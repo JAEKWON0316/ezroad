@@ -1,4 +1,4 @@
-name: Deploy Backend to EC2
+name: Deploy Backend to EC2 (Docker)
 
 on:
   push:
@@ -15,32 +15,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x ./backend/gradlew
-        
-      - name: Build with Gradle
-        run: |
-          cd backend
-          ./gradlew clean build -x test
-
-      - name: Copy JAR to EC2
+      - name: Copy files to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_PORT }}
-          source: "backend/build/libs/*.jar"
+          source: "backend/"
           target: "/opt/ezroad/temp"
-          strip_components: 3
+          strip_components: 1
 
-      - name: Deploy and Restart Service
+      - name: Build and Deploy Docker
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -48,14 +34,29 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_PORT }}
           script: |
-            # JAR 파일 이동
-            sudo mv /opt/ezroad/temp/*.jar /opt/ezroad/ezroad.jar
+            cd /opt/ezroad/temp
+            
+            # 기존 컨테이너 중지 및 삭제
+            docker stop ezroad-backend || true
+            docker rm ezroad-backend || true
+            
+            # 이미지 빌드
+            docker build -t ezroad-backend:latest .
+            
+            # 컨테이너 실행
+            docker run -d \
+              --name ezroad-backend \
+              --restart unless-stopped \
+              -p 8080:8080 \
+              -e SPRING_PROFILES_ACTIVE=prod \
+              -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
+              ezroad-backend:latest
             
             # 임시 폴더 정리
             rm -rf /opt/ezroad/temp
             
-            # 서비스 재시작
-            sudo systemctl restart ezroad
+            # 오래된 이미지 정리
+            docker image prune -f
             
-            # 서비스 상태 확인
-            sudo systemctl status ezroad
+            # 상태 확인
+            docker ps | grep ezroad-backend
