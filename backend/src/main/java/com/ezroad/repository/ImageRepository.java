@@ -1,0 +1,15 @@
+package com.ezroad.repository;
+
+import com.ezroad.entity.Image;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface ImageRepository extends JpaRepository<Image, Long> {
+    
+    List<Image> findByEntityTypeAndEntityId(String entityType, Long entityId);
+    
+    void deleteByEntityTypeAndEntityId(String entityType, Long entityId);
+}

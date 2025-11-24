@@ -31,8 +31,15 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+frontend/.env
 frontend/.env.local
+backend/.env
 backend/src/main/resources/application-local.yml
+
+# Keep example env files (for reference)
+!.env.example
+!backend/.env.example
+!frontend/.env.example
 
 # Vercel
 .vercel
