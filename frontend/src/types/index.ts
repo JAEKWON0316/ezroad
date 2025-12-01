@@ -143,8 +143,12 @@ export interface ReviewCreateRequest {
 export interface Reservation {
   id: number;
   restaurantId: number;
-  restaurant?: Restaurant;
-  member?: User;
+  restaurantName?: string;
+  restaurantAddress?: string;
+  restaurantPhone?: string;
+  memberId?: number;
+  memberName?: string;
+  memberPhone?: string;
   guestCount: number;
   reservationDate: string;
   reservationTime: string;
@@ -166,9 +170,10 @@ export interface ReservationCreateRequest {
 export interface Waiting {
   id: number;
   restaurantId: number;
-  restaurant?: Restaurant;
-  member?: User;
-  partySize: number;
+  restaurantName?: string;
+  memberId?: number;
+  memberNickname?: string;
+  guestCount: number;
   waitingNumber: number;
   estimatedWaitTime?: number;
   status: 'WAITING' | 'CALLED' | 'SEATED' | 'CANCELLED' | 'NO_SHOW';

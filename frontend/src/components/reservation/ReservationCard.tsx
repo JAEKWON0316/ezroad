@@ -52,15 +52,17 @@ export default function ReservationCard({
       </div>
 
       {/* 식당 정보 */}
-      {reservation.restaurant && (
+      {reservation.restaurantName && (
         <div className="mb-4">
           <h3 className="font-semibold text-gray-900 text-lg">
-            {reservation.restaurant.name}
+            {reservation.restaurantName}
           </h3>
-          <div className="flex items-center gap-1 text-sm text-gray-500 mt-1">
-            <MapPin className="h-4 w-4" />
-            <span>{reservation.restaurant.address}</span>
-          </div>
+          {reservation.restaurantAddress && (
+            <div className="flex items-center gap-1 text-sm text-gray-500 mt-1">
+              <MapPin className="h-4 w-4" />
+              <span>{reservation.restaurantAddress}</span>
+            </div>
+          )}
         </div>
       )}
 

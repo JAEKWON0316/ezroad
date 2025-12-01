@@ -253,7 +253,7 @@ export default function MyPage() {
                 recentReservations.map((reservation) => (
                   <div key={reservation.id} className="p-4 border rounded-lg">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium">{reservation.restaurant?.name}</span>
+                      <span className="font-medium">{reservation.restaurantName || '식당'}</span>
                       <StatusBadge status={reservation.status} />
                     </div>
                     <p className="text-gray-600 text-sm">

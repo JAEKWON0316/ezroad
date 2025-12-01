@@ -57,7 +57,7 @@ export default function SearchBar({
           className={cn(
             'w-full pl-12 pr-12 py-3 text-base rounded-full border border-gray-300',
             'focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent',
-            'placeholder-gray-400 transition-shadow bg-white'
+            'placeholder-gray-400 transition-shadow bg-white text-gray-900'
           )}
         />
         {showClearButton && query && (

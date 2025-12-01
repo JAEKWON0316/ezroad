@@ -314,7 +314,7 @@ export default function RestaurantDetailPage() {
               >
                 예약하기
               </Button>
-              <Link href={`/restaurants/${restaurantId}/waiting`} className="flex-1">
+              <Link href={`/waitings/new?restaurantId=${restaurantId}`} className="flex-1">
                 <Button variant="outline" className="w-full" size="lg" leftIcon={<Users className="h-5 w-5" />}>
                   대기 등록
                 </Button>

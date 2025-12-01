@@ -26,7 +26,7 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
     
     @Query("SELECT r FROM Restaurant r WHERE r.status = :status " +
            "AND (:category IS NULL OR r.category = :category) " +
-           "AND (:keyword IS NULL OR r.name LIKE %:keyword% OR r.description LIKE %:keyword%)")
+           "AND (:keyword IS NULL OR r.name LIKE %:keyword% OR r.address LIKE %:keyword% OR r.description LIKE %:keyword%)")
     Page<Restaurant> searchRestaurants(@Param("status") RestaurantStatus status,
                                        @Param("category") String category,
                                        @Param("keyword") String keyword,

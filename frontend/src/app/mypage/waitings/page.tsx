@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronLeft, Clock, Users, MapPin, X, Hash } from 'lucide-react';
+import { ChevronLeft, Clock, Users, X, Hash } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { waitingApi } from '@/lib/api';
 import { Waiting, PageResponse } from '@/types';
@@ -125,15 +125,9 @@ export default function MyWaitingsPage() {
                       <div>
                         <Link href={`/restaurants/${waiting.restaurantId}`}>
                           <h3 className="font-semibold text-gray-900 hover:text-orange-500">
-                            {waiting.restaurant?.name || '식당 정보 없음'}
+                            {waiting.restaurantName || '식당 정보 없음'}
                           </h3>
                         </Link>
-                        {waiting.restaurant?.address && (
-                          <p className="text-sm text-gray-500 flex items-center mt-1">
-                            <MapPin className="h-3.5 w-3.5 mr-1" />
-                            {waiting.restaurant.address}
-                          </p>
-                        )}
                       </div>
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusStyles[waiting.status]}`}>
                         {statusLabels[waiting.status]}
@@ -147,7 +141,7 @@ export default function MyWaitingsPage() {
                       </div>
                       <div className="flex items-center gap-2 text-sm">
                         <Users className="h-4 w-4 text-gray-400" />
-                        <span>{waiting.partySize}명</span>
+                        <span>{waiting.guestCount}명</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm">
                         <Clock className="h-4 w-4 text-gray-400" />

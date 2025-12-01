@@ -124,13 +124,13 @@ export default function MyReservationsPage() {
                       <div>
                         <Link href={`/restaurants/${reservation.restaurantId}`}>
                           <h3 className="font-semibold text-gray-900 hover:text-orange-500">
-                            {reservation.restaurant?.name || '식당 정보 없음'}
+                            {reservation.restaurantName || '식당 정보 없음'}
                           </h3>
                         </Link>
-                        {reservation.restaurant?.address && (
+                        {reservation.restaurantAddress && (
                           <p className="text-sm text-gray-500 flex items-center mt-1">
                             <MapPin className="h-3.5 w-3.5 mr-1" />
-                            {reservation.restaurant.address}
+                            {reservation.restaurantAddress}
                           </p>
                         )}
                       </div>

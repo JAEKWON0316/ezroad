@@ -55,20 +55,12 @@ public class RestaurantService {
     }
 
     public Page<RestaurantResponse> getAllRestaurants(String keyword, String category, Pageable pageable) {
-        if (keyword != null && !keyword.isEmpty() && category != null && !category.isEmpty()) {
-            return restaurantRepository.findByStatusAndNameContainingAndCategory(
-                    RestaurantStatus.ACTIVE, keyword, category, pageable)
-                    .map(RestaurantResponse::from);
-        } else if (keyword != null && !keyword.isEmpty()) {
-            return restaurantRepository.findByStatusAndNameContaining(
-                    RestaurantStatus.ACTIVE, keyword, pageable)
-                    .map(RestaurantResponse::from);
-        } else if (category != null && !category.isEmpty()) {
-            return restaurantRepository.findByStatusAndCategory(
-                    RestaurantStatus.ACTIVE, category, pageable)
-                    .map(RestaurantResponse::from);
-        }
-        return restaurantRepository.findByStatus(RestaurantStatus.ACTIVE, pageable)
+        // keyword나 category가 빈 문자열이면 null로 처리
+        String searchKeyword = (keyword != null && !keyword.isEmpty()) ? keyword : null;
+        String searchCategory = (category != null && !category.isEmpty()) ? category : null;
+        
+        return restaurantRepository.searchRestaurants(
+                RestaurantStatus.ACTIVE, searchCategory, searchKeyword, pageable)
                 .map(RestaurantResponse::from);
     }
 

@@ -357,7 +357,7 @@ export default function PartnerPage() {
                       pendingReservations.map((reservation) => (
                         <div key={reservation.id} className="p-4 flex items-center justify-between">
                           <div>
-                            <p className="font-medium">{reservation.member?.nickname}</p>
+                            <p className="font-medium">{reservation.memberName || '예약자'}</p>
                             <p className="text-sm text-gray-500">
                               {reservation.reservationDate} {reservation.reservationTime} · {reservation.guestCount}명
                             </p>
@@ -398,9 +398,9 @@ export default function PartnerPage() {
                               {waiting.waitingNumber}
                             </div>
                             <div>
-                              <p className="font-medium">{waiting.member?.nickname}</p>
+                              <p className="font-medium">{waiting.memberNickname || '손님'}</p>
                               <p className="text-sm text-gray-500">
-                                {waiting.partySize}명 · {waiting.estimatedWaitTime}분 예상
+                                {waiting.guestCount}명 · {waiting.estimatedWaitTime}분 예상
                               </p>
                             </div>
                           </div>

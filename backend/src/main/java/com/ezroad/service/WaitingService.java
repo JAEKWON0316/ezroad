@@ -39,12 +39,13 @@ public class WaitingService {
         Restaurant restaurant = restaurantRepository.findById(request.getRestaurantId())
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 식당입니다"));
 
-        // 현재 대기중인 팀 수 조회
+        // 현재 대기중인 팀 수 조회 (null이면 0으로 처리)
         Integer currentWaitingCount = waitingRepository
                 .countByRestaurantIdAndStatus(request.getRestaurantId(), WaitingStatus.WAITING);
+        int waitingCount = currentWaitingCount != null ? currentWaitingCount : 0;
         
         // 대기번호 생성 (당일 기준)
-        Integer waitingNumber = currentWaitingCount + 1;
+        Integer waitingNumber = waitingCount + 1;
         
         // 예상 대기 시간 (팀당 평균 30분)
         Integer estimatedWaitTime = waitingNumber * 30;
