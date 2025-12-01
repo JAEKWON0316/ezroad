@@ -1,11 +1,13 @@
 package com.ezroad.service;
 
 import com.ezroad.dto.request.RestaurantCreateRequest;
+import com.ezroad.dto.request.RestaurantUpdateRequest;
 import com.ezroad.dto.response.RestaurantResponse;
 import com.ezroad.entity.Member;
 import com.ezroad.entity.Restaurant;
 import com.ezroad.entity.RestaurantStatus;
 import com.ezroad.exception.ResourceNotFoundException;
+import com.ezroad.exception.UnauthorizedException;
 import com.ezroad.repository.MemberRepository;
 import com.ezroad.repository.RestaurantRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -49,7 +54,20 @@ public class RestaurantService {
         return RestaurantResponse.from(saved);
     }
 
-    public Page<RestaurantResponse> getAllRestaurants(Pageable pageable) {
+    public Page<RestaurantResponse> getAllRestaurants(String keyword, String category, Pageable pageable) {
+        if (keyword != null && !keyword.isEmpty() && category != null && !category.isEmpty()) {
+            return restaurantRepository.findByStatusAndNameContainingAndCategory(
+                    RestaurantStatus.ACTIVE, keyword, category, pageable)
+                    .map(RestaurantResponse::from);
+        } else if (keyword != null && !keyword.isEmpty()) {
+            return restaurantRepository.findByStatusAndNameContaining(
+                    RestaurantStatus.ACTIVE, keyword, pageable)
+                    .map(RestaurantResponse::from);
+        } else if (category != null && !category.isEmpty()) {
+            return restaurantRepository.findByStatusAndCategory(
+                    RestaurantStatus.ACTIVE, category, pageable)
+                    .map(RestaurantResponse::from);
+        }
         return restaurantRepository.findByStatus(RestaurantStatus.ACTIVE, pageable)
                 .map(RestaurantResponse::from);
     }
@@ -66,5 +84,62 @@ public class RestaurantService {
         
         restaurant.incrementViewCount();
         return RestaurantResponse.from(restaurant);
+    }
+
+    public List<RestaurantResponse> getMyRestaurants(Long ownerId) {
+        return restaurantRepository.findByOwnerId(ownerId).stream()
+                .map(RestaurantResponse::from)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public RestaurantResponse updateRestaurant(Long ownerId, Long restaurantId, RestaurantUpdateRequest request) {
+        Restaurant restaurant = restaurantRepository.findById(restaurantId)
+                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 식당입니다"));
+        
+        if (!restaurant.getOwner().getId().equals(ownerId)) {
+            throw new UnauthorizedException("수정 권한이 없습니다");
+        }
+
+        if (request.getName() != null) restaurant.updateName(request.getName());
+        if (request.getCategory() != null) restaurant.updateCategory(request.getCategory());
+        if (request.getDescription() != null) restaurant.updateDescription(request.getDescription());
+        if (request.getPhone() != null) restaurant.updatePhone(request.getPhone());
+        if (request.getAddress() != null) restaurant.updateAddress(request.getZipcode(), request.getAddress(), request.getAddressDetail());
+        if (request.getLatitude() != null && request.getLongitude() != null) {
+            restaurant.updateLocation(request.getLatitude(), request.getLongitude());
+        }
+        if (request.getWebsite() != null) restaurant.updateWebsite(request.getWebsite());
+        if (request.getBusinessHours() != null) restaurant.updateBusinessHours(request.getBusinessHours());
+        if (request.getNotice() != null) restaurant.updateNotice(request.getNotice());
+        if (request.getThumbnail() != null) restaurant.updateThumbnail(request.getThumbnail());
+        if (request.getMenuBoardImage() != null) restaurant.updateMenuBoardImage(request.getMenuBoardImage());
+
+        return RestaurantResponse.from(restaurant);
+    }
+
+    @Transactional
+    public RestaurantResponse updateNotice(Long ownerId, Long restaurantId, String notice) {
+        Restaurant restaurant = restaurantRepository.findById(restaurantId)
+                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 식당입니다"));
+        
+        if (!restaurant.getOwner().getId().equals(ownerId)) {
+            throw new UnauthorizedException("수정 권한이 없습니다");
+        }
+
+        restaurant.updateNotice(notice);
+        return RestaurantResponse.from(restaurant);
+    }
+
+    @Transactional
+    public void deleteRestaurant(Long ownerId, Long restaurantId) {
+        Restaurant restaurant = restaurantRepository.findById(restaurantId)
+                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 식당입니다"));
+        
+        if (!restaurant.getOwner().getId().equals(ownerId)) {
+            throw new UnauthorizedException("삭제 권한이 없습니다");
+        }
+
+        restaurant.updateStatus(RestaurantStatus.DELETED);
     }
 }

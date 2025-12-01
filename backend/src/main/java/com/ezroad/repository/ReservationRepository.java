@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -33,4 +34,12 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     
     // 식당별 + 상태별 예약
     List<Reservation> findByRestaurantIdAndStatus(Long restaurantId, ReservationStatus status);
+    
+    // ==================== 통계 ====================
+    
+    Long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+    
+    Long countByStatus(ReservationStatus status);
+    
+    Long countByRestaurantIdAndCreatedAtBetween(Long restaurantId, LocalDateTime start, LocalDateTime end);
 }

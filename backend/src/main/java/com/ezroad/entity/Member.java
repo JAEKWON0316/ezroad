@@ -112,4 +112,12 @@ public class Member {
     public void delete() {
         this.deletedAt = LocalDateTime.now();
     }
+
+    public void updateRole(MemberRole role) {
+        this.role = role;
+    }
+
+    public void updatePassword(String password) {
+        this.password = password;
+    }
 }

@@ -32,8 +32,8 @@ public class Reservation {
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
 
-    @Column(name = "party_size", nullable = false)
-    private Integer partySize;
+    @Column(name = "guest_count", nullable = false)
+    private Integer guestCount;
 
     @Column(name = "reservation_date", nullable = false)
     private LocalDate reservationDate;
@@ -41,8 +41,8 @@ public class Reservation {
     @Column(name = "reservation_time", nullable = false)
     private LocalTime reservationTime;
 
-    @Column(name = "special_requests", columnDefinition = "TEXT")
-    private String specialRequests;
+    @Column(name = "request", columnDefinition = "TEXT")
+    private String request;
 
     @Column(length = 20)
     @Enumerated(EnumType.STRING)
@@ -57,15 +57,15 @@ public class Reservation {
     private LocalDateTime updatedAt;
 
     @Builder
-    public Reservation(Restaurant restaurant, Member member, Integer partySize,
+    public Reservation(Restaurant restaurant, Member member, Integer guestCount,
                       LocalDate reservationDate, LocalTime reservationTime,
-                      String specialRequests, ReservationStatus status) {
+                      String request, ReservationStatus status) {
         this.restaurant = restaurant;
         this.member = member;
-        this.partySize = partySize;
+        this.guestCount = guestCount;
         this.reservationDate = reservationDate;
         this.reservationTime = reservationTime;
-        this.specialRequests = specialRequests;
+        this.request = request;
         this.status = status != null ? status : ReservationStatus.PENDING;
     }
 

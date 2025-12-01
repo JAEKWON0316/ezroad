@@ -72,6 +72,16 @@ public class Menu {
         if (thumbnail != null) this.thumbnail = thumbnail;
     }
 
+    public void update(String name, Integer price, String description) {
+        if (name != null) this.name = name;
+        if (price != null) this.price = price;
+        if (description != null) this.description = description;
+    }
+
+    public void toggleVisibility() {
+        this.isVisible = !this.isVisible;
+    }
+
     public void hide() {
         this.isVisible = false;
     }

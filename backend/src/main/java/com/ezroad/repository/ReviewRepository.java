@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
@@ -31,4 +32,14 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     
     // 회원별 리뷰 개수 (삭제되지 않은 것만)
     Long countByMemberIdAndDeletedAtIsNull(Long memberId);
+    
+    // ==================== 관리자용 ====================
+    
+    Page<Review> findByContentContaining(String keyword, Pageable pageable);
+    
+    Long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+    
+    // ==================== 파트너(사업자)용 ====================
+    
+    Long countByRestaurantIdAndDeletedAtIsNullAndCreatedAtBetween(Long restaurantId, LocalDateTime start, LocalDateTime end);
 }

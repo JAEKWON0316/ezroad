@@ -72,8 +72,8 @@ public class ReservationService {
                 .restaurant(restaurant)
                 .reservationDate(request.getReservationDate())
                 .reservationTime(request.getReservationTime())
-                .partySize(request.getPartySize())
-                .specialRequests(request.getSpecialRequests())
+                .guestCount(request.getGuestCount())
+                .request(request.getRequest())
                 .status(ReservationStatus.PENDING)
                 .build();
 

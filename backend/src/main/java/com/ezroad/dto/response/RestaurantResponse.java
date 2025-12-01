@@ -24,9 +24,11 @@ public class RestaurantResponse {
     private String businessHours;
     private String notice;
     private String thumbnail;
+    private String menuBoardImage;
     private BigDecimal avgRating;
     private Integer reviewCount;
     private Integer viewCount;
+    private String status;
     private String ownerNickname;
     private LocalDateTime createdAt;
 
@@ -45,9 +47,11 @@ public class RestaurantResponse {
                 .businessHours(restaurant.getBusinessHours())
                 .notice(restaurant.getNotice())
                 .thumbnail(restaurant.getThumbnail())
+                .menuBoardImage(restaurant.getMenuBoardImage())
                 .avgRating(restaurant.getAvgRating())
                 .reviewCount(restaurant.getReviewCount())
                 .viewCount(restaurant.getViewCount())
+                .status(restaurant.getStatus().name())
                 .ownerNickname(restaurant.getOwner().getNickname())
                 .createdAt(restaurant.getCreatedAt())
                 .build();

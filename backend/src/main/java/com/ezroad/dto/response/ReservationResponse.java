@@ -23,8 +23,8 @@ public class ReservationResponse {
     private String memberPhone;
     private LocalDate reservationDate;
     private LocalTime reservationTime;
-    private Integer partySize;
-    private String specialRequests;
+    private Integer guestCount;
+    private String request;
     private ReservationStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -41,8 +41,8 @@ public class ReservationResponse {
                 .memberPhone(reservation.getMember().getPhone())
                 .reservationDate(reservation.getReservationDate())
                 .reservationTime(reservation.getReservationTime())
-                .partySize(reservation.getPartySize())
-                .specialRequests(reservation.getSpecialRequests())
+                .guestCount(reservation.getGuestCount())
+                .request(reservation.getRequest())
                 .status(reservation.getStatus())
                 .createdAt(reservation.getCreatedAt())
                 .updatedAt(reservation.getUpdatedAt())

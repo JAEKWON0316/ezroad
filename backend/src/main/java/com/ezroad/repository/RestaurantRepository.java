@@ -10,16 +10,17 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
     
     Page<Restaurant> findByStatus(RestaurantStatus status, Pageable pageable);
     
-    Page<Restaurant> findByStatusAndCategoryContaining(RestaurantStatus status, String category, Pageable pageable);
+    Page<Restaurant> findByStatusAndCategory(RestaurantStatus status, String category, Pageable pageable);
     
     Page<Restaurant> findByStatusAndNameContaining(RestaurantStatus status, String name, Pageable pageable);
+    
+    Page<Restaurant> findByStatusAndNameContainingAndCategory(RestaurantStatus status, String name, String category, Pageable pageable);
     
     List<Restaurant> findByOwnerId(Long ownerId);
     
@@ -30,4 +31,12 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
                                        @Param("category") String category,
                                        @Param("keyword") String keyword,
                                        Pageable pageable);
+    
+    // ==================== 관리자용 ====================
+    
+    Page<Restaurant> findByNameContaining(String name, Pageable pageable);
+    
+    Page<Restaurant> findByNameContainingAndStatus(String name, RestaurantStatus status, Pageable pageable);
+    
+    Long countByStatus(RestaurantStatus status);
 }

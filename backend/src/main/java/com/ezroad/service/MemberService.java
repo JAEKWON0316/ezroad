@@ -169,11 +169,11 @@ public class MemberService {
 
     // 통계 관련 메서드
     public Long getFollowerCount(Long memberId) {
-        return followRepository.countByFollowingIdAndFollowerIsNotNull(memberId);
+        return followRepository.countFollowersByMemberId(memberId);
     }
 
     public Long getFollowingCount(Long memberId) {
-        return followRepository.countByFollowerIdAndFollowingIsNotNull(memberId);
+        return followRepository.countFollowingByMemberId(memberId);
     }
 
     public Long getReviewCount(Long memberId) {

@@ -65,6 +65,9 @@ public class Restaurant {
     @Column(length = 500)
     private String thumbnail;
 
+    @Column(name = "menu_board_image", length = 500)
+    private String menuBoardImage;
+
     @Column(name = "avg_rating", precision = 3, scale = 2)
     private BigDecimal avgRating = BigDecimal.ZERO;
 
@@ -90,7 +93,7 @@ public class Restaurant {
     public Restaurant(Member owner, String name, String category, String description,
                      String phone, String zipcode, String address, String addressDetail,
                      BigDecimal latitude, BigDecimal longitude, String website,
-                     String businessHours, String notice, String thumbnail) {
+                     String businessHours, String notice, String thumbnail, String menuBoardImage) {
         this.owner = owner;
         this.name = name;
         this.category = category;
@@ -105,6 +108,7 @@ public class Restaurant {
         this.businessHours = businessHours;
         this.notice = notice;
         this.thumbnail = thumbnail;
+        this.menuBoardImage = menuBoardImage;
     }
 
     // 비즈니스 로직
@@ -129,5 +133,56 @@ public class Restaurant {
     public void updateRating(BigDecimal avgRating, Integer reviewCount) {
         this.avgRating = avgRating;
         this.reviewCount = reviewCount;
+    }
+
+    public void updateStatus(RestaurantStatus status) {
+        this.status = status;
+    }
+
+    public void updateThumbnail(String thumbnail) {
+        this.thumbnail = thumbnail;
+    }
+
+    public void updateName(String name) {
+        this.name = name;
+    }
+
+    public void updateCategory(String category) {
+        this.category = category;
+    }
+
+    public void updateDescription(String description) {
+        this.description = description;
+    }
+
+    public void updatePhone(String phone) {
+        this.phone = phone;
+    }
+
+    public void updateAddress(String zipcode, String address, String addressDetail) {
+        this.zipcode = zipcode;
+        this.address = address;
+        this.addressDetail = addressDetail;
+    }
+
+    public void updateLocation(BigDecimal latitude, BigDecimal longitude) {
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
+
+    public void updateWebsite(String website) {
+        this.website = website;
+    }
+
+    public void updateBusinessHours(String businessHours) {
+        this.businessHours = businessHours;
+    }
+
+    public void updateNotice(String notice) {
+        this.notice = notice;
+    }
+
+    public void updateMenuBoardImage(String menuBoardImage) {
+        this.menuBoardImage = menuBoardImage;
     }
 }
