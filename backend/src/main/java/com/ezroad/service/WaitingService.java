@@ -18,7 +18,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Slf4j
 @Service
@@ -29,6 +31,9 @@ public class WaitingService {
     private final WaitingRepository waitingRepository;
     private final MemberRepository memberRepository;
     private final RestaurantRepository restaurantRepository;
+    
+    // 한국 시간대
+    private static final ZoneId KOREA_ZONE = ZoneId.of("Asia/Seoul");
 
     // 대기 등록
     @Transactional
@@ -39,16 +44,24 @@ public class WaitingService {
         Restaurant restaurant = restaurantRepository.findById(request.getRestaurantId())
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 식당입니다"));
 
-        // 현재 대기중인 팀 수 조회 (null이면 0으로 처리)
-        Integer currentWaitingCount = waitingRepository
-                .countByRestaurantIdAndStatus(request.getRestaurantId(), WaitingStatus.WAITING);
-        int waitingCount = currentWaitingCount != null ? currentWaitingCount : 0;
+        // 한국 시간 기준 오늘 00:00:00
+        LocalDateTime startOfToday = LocalDate.now(KOREA_ZONE).atStartOfDay();
         
-        // 대기번호 생성 (당일 기준)
-        Integer waitingNumber = waitingCount + 1;
+        // 오늘 해당 식당의 전체 대기 수 조회 (대기번호 부여용)
+        Integer todayTotalCount = waitingRepository.countTodayWaitingsByRestaurant(
+                request.getRestaurantId(), startOfToday);
+        int totalCount = todayTotalCount != null ? todayTotalCount : 0;
         
-        // 예상 대기 시간 (팀당 평균 30분)
-        Integer estimatedWaitTime = waitingNumber * 30;
+        // 대기번호 생성 (오늘 기준 순번)
+        Integer waitingNumber = totalCount + 1;
+        
+        // 현재 WAITING 상태인 대기 수 조회 (예상 대기 시간 계산용)
+        Integer currentWaitingCount = waitingRepository.countTodayWaitingsByRestaurantAndStatus(
+                request.getRestaurantId(), WaitingStatus.WAITING, startOfToday);
+        int activeCount = currentWaitingCount != null ? currentWaitingCount : 0;
+        
+        // 예상 대기 시간 (대기중인 팀 수 기준, 팀당 평균 15분)
+        Integer estimatedWaitTime = (activeCount + 1) * 15;
 
         Waiting waiting = Waiting.builder()
                 .member(member)
@@ -60,6 +73,8 @@ public class WaitingService {
                 .build();
 
         Waiting savedWaiting = waitingRepository.save(waiting);
+        log.info("대기 등록 완료 - 식당: {}, 대기번호: {}, 예상시간: {}분", 
+                restaurant.getName(), waitingNumber, estimatedWaitTime);
         return WaitingResponse.from(savedWaiting);
     }
 
