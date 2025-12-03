@@ -39,6 +39,7 @@ public class MenuService {
                 .name(request.getName())
                 .price(request.getPrice())
                 .description(request.getDescription())
+                .thumbnail(request.getThumbnail())
                 .build();
 
         Menu saved = menuRepository.save(menu);
@@ -68,7 +69,7 @@ public class MenuService {
             throw new UnauthorizedException("메뉴 수정 권한이 없습니다");
         }
 
-        menu.update(request.getName(), request.getPrice(), request.getDescription());
+        menu.update(request.getName(), request.getPrice(), request.getDescription(), request.getThumbnail());
         return MenuResponse.from(menu);
     }
 

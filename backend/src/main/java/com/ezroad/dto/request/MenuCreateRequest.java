@@ -21,4 +21,6 @@ public class MenuCreateRequest {
     private Integer price;
 
     private String description;
+
+    private String thumbnail;
 }
