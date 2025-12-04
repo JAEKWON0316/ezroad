@@ -73,7 +73,7 @@ $env:DATABASE_URL="jdbc:postgresql://localhost:5432/ezroad?user=postgres&passwor
 
 # AWS S3 (선택사항)
 $env:AWS_REGION="ap-northeast-2"
-$env:AWS_S3_BUCKET="ezroad-uploads"
+$env:AWS_S3_BUCKET="your_bucket_name"
 $env:AWS_ACCESS_KEY="your-access-key"
 $env:AWS_SECRET_KEY="your-secret-key"
 $env:AWS_CLOUDFRONT_DOMAIN="https://your-cloudfront-domain.cloudfront.net"
