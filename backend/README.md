@@ -9,6 +9,7 @@ Spring Boot 3.2.0 기반 백엔드 서버
 - **Java**: JDK 17 이상
 - **Gradle**: 8.5 이상 (프로젝트에 포함된 Gradle Wrapper 사용 가능)
 - **PostgreSQL**: 12 이상
+- **AWS EC2**: 백엔드 배포용 (선택사항)
 - **AWS S3**: 파일 업로드용 (선택사항)
 
 ## 🚀 시작하기
