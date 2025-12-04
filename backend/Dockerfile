@@ -12,11 +12,11 @@ WORKDIR /app
 RUN apk add --no-cache tzdata
 ENV TZ=Asia/Seoul
 
-# JAR 파일 복사
-COPY --from=build /app/build/libs/*.jar app.jar
+# JAR 파일 복사 (rename 안정적 버전)
+COPY --from=build /app/build/libs/*.jar /app/app.jar
 
 # 포트 노출
 EXPOSE 8080
 
-# 메모리 설정 및 실행
-ENTRYPOINT ["java", "-Xms256m", "-Xmx512m", "-jar", "app.jar"]
+# 실행 설정
+ENTRYPOINT ["java", "-Xms256m", "-Xmx512m", "-jar", "/app/app.jar"]
