@@ -134,7 +134,7 @@ java -jar build\libs\ezroad-0.0.1-SNAPSHOT.jar
 - `POST /api/auth/login` - 로그인
 - `POST /api/auth/refresh` - 토큰 갱신
 - `POST /api//files/upload` - 파일 업로드
-- `GET //members/me` - 내 정보 조회회
+- `GET //members/me` - 내 정보 조회
 - `GET /api/restaurants` - 식당 목록
 - `GET /api/menus?restaurantId={id}` - 메뉴 목록
 - `GET /api/restaurants/{restaurantId}/reviews` - 리뷰 목록
