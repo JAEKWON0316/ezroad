@@ -4,7 +4,7 @@ Spring Boot + Next.js 기반의 현대적인 맛집 검색 및 예약 플랫폼
 
 ## 🎯 프로젝트 개요
 
-기존 Spring MVC + JSP + MySQL 기반의 EzenRoad를 현대적인 기술 스택으로 리빌딩한 프로젝트입니다.
+기존 Spring MVC + JSP + MySQL 기반의 EZroad를 현대적인 기술 스택으로 리빌딩한 프로젝트입니다.
 
 ### 기술 스택
 
