@@ -51,7 +51,7 @@ PostgreSQL 데이터베이스를 생성하고 `application.yml`에 연결 정보
 ```yaml
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/ezroad
+    url: jdbc:postgresql://localhost:5432/your_db
     username: your_username
     password: your_password
 ```
