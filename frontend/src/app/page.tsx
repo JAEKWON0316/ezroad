@@ -15,8 +15,8 @@ import {
   Fish,
   Beef,
 } from 'lucide-react';
-import { restaurantApi } from '@/lib/api';
-import { Restaurant } from '@/types';
+import { restaurantApi, themeApi } from '@/lib/api';
+import { Restaurant, Theme } from '@/types';
 import Button from '@/components/common/Button';
 import SearchBar from '@/components/common/SearchBar';
 
@@ -41,26 +41,27 @@ const categories = [
 
 export default function HomePage() {
   const [popularRestaurants, setPopularRestaurants] = useState<Restaurant[]>([]);
+  const [topThemes, setTopThemes] = useState<Theme[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    const fetchPopularRestaurants = async () => {
+    const fetchData = async () => {
       try {
-        const response = await restaurantApi.getList({ 
-          sort: 'avgRating', 
-          size: 6,
-          page: 0 
-        });
-        setPopularRestaurants(response.content);
+        const [restaurantsRes, themesRes] = await Promise.all([
+          restaurantApi.getList({ sort: 'avgRating', size: 6, page: 0 }),
+          themeApi.getTop(),
+        ]);
+        setPopularRestaurants(restaurantsRes.content);
+        setTopThemes(themesRes);
       } catch (error) {
-        console.error('Failed to fetch restaurants:', error);
+        console.error('Failed to fetch data:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchPopularRestaurants();
+    fetchData();
   }, []);
 
   const handleSearch = (query: string) => {
@@ -182,6 +183,31 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Popular Themes Section */}
+      {topThemes.length > 0 && (
+        <section className="py-16 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
+                인기 테마 🗺️
+              </h2>
+              <Link
+                href="/themes"
+                className="inline-flex items-center text-orange-500 hover:text-orange-600 font-medium"
+              >
+                더보기
+                <ArrowRight className="h-4 w-4 ml-1" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {topThemes.map((theme) => (
+                <ThemeCard key={theme.id} theme={theme} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Features Section */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -290,5 +316,45 @@ function FeatureCard({
       <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
       <p className="text-gray-500">{description}</p>
     </div>
+  );
+}
+
+// 테마 카드 컴포넌트
+function ThemeCard({ theme }: { theme: Theme }) {
+  return (
+    <Link href={`/themes/${theme.id}`}>
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition-shadow group h-full">
+        <div className="relative h-40 bg-gray-200">
+          {theme.thumbnail ? (
+            <img
+              src={theme.thumbnail}
+              alt={theme.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-100 to-orange-200">
+              <span className="text-4xl">🍽️</span>
+            </div>
+          )}
+          <div className="absolute top-3 right-3 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
+            {theme.restaurantCount}개 식당
+          </div>
+        </div>
+        <div className="p-4">
+          <h3 className="font-semibold text-gray-900 text-lg mb-1 line-clamp-1">
+            {theme.title}
+          </h3>
+          {theme.description && (
+            <p className="text-gray-500 text-sm mb-3 line-clamp-2">
+              {theme.description}
+            </p>
+          )}
+          <div className="flex items-center justify-between text-sm text-gray-400">
+            <span>{theme.member.nickname}</span>
+            <span>👁 {theme.viewCount}</span>
+          </div>
+        </div>
+      </div>
+    </Link>
   );
 }
