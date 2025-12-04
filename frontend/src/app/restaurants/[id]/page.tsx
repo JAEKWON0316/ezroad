@@ -17,8 +17,8 @@ import {
   Users,
   MessageSquare,
 } from 'lucide-react';
-import { restaurantApi, menuApi, reviewApi, followApi } from '@/lib/api';
-import { Restaurant, Menu, Review, PageResponse } from '@/types';
+import { restaurantApi, menuApi, reviewApi, followApi, themeApi } from '@/lib/api';
+import { Restaurant, Menu, Review, PageResponse, Theme } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/common/Button';
 import Loading from '@/components/common/Loading';
@@ -39,6 +39,8 @@ export default function RestaurantDetailPage() {
   const [isFollowed, setIsFollowed] = useState(false);
   const [activeTab, setActiveTab] = useState<'info' | 'menu' | 'reviews'>('info');
   const [showReservationModal, setShowReservationModal] = useState(false);
+  const [showThemeModal, setShowThemeModal] = useState(false);
+  const [myThemes, setMyThemes] = useState<Theme[]>([]);
   const [reviewPage, setReviewPage] = useState(0);
   const [hasMoreReviews, setHasMoreReviews] = useState(true);
 
@@ -135,6 +137,35 @@ export default function RestaurantDetailPage() {
     }
   };
 
+  const handleOpenThemeModal = async () => {
+    if (!isAuthenticated) {
+      toast.error('로그인이 필요합니다');
+      return;
+    }
+    try {
+      const themes = await themeApi.getMyAll();
+      setMyThemes(themes);
+      setShowThemeModal(true);
+    } catch (error) {
+      console.error('Failed to fetch themes:', error);
+      toast.error('테마 목록을 불러오는데 실패했습니다');
+    }
+  };
+
+  const handleAddToTheme = async (themeId: number) => {
+    try {
+      await themeApi.addRestaurant(themeId, { restaurantId });
+      toast.success('테마에 추가되었습니다!');
+      setShowThemeModal(false);
+    } catch (error: any) {
+      if (error.response?.status === 409) {
+        toast.error('이미 테마에 추가된 식당입니다');
+      } else {
+        toast.error('테마 추가에 실패했습니다');
+      }
+    }
+  };
+
   const loadMoreReviews = () => {
     const nextPage = reviewPage + 1;
     setReviewPage(nextPage);
@@ -180,6 +211,15 @@ export default function RestaurantDetailPage() {
 
         {/* Actions */}
         <div className="absolute top-4 right-4 flex gap-2">
+          {isAuthenticated && (
+            <button
+              onClick={handleOpenThemeModal}
+              className="p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white"
+              title="테마에 추가"
+            >
+              <span className="text-lg">📁</span>
+            </button>
+          )}
           <button
             onClick={handleShare}
             className="p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white"
@@ -401,6 +441,15 @@ export default function RestaurantDetailPage() {
         restaurantId={restaurantId}
         restaurantName={restaurant.name}
       />
+
+      {/* Theme Modal */}
+      <ThemeSelectModal
+        isOpen={showThemeModal}
+        onClose={() => setShowThemeModal(false)}
+        themes={myThemes}
+        onSelectTheme={handleAddToTheme}
+        restaurantName={restaurant.name}
+      />
     </div>
   );
 }
@@ -489,6 +538,78 @@ function ReservationModal({
         >
           예약 페이지로 이동
         </Button>
+      </div>
+    </Modal>
+  );
+}
+
+// Theme Select Modal Component
+function ThemeSelectModal({
+  isOpen,
+  onClose,
+  themes,
+  onSelectTheme,
+  restaurantName,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  themes: Theme[];
+  onSelectTheme: (themeId: number) => void;
+  restaurantName: string;
+}) {
+  const router = useRouter();
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title={`"${restaurantName}" 테마에 추가`}>
+      <div className="space-y-3">
+        {themes.length === 0 ? (
+          <div className="text-center py-6">
+            <p className="text-gray-500 mb-4">아직 생성한 테마가 없습니다</p>
+            <Button onClick={() => router.push('/themes/new')}>
+              새 테마 만들기
+            </Button>
+          </div>
+        ) : (
+          <>
+            <p className="text-sm text-gray-500 mb-3">추가할 테마를 선택하세요</p>
+            {themes.map((theme) => (
+              <button
+                key={theme.id}
+                onClick={() => onSelectTheme(theme.id)}
+                className="w-full p-3 text-left border rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  {theme.thumbnail ? (
+                    <img
+                      src={theme.thumbnail}
+                      alt={theme.title}
+                      className="w-12 h-12 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center">
+                      <span className="text-xl">🍽️</span>
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">{theme.title}</p>
+                    <p className="text-sm text-gray-500">
+                      {theme.restaurantCount}개 식당 · {theme.isPublic ? '공개' : '비공개'}
+                    </p>
+                  </div>
+                </div>
+              </button>
+            ))}
+            <div className="pt-3 border-t">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => router.push('/themes/new')}
+              >
+                + 새 테마 만들기
+              </Button>
+            </div>
+          </>
+        )}
       </div>
     </Modal>
   );

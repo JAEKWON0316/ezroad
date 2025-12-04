@@ -97,8 +97,8 @@ export default function EditThemePage() {
 
     try {
       setUploading(true);
-      const imageUrl = await fileApi.upload(file, 'restaurant');
-      setFormData({ ...formData, thumbnail: imageUrl });
+      const result = await fileApi.upload(file, 'restaurant');
+      setFormData({ ...formData, thumbnail: result.url });
     } catch (err) {
       console.error('이미지 업로드 실패:', err);
       alert('이미지 업로드에 실패했습니다');
