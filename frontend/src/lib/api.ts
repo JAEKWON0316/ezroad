@@ -18,6 +18,12 @@ import {
   MemberStats,
   RestaurantFilter,
   Mapping,
+  Theme,
+  ThemeDetail,
+  ThemeCreateRequest,
+  ThemeUpdateRequest,
+  ThemeAddRestaurantRequest,
+  ThemeReorderRequest,
 } from '@/types';
 
 // ==================== Auth API ====================
@@ -471,6 +477,78 @@ export const partnerApi = {
   // 특정 식당 상세 통계
   getRestaurantStats: async (restaurantId: number): Promise<RestaurantStats> => {
     const response = await api.get<RestaurantStats>(`/partner/restaurants/${restaurantId}/stats`);
+    return response.data;
+  },
+};
+
+// ==================== 테마/루트 API ====================
+export const themeApi = {
+  // 테마 생성
+  create: async (data: ThemeCreateRequest): Promise<Theme> => {
+    const response = await api.post<Theme>('/themes', data);
+    return response.data;
+  },
+
+  // 공개 테마 목록
+  getPublic: async (keyword?: string, page = 0, size = 12): Promise<PageResponse<Theme>> => {
+    const response = await api.get<PageResponse<Theme>>('/themes', {
+      params: { keyword, page, size },
+    });
+    return response.data;
+  },
+
+  // 내 테마 목록 (페이징)
+  getMy: async (page = 0, size = 12): Promise<PageResponse<Theme>> => {
+    const response = await api.get<PageResponse<Theme>>('/themes/my', {
+      params: { page, size },
+    });
+    return response.data;
+  },
+
+  // 내 테마 목록 (전체)
+  getMyAll: async (): Promise<Theme[]> => {
+    const response = await api.get<Theme[]>('/themes/my/all');
+    return response.data;
+  },
+
+  // 인기 테마 TOP 3
+  getTop: async (): Promise<Theme[]> => {
+    const response = await api.get<Theme[]>('/themes/top');
+    return response.data;
+  },
+
+  // 테마 상세
+  getDetail: async (id: number): Promise<ThemeDetail> => {
+    const response = await api.get<ThemeDetail>(`/themes/${id}`);
+    return response.data;
+  },
+
+  // 테마 수정
+  update: async (id: number, data: ThemeUpdateRequest): Promise<Theme> => {
+    const response = await api.put<Theme>(`/themes/${id}`, data);
+    return response.data;
+  },
+
+  // 테마 삭제
+  delete: async (id: number): Promise<void> => {
+    await api.delete(`/themes/${id}`);
+  },
+
+  // 테마에 식당 추가
+  addRestaurant: async (themeId: number, data: ThemeAddRestaurantRequest): Promise<ThemeDetail> => {
+    const response = await api.post<ThemeDetail>(`/themes/${themeId}/restaurants`, data);
+    return response.data;
+  },
+
+  // 테마에서 식당 제거
+  removeRestaurant: async (themeId: number, restaurantId: number): Promise<ThemeDetail> => {
+    const response = await api.delete<ThemeDetail>(`/themes/${themeId}/restaurants/${restaurantId}`);
+    return response.data;
+  },
+
+  // 식당 순서 변경
+  reorderRestaurants: async (themeId: number, data: ThemeReorderRequest): Promise<ThemeDetail> => {
+    const response = await api.put<ThemeDetail>(`/themes/${themeId}/restaurants/order`, data);
     return response.data;
   },
 };

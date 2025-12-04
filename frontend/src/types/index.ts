@@ -237,3 +237,62 @@ export interface Mapping {
   longitude: number;
   createdAt: string;
 }
+
+// Theme Types
+export interface ThemeMember {
+  id: number;
+  nickname: string;
+  profileImage?: string;
+}
+
+export interface Theme {
+  id: number;
+  member: ThemeMember;
+  title: string;
+  description?: string;
+  thumbnail?: string;
+  isPublic: boolean;
+  viewCount: number;
+  restaurantCount: number;
+  createdAt: string;
+}
+
+export interface ThemeRestaurant {
+  id: number;
+  restaurantId: number;
+  name: string;
+  category: string;
+  address: string;
+  thumbnail?: string;
+  avgRating: number;
+  reviewCount: number;
+  sortOrder: number;
+  memo?: string;
+}
+
+export interface ThemeDetail extends Theme {
+  restaurants: ThemeRestaurant[];
+}
+
+export interface ThemeCreateRequest {
+  title: string;
+  description?: string;
+  thumbnail?: string;
+  isPublic?: boolean;
+}
+
+export interface ThemeUpdateRequest {
+  title?: string;
+  description?: string;
+  thumbnail?: string;
+  isPublic?: boolean;
+}
+
+export interface ThemeAddRestaurantRequest {
+  restaurantId: number;
+  memo?: string;
+}
+
+export interface ThemeReorderRequest {
+  restaurantIds: number[];
+}
