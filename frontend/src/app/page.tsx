@@ -48,12 +48,18 @@ export default function HomePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [restaurantsRes, themesRes] = await Promise.all([
+        // 개별적으로 fetch하여 하나가 실패해도 다른 것은 표시
+        const [restaurantsResult, themesResult] = await Promise.allSettled([
           restaurantApi.getList({ sort: 'avgRating', size: 6, page: 0 }),
           themeApi.getTop(),
         ]);
-        setPopularRestaurants(restaurantsRes.content);
-        setTopThemes(themesRes);
+        
+        if (restaurantsResult.status === 'fulfilled') {
+          setPopularRestaurants(restaurantsResult.value.content);
+        }
+        if (themesResult.status === 'fulfilled') {
+          setTopThemes(themesResult.value);
+        }
       } catch (error) {
         console.error('Failed to fetch data:', error);
       } finally {
