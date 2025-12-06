@@ -6,6 +6,7 @@ import com.ezroad.dto.request.ThemeReorderRequest;
 import com.ezroad.dto.request.ThemeUpdateRequest;
 import com.ezroad.dto.response.ThemeDetailResponse;
 import com.ezroad.dto.response.ThemeResponse;
+import com.ezroad.service.ThemeLikeService;
 import com.ezroad.service.ThemeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ import java.util.Map;
 public class ThemeController {
 
     private final ThemeService themeService;
+    private final ThemeLikeService themeLikeService;
 
     @PostMapping
     public ResponseEntity<ThemeResponse> createTheme(
@@ -41,8 +43,9 @@ public class ThemeController {
     @GetMapping
     public ResponseEntity<Page<ThemeResponse>> getPublicThemes(
             @RequestParam(required = false) String keyword,
-            @PageableDefault(size = 12, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<ThemeResponse> response = themeService.getPublicThemes(keyword, pageable);
+            @RequestParam(required = false, defaultValue = "createdAt") String sort,
+            @PageableDefault(size = 12) Pageable pageable) {
+        Page<ThemeResponse> response = themeService.getPublicThemes(keyword, sort, pageable);
         return ResponseEntity.ok(response);
     }
 
@@ -117,5 +120,52 @@ public class ThemeController {
             @Valid @RequestBody ThemeReorderRequest request) {
         ThemeDetailResponse response = themeService.reorderRestaurants(memberId, id, request);
         return ResponseEntity.ok(response);
+    }
+
+    // ========== 좋아요 API ==========
+
+    @PostMapping("/{id}/like")
+    public ResponseEntity<Map<String, Object>> likeTheme(
+            @AuthenticationPrincipal Long memberId,
+            @PathVariable Long id) {
+        themeLikeService.likeTheme(id, memberId);
+        long likeCount = themeLikeService.getLikeCount(id);
+        return ResponseEntity.ok(Map.of(
+                "message", "좋아요가 등록되었습니다",
+                "likeCount", likeCount,
+                "isLiked", true
+        ));
+    }
+
+    @DeleteMapping("/{id}/like")
+    public ResponseEntity<Map<String, Object>> unlikeTheme(
+            @AuthenticationPrincipal Long memberId,
+            @PathVariable Long id) {
+        themeLikeService.unlikeTheme(id, memberId);
+        long likeCount = themeLikeService.getLikeCount(id);
+        return ResponseEntity.ok(Map.of(
+                "message", "좋아요가 취소되었습니다",
+                "likeCount", likeCount,
+                "isLiked", false
+        ));
+    }
+
+    @GetMapping("/{id}/like")
+    public ResponseEntity<Map<String, Object>> checkLike(
+            @AuthenticationPrincipal Long memberId,
+            @PathVariable Long id) {
+        boolean isLiked = memberId != null && themeLikeService.isLiked(id, memberId);
+        long likeCount = themeLikeService.getLikeCount(id);
+        return ResponseEntity.ok(Map.of(
+                "isLiked", isLiked,
+                "likeCount", likeCount
+        ));
+    }
+
+    @GetMapping("/my/liked")
+    public ResponseEntity<List<Long>> getMyLikedThemeIds(
+            @AuthenticationPrincipal Long memberId) {
+        List<Long> likedThemeIds = themeLikeService.getMyLikedThemeIds(memberId);
+        return ResponseEntity.ok(likedThemeIds);
     }
 }

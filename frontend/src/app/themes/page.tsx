@@ -18,18 +18,20 @@ function ThemeListContent() {
   const [totalPages, setTotalPages] = useState(0);
   const [keyword, setKeyword] = useState(searchParams.get('keyword') || '');
   const [searchInput, setSearchInput] = useState(searchParams.get('keyword') || '');
+  const [sort, setSort] = useState(searchParams.get('sort') || 'createdAt');
   
   const page = parseInt(searchParams.get('page') || '0');
 
   useEffect(() => {
     fetchThemes();
-  }, [page, keyword]);
+  }, [page, keyword, sort]);
 
   const fetchThemes = async () => {
     try {
       setLoading(true);
       const response: PageResponse<Theme> = await themeApi.getPublic(
-        keyword || undefined, 
+        keyword || undefined,
+        sort,
         page, 
         12
       );
@@ -45,12 +47,26 @@ function ThemeListContent() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setKeyword(searchInput);
-    router.push(`/themes?keyword=${encodeURIComponent(searchInput)}&page=0`);
+    const params = new URLSearchParams();
+    if (searchInput) params.set('keyword', searchInput);
+    params.set('sort', sort);
+    params.set('page', '0');
+    router.push(`/themes?${params.toString()}`);
+  };
+
+  const handleSortChange = (newSort: string) => {
+    setSort(newSort);
+    const params = new URLSearchParams();
+    if (keyword) params.set('keyword', keyword);
+    params.set('sort', newSort);
+    params.set('page', '0');
+    router.push(`/themes?${params.toString()}`);
   };
 
   const handlePageChange = (newPage: number) => {
     const params = new URLSearchParams();
     if (keyword) params.set('keyword', keyword);
+    params.set('sort', sort);
     params.set('page', String(newPage));
     router.push(`/themes?${params.toString()}`);
   };
@@ -73,24 +89,60 @@ function ThemeListContent() {
         )}
       </div>
 
-      {/* 검색 */}
-      <form onSubmit={handleSearch} className="mb-8">
+      {/* 검색 & 정렬 */}
+      <div className="flex flex-col md:flex-row gap-4 mb-8">
+        <form onSubmit={handleSearch} className="flex-1">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="테마 검색..."
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            />
+            <button
+              type="submit"
+              className="bg-gray-800 hover:bg-gray-900 text-white px-6 py-3 rounded-lg font-medium transition"
+            >
+              검색
+            </button>
+          </div>
+        </form>
+        
+        {/* 정렬 옵션 */}
         <div className="flex gap-2">
-          <input
-            type="text"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="테마 검색..."
-            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-          />
           <button
-            type="submit"
-            className="bg-gray-800 hover:bg-gray-900 text-white px-6 py-3 rounded-lg font-medium transition"
+            onClick={() => handleSortChange('createdAt')}
+            className={`px-4 py-3 rounded-lg font-medium transition ${
+              sort === 'createdAt'
+                ? 'bg-orange-500 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
           >
-            검색
+            최신순
+          </button>
+          <button
+            onClick={() => handleSortChange('viewCount')}
+            className={`px-4 py-3 rounded-lg font-medium transition ${
+              sort === 'viewCount'
+                ? 'bg-orange-500 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            인기순
+          </button>
+          <button
+            onClick={() => handleSortChange('likeCount')}
+            className={`px-4 py-3 rounded-lg font-medium transition ${
+              sort === 'likeCount'
+                ? 'bg-orange-500 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            좋아요순
           </button>
         </div>
-      </form>
+      </div>
 
       {/* 테마 목록 */}
       {loading ? (
@@ -186,7 +238,7 @@ function ThemeCard({ theme }: { theme: Theme }) {
             </p>
           )}
           
-          {/* 작성자 & 조회수 */}
+          {/* 작성자 & 통계 */}
           <div className="flex items-center justify-between text-sm text-gray-500">
             <div className="flex items-center gap-2">
               {theme.member.profileImage ? (
@@ -204,7 +256,10 @@ function ThemeCard({ theme }: { theme: Theme }) {
               )}
               <span>{theme.member.nickname}</span>
             </div>
-            <span>👁 {theme.viewCount}</span>
+            <div className="flex items-center gap-3">
+              <span>❤️ {theme.likeCount || 0}</span>
+              <span>👁 {theme.viewCount}</span>
+            </div>
           </div>
         </div>
       </div>

@@ -43,6 +43,9 @@ public class Theme {
     @Column(name = "view_count")
     private Integer viewCount = 0;
 
+    @Column(name = "like_count")
+    private Integer likeCount = 0;
+
     @OneToMany(mappedBy = "theme", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("sortOrder ASC")
     private List<ThemeRestaurant> themeRestaurants = new ArrayList<>();
@@ -64,6 +67,7 @@ public class Theme {
         this.thumbnail = thumbnail;
         this.isPublic = isPublic != null ? isPublic : true;
         this.viewCount = 0;
+        this.likeCount = 0;
     }
 
     public void update(String title, String description, String thumbnail, Boolean isPublic) {
@@ -75,6 +79,16 @@ public class Theme {
 
     public void incrementViewCount() {
         this.viewCount++;
+    }
+
+    public void incrementLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decrementLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
     }
 
     public int getRestaurantCount() {

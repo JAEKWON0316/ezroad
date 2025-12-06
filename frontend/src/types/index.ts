@@ -253,6 +253,7 @@ export interface Theme {
   thumbnail?: string;
   isPublic: boolean;
   viewCount: number;
+  likeCount: number;
   restaurantCount: number;
   createdAt: string;
 }

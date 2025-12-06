@@ -17,7 +17,10 @@ public interface ThemeRepository extends JpaRepository<Theme, Long> {
     
     List<Theme> findByMemberIdOrderByCreatedAtDesc(Long memberId);
 
-    // 공개 테마 목록
+    // 공개 테마 목록 (정렬은 Pageable에서 처리)
+    Page<Theme> findByIsPublicTrue(Pageable pageable);
+    
+    // 공개 테마 목록 (최신순)
     Page<Theme> findByIsPublicTrueOrderByCreatedAtDesc(Pageable pageable);
 
     // 공개 테마 검색
@@ -26,8 +29,11 @@ public interface ThemeRepository extends JpaRepository<Theme, Long> {
            "LOWER(t.description) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     Page<Theme> searchPublicThemes(@Param("keyword") String keyword, Pageable pageable);
 
-    // 인기 테마 TOP N
+    // 인기 테마 TOP N (조회수 기준)
     List<Theme> findTop3ByIsPublicTrueOrderByViewCountDesc();
+    
+    // 인기 테마 TOP N (좋아요 기준)
+    List<Theme> findTop3ByIsPublicTrueOrderByLikeCountDesc();
 
     // 테마 상세 (식당 목록 함께 조회)
     @Query("SELECT t FROM Theme t LEFT JOIN FETCH t.themeRestaurants tr " +

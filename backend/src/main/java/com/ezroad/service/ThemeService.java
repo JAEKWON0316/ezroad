@@ -20,7 +20,9 @@ import com.ezroad.repository.ThemeRestaurantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,9 +39,6 @@ public class ThemeService {
     private final MemberRepository memberRepository;
     private final RestaurantRepository restaurantRepository;
 
-    /**
-     * 테마 생성
-     */
     @Transactional
     public ThemeResponse createTheme(Long memberId, ThemeCreateRequest request) {
         Member member = memberRepository.findById(memberId)
@@ -57,9 +56,6 @@ public class ThemeService {
         return ThemeResponse.from(saved);
     }
 
-    /**
-     * 테마 수정
-     */
     @Transactional
     public ThemeResponse updateTheme(Long memberId, Long themeId, ThemeUpdateRequest request) {
         Theme theme = getThemeWithOwnerCheck(themeId, memberId);
@@ -68,26 +64,17 @@ public class ThemeService {
         return ThemeResponse.from(theme);
     }
 
-    /**
-     * 테마 삭제
-     */
     @Transactional
     public void deleteTheme(Long memberId, Long themeId) {
         Theme theme = getThemeWithOwnerCheck(themeId, memberId);
         themeRepository.delete(theme);
     }
 
-    /**
-     * 내 테마 목록
-     */
     public Page<ThemeResponse> getMyThemes(Long memberId, Pageable pageable) {
         return themeRepository.findByMemberIdOrderByCreatedAtDesc(memberId, pageable)
                 .map(ThemeResponse::from);
     }
 
-    /**
-     * 내 테마 목록 (전체)
-     */
     public List<ThemeResponse> getMyThemesList(Long memberId) {
         return themeRepository.findByMemberIdOrderByCreatedAtDesc(memberId)
                 .stream()
@@ -96,20 +83,31 @@ public class ThemeService {
     }
 
     /**
-     * 공개 테마 목록
+     * 공개 테마 목록 (정렬 옵션 지원)
+     * @param sort: createdAt(최신순), viewCount(인기순), likeCount(좋아요순)
      */
-    public Page<ThemeResponse> getPublicThemes(String keyword, Pageable pageable) {
+    public Page<ThemeResponse> getPublicThemes(String keyword, String sort, Pageable pageable) {
+        // 정렬 필드 결정
+        String sortField = switch (sort) {
+            case "viewCount" -> "viewCount";
+            case "likeCount" -> "likeCount";
+            default -> "createdAt";
+        };
+        
+        Pageable sortedPageable = PageRequest.of(
+            pageable.getPageNumber(), 
+            pageable.getPageSize(), 
+            Sort.by(Sort.Direction.DESC, sortField)
+        );
+
         if (keyword != null && !keyword.isBlank()) {
-            return themeRepository.searchPublicThemes(keyword, pageable)
+            return themeRepository.searchPublicThemes(keyword, sortedPageable)
                     .map(ThemeResponse::from);
         }
-        return themeRepository.findByIsPublicTrueOrderByCreatedAtDesc(pageable)
+        return themeRepository.findByIsPublicTrue(sortedPageable)
                 .map(ThemeResponse::from);
     }
 
-    /**
-     * 인기 테마 TOP 3
-     */
     public List<ThemeResponse> getTopThemes() {
         return themeRepository.findTop3ByIsPublicTrueOrderByViewCountDesc()
                 .stream()
@@ -117,20 +115,15 @@ public class ThemeService {
                 .toList();
     }
 
-    /**
-     * 테마 상세 조회
-     */
     @Transactional
     public ThemeDetailResponse getThemeDetail(Long themeId, Long memberId) {
         Theme theme = themeRepository.findByIdWithRestaurants(themeId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 테마입니다"));
 
-        // 비공개 테마는 본인만 조회 가능
         if (!theme.getIsPublic() && !theme.getMember().getId().equals(memberId)) {
             throw new UnauthorizedException("비공개 테마입니다");
         }
 
-        // 조회수 증가 (본인 제외)
         if (memberId == null || !theme.getMember().getId().equals(memberId)) {
             theme.incrementViewCount();
         }
@@ -138,9 +131,6 @@ public class ThemeService {
         return ThemeDetailResponse.from(theme);
     }
 
-    /**
-     * 테마에 식당 추가
-     */
     @Transactional
     public ThemeDetailResponse addRestaurantToTheme(Long memberId, Long themeId, 
                                                      ThemeAddRestaurantRequest request) {
@@ -149,12 +139,10 @@ public class ThemeService {
         Restaurant restaurant = restaurantRepository.findById(request.getRestaurantId())
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 식당입니다"));
 
-        // 이미 추가된 식당인지 확인
         if (themeRestaurantRepository.existsByThemeIdAndRestaurantId(themeId, request.getRestaurantId())) {
             throw new DuplicateResourceException("이미 테마에 추가된 식당입니다");
         }
 
-        // 마지막 순서 + 1
         Integer maxOrder = themeRestaurantRepository.findMaxSortOrderByThemeId(themeId);
         
         ThemeRestaurant themeRestaurant = ThemeRestaurant.builder()
@@ -166,15 +154,11 @@ public class ThemeService {
 
         themeRestaurantRepository.save(themeRestaurant);
 
-        // 새로 조회해서 반환
         Theme updatedTheme = themeRepository.findByIdWithRestaurants(themeId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 테마입니다"));
         return ThemeDetailResponse.from(updatedTheme);
     }
 
-    /**
-     * 테마에서 식당 제거
-     */
     @Transactional
     public ThemeDetailResponse removeRestaurantFromTheme(Long memberId, Long themeId, Long restaurantId) {
         getThemeWithOwnerCheck(themeId, memberId);
@@ -185,15 +169,11 @@ public class ThemeService {
 
         themeRestaurantRepository.delete(themeRestaurant);
 
-        // 새로 조회해서 반환
         Theme updatedTheme = themeRepository.findByIdWithRestaurants(themeId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 테마입니다"));
         return ThemeDetailResponse.from(updatedTheme);
     }
 
-    /**
-     * 식당 순서 변경
-     */
     @Transactional
     public ThemeDetailResponse reorderRestaurants(Long memberId, Long themeId, ThemeReorderRequest request) {
         getThemeWithOwnerCheck(themeId, memberId);
@@ -201,7 +181,6 @@ public class ThemeService {
         List<ThemeRestaurant> themeRestaurants = themeRestaurantRepository
                 .findByThemeIdOrderBySortOrderAsc(themeId);
 
-        // 새로운 순서대로 업데이트
         List<Long> newOrder = request.getRestaurantIds();
         for (ThemeRestaurant tr : themeRestaurants) {
             int newIndex = newOrder.indexOf(tr.getRestaurant().getId());
@@ -210,15 +189,11 @@ public class ThemeService {
             }
         }
 
-        // 새로 조회해서 반환
         Theme updatedTheme = themeRepository.findByIdWithRestaurants(themeId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 테마입니다"));
         return ThemeDetailResponse.from(updatedTheme);
     }
 
-    /**
-     * 소유권 체크
-     */
     private Theme getThemeWithOwnerCheck(Long themeId, Long memberId) {
         Theme theme = themeRepository.findById(themeId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 테마입니다"));

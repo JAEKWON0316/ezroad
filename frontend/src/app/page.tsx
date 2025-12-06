@@ -357,7 +357,10 @@ function ThemeCard({ theme }: { theme: Theme }) {
           )}
           <div className="flex items-center justify-between text-sm text-gray-400">
             <span>{theme.member.nickname}</span>
-            <span>👁 {theme.viewCount}</span>
+            <div className="flex items-center gap-3">
+              <span>❤️ {theme.likeCount || 0}</span>
+              <span>👁 {theme.viewCount}</span>
+            </div>
           </div>
         </div>
       </div>

@@ -17,6 +17,11 @@ export default function ThemeDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  
+  // 좋아요 상태
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [likeLoading, setLikeLoading] = useState(false);
 
   const themeId = Number(params.id);
   const isOwner = user && theme && user.id === theme.member.id;
@@ -24,6 +29,13 @@ export default function ThemeDetailPage() {
   useEffect(() => {
     fetchTheme();
   }, [themeId]);
+
+  useEffect(() => {
+    if (theme) {
+      setLikeCount(theme.likeCount || 0);
+      checkLikeStatus();
+    }
+  }, [theme, isAuthenticated]);
 
   const fetchTheme = async () => {
     try {
@@ -42,6 +54,42 @@ export default function ThemeDetailPage() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkLikeStatus = async () => {
+    try {
+      const data = await themeApi.checkLike(themeId);
+      setIsLiked(data.isLiked);
+      setLikeCount(data.likeCount);
+    } catch (err) {
+      console.error('좋아요 상태 확인 실패:', err);
+    }
+  };
+
+  const handleLikeToggle = async () => {
+    if (!isAuthenticated) {
+      alert('로그인이 필요합니다');
+      router.push('/login');
+      return;
+    }
+
+    try {
+      setLikeLoading(true);
+      if (isLiked) {
+        const result = await themeApi.unlike(themeId);
+        setIsLiked(false);
+        setLikeCount(result.likeCount);
+      } else {
+        const result = await themeApi.like(themeId);
+        setIsLiked(true);
+        setLikeCount(result.likeCount);
+      }
+    } catch (err: any) {
+      console.error('좋아요 처리 실패:', err);
+      alert(err.response?.data?.message || '좋아요 처리에 실패했습니다');
+    } finally {
+      setLikeLoading(false);
     }
   };
 
@@ -118,24 +166,45 @@ export default function ThemeDetailPage() {
             </div>
           </div>
 
-          {/* 소유자 액션 버튼 */}
-          {isOwner && (
-            <div className="flex gap-2">
-              <Link
-                href={`/themes/${themeId}/edit`}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-              >
-                수정
-              </Link>
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 transition"
-              >
-                {deleting ? '삭제 중...' : '삭제'}
-              </button>
-            </div>
-          )}
+          {/* 액션 버튼 */}
+          <div className="flex gap-2">
+            {/* 좋아요 버튼 */}
+            <button
+              onClick={handleLikeToggle}
+              disabled={likeLoading}
+              className={`px-4 py-2 rounded-lg font-medium transition flex items-center gap-2 ${
+                isLiked
+                  ? 'bg-red-500 text-white hover:bg-red-600'
+                  : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+              } disabled:opacity-50`}
+            >
+              {likeLoading ? (
+                <span className="animate-spin">⏳</span>
+              ) : (
+                <span>{isLiked ? '❤️' : '🤍'}</span>
+              )}
+              <span>{likeCount}</span>
+            </button>
+
+            {/* 소유자 액션 버튼 */}
+            {isOwner && (
+              <>
+                <Link
+                  href={`/themes/${themeId}/edit`}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                >
+                  수정
+                </Link>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 transition"
+                >
+                  {deleting ? '삭제 중...' : '삭제'}
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
 

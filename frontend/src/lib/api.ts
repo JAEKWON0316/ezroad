@@ -489,10 +489,10 @@ export const themeApi = {
     return response.data;
   },
 
-  // 공개 테마 목록
-  getPublic: async (keyword?: string, page = 0, size = 12): Promise<PageResponse<Theme>> => {
+  // 공개 테마 목록 (정렬: createdAt, viewCount, likeCount)
+  getPublic: async (keyword?: string, sort = 'createdAt', page = 0, size = 12): Promise<PageResponse<Theme>> => {
     const response = await api.get<PageResponse<Theme>>('/themes', {
-      params: { keyword, page, size },
+      params: { keyword, sort, page, size },
     });
     return response.data;
   },
@@ -549,6 +549,32 @@ export const themeApi = {
   // 식당 순서 변경
   reorderRestaurants: async (themeId: number, data: ThemeReorderRequest): Promise<ThemeDetail> => {
     const response = await api.put<ThemeDetail>(`/themes/${themeId}/restaurants/order`, data);
+    return response.data;
+  },
+
+  // ========== 좋아요 API ==========
+  
+  // 테마 좋아요
+  like: async (themeId: number): Promise<{ message: string; likeCount: number; isLiked: boolean }> => {
+    const response = await api.post<{ message: string; likeCount: number; isLiked: boolean }>(`/themes/${themeId}/like`);
+    return response.data;
+  },
+
+  // 테마 좋아요 취소
+  unlike: async (themeId: number): Promise<{ message: string; likeCount: number; isLiked: boolean }> => {
+    const response = await api.delete<{ message: string; likeCount: number; isLiked: boolean }>(`/themes/${themeId}/like`);
+    return response.data;
+  },
+
+  // 테마 좋아요 여부 확인
+  checkLike: async (themeId: number): Promise<{ isLiked: boolean; likeCount: number }> => {
+    const response = await api.get<{ isLiked: boolean; likeCount: number }>(`/themes/${themeId}/like`);
+    return response.data;
+  },
+
+  // 내가 좋아요한 테마 ID 목록
+  getMyLikedIds: async (): Promise<number[]> => {
+    const response = await api.get<number[]>('/themes/my/liked');
     return response.data;
   },
 };

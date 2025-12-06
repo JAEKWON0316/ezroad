@@ -17,6 +17,7 @@ public class ThemeResponse {
     private String thumbnail;
     private Boolean isPublic;
     private Integer viewCount;
+    private Integer likeCount;
     private Integer restaurantCount;
     private LocalDateTime createdAt;
 
@@ -33,6 +34,7 @@ public class ThemeResponse {
                 .thumbnail(theme.getThumbnail())
                 .isPublic(theme.getIsPublic())
                 .viewCount(theme.getViewCount())
+                .likeCount(theme.getLikeCount())
                 .restaurantCount(theme.getRestaurantCount())
                 .createdAt(theme.getCreatedAt())
                 .build();
