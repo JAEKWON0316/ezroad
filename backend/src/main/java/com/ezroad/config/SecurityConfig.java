@@ -38,11 +38,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/restaurants/**").permitAll()
                         .requestMatchers("/api/menus/**").permitAll()
                         .requestMatchers("/api/reviews/**").permitAll()
-                        // 테마: 공개 조회 허용
-                        .requestMatchers(HttpMethod.GET, "/api/themes").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/themes/top").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/themes/{id}").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/themes/{id}/like").permitAll()
+                        // 테마: 공개 조회 전체 허용
+                        .requestMatchers(HttpMethod.GET, "/api/themes/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
