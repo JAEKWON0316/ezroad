@@ -55,3 +55,8 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+// plain jar 생성 비활성화 (Docker 빌드 시 단일 JAR만 생성)
+jar {
+    enabled = false
+}
