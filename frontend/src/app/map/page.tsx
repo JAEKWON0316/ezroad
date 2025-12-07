@@ -219,7 +219,10 @@ function MapPageContent() {
     const kakao = (window as any).kakao;
 
     // 기존 마커 & 폴리라인 제거
-    markers.forEach((marker) => marker.setMap(null));
+    markers.forEach((m) => {
+      if (m.marker) m.marker.setMap(null);
+      if (m.overlay) m.overlay.setMap(null);
+    });
     if (polyline) {
       polyline.setMap(null);
     }
