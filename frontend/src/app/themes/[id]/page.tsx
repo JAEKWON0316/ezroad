@@ -168,6 +168,16 @@ export default function ThemeDetailPage() {
 
           {/* 액션 버튼 */}
           <div className="flex gap-2">
+            {/* 지도에서 보기 버튼 */}
+            {theme.restaurantCount > 0 && (
+              <Link
+                href={`/map?theme=${themeId}`}
+                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition flex items-center gap-2"
+              >
+                🗺️ 지도에서 보기
+              </Link>
+            )}
+
             {/* 좋아요 버튼 */}
             <button
               onClick={handleLikeToggle}

@@ -68,6 +68,8 @@ public class ThemeDetailResponse {
         private Integer reviewCount;
         private Integer sortOrder;
         private String memo;
+        private BigDecimal latitude;
+        private BigDecimal longitude;
 
         public static ThemeRestaurantResponse from(ThemeRestaurant tr) {
             return ThemeRestaurantResponse.builder()
@@ -81,6 +83,8 @@ public class ThemeDetailResponse {
                     .reviewCount(tr.getRestaurant().getReviewCount())
                     .sortOrder(tr.getSortOrder())
                     .memo(tr.getMemo())
+                    .latitude(tr.getRestaurant().getLatitude())
+                    .longitude(tr.getRestaurant().getLongitude())
                     .build();
         }
     }

@@ -269,6 +269,8 @@ export interface ThemeRestaurant {
   reviewCount: number;
   sortOrder: number;
   memo?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface ThemeDetail extends Theme {
