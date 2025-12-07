@@ -1,9 +1,14 @@
 package com.ezroad.controller;
 
 import com.ezroad.dto.response.MemberResponse;
+import com.ezroad.dto.response.ReportResponse;
 import com.ezroad.dto.response.RestaurantResponse;
 import com.ezroad.dto.response.ReviewResponse;
+import com.ezroad.dto.response.SearchKeywordResponse;
+import com.ezroad.entity.Report.ReportStatus;
 import com.ezroad.service.AdminService;
+import com.ezroad.service.ReportService;
+import com.ezroad.service.SearchKeywordService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,8 +16,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -22,6 +29,8 @@ import java.util.Map;
 public class AdminController {
 
     private final AdminService adminService;
+    private final ReportService reportService;
+    private final SearchKeywordService searchKeywordService;
 
     // ==================== 대시보드 ====================
 
@@ -105,4 +114,53 @@ public class AdminController {
 
     public record RoleUpdateRequest(String role) {}
     public record StatusUpdateRequest(String status) {}
+    public record AdminNoteRequest(String adminNote) {}
+
+    // ==================== 신고 관리 ====================
+
+    @GetMapping("/reports")
+    public ResponseEntity<Page<ReportResponse>> getReports(
+            @RequestParam(required = false) ReportStatus status,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(reportService.getReports(status, pageable));
+    }
+
+    @GetMapping("/reports/{id}")
+    public ResponseEntity<ReportResponse> getReport(@PathVariable Long id) {
+        return ResponseEntity.ok(reportService.getReport(id));
+    }
+
+    @GetMapping("/reports/stats")
+    public ResponseEntity<Map<String, Long>> getReportStats() {
+        return ResponseEntity.ok(reportService.getReportStats());
+    }
+
+    @PatchMapping("/reports/{id}/resolve")
+    public ResponseEntity<ReportResponse> resolveReport(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Long adminId,
+            @RequestBody AdminNoteRequest request) {
+        return ResponseEntity.ok(reportService.resolveReport(id, adminId, request.adminNote()));
+    }
+
+    @PatchMapping("/reports/{id}/dismiss")
+    public ResponseEntity<ReportResponse> dismissReport(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Long adminId,
+            @RequestBody AdminNoteRequest request) {
+        return ResponseEntity.ok(reportService.dismissReport(id, adminId, request.adminNote()));
+    }
+
+    // ==================== 키워드 관리 ====================
+
+    @GetMapping("/keywords")
+    public ResponseEntity<List<SearchKeywordResponse>> getAllKeywords() {
+        return ResponseEntity.ok(searchKeywordService.getAllKeywords());
+    }
+
+    @DeleteMapping("/keywords/{id}")
+    public ResponseEntity<Void> deleteKeyword(@PathVariable Long id) {
+        searchKeywordService.deleteKeyword(id);
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -16,6 +16,7 @@ import {
   Calendar,
   Users,
   MessageSquare,
+  Flag,
 } from 'lucide-react';
 import { restaurantApi, menuApi, reviewApi, followApi, themeApi } from '@/lib/api';
 import { Restaurant, Menu, Review, PageResponse, Theme } from '@/types';
@@ -24,6 +25,7 @@ import Button from '@/components/common/Button';
 import Loading from '@/components/common/Loading';
 import RatingStars from '@/components/common/RatingStars';
 import Modal from '@/components/common/Modal';
+import ReportModal from '@/components/common/ReportModal';
 import toast from 'react-hot-toast';
 
 export default function RestaurantDetailPage() {
@@ -40,6 +42,7 @@ export default function RestaurantDetailPage() {
   const [activeTab, setActiveTab] = useState<'info' | 'menu' | 'reviews'>('info');
   const [showReservationModal, setShowReservationModal] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [myThemes, setMyThemes] = useState<Theme[]>([]);
   const [reviewPage, setReviewPage] = useState(0);
   const [hasMoreReviews, setHasMoreReviews] = useState(true);
@@ -226,6 +229,15 @@ export default function RestaurantDetailPage() {
           >
             <Share2 className="h-5 w-5" />
           </button>
+          {isAuthenticated && (
+            <button
+              onClick={() => setShowReportModal(true)}
+              className="p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white"
+              title="신고하기"
+            >
+              <Flag className="h-5 w-5" />
+            </button>
+          )}
           <button
             onClick={handleFollow}
             className={`p-2 rounded-full ${
@@ -449,6 +461,15 @@ export default function RestaurantDetailPage() {
         themes={myThemes}
         onSelectTheme={handleAddToTheme}
         restaurantName={restaurant.name}
+      />
+
+      {/* Report Modal */}
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        targetType="RESTAURANT"
+        targetId={restaurantId}
+        targetName={restaurant.name}
       />
     </div>
   );

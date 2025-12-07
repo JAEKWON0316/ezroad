@@ -438,6 +438,47 @@ export const adminApi = {
   deleteReview: async (id: number): Promise<void> => {
     await api.delete(`/admin/reviews/${id}`);
   },
+
+  // 신고 목록
+  getReports: async (params: { status?: ReportStatus; page?: number; size?: number }): Promise<PageResponse<Report>> => {
+    const response = await api.get<PageResponse<Report>>('/admin/reports', { params });
+    return response.data;
+  },
+
+  // 신고 상세
+  getReport: async (id: number): Promise<Report> => {
+    const response = await api.get<Report>(`/admin/reports/${id}`);
+    return response.data;
+  },
+
+  // 신고 통계
+  getReportStats: async (): Promise<Record<string, number>> => {
+    const response = await api.get<Record<string, number>>('/admin/reports/stats');
+    return response.data;
+  },
+
+  // 신고 처리
+  resolveReport: async (id: number, adminNote?: string): Promise<Report> => {
+    const response = await api.patch<Report>(`/admin/reports/${id}/resolve`, { adminNote });
+    return response.data;
+  },
+
+  // 신고 기각
+  dismissReport: async (id: number, adminNote?: string): Promise<Report> => {
+    const response = await api.patch<Report>(`/admin/reports/${id}/dismiss`, { adminNote });
+    return response.data;
+  },
+
+  // 키워드 목록
+  getKeywords: async (): Promise<SearchKeyword[]> => {
+    const response = await api.get<SearchKeyword[]>('/admin/keywords');
+    return response.data;
+  },
+
+  // 키워드 삭제
+  deleteKeyword: async (id: number): Promise<void> => {
+    await api.delete(`/admin/keywords/${id}`);
+  },
 };
 
 // ==================== 파트너(사업자) API ====================
@@ -604,6 +645,43 @@ export const searchApi = {
   // 최근 검색어 TOP 10
   getRecent: async (): Promise<SearchKeyword[]> => {
     const response = await api.get<SearchKeyword[]>('/search/recent');
+    return response.data;
+  },
+};
+
+// ========================================
+// 신고 API
+// ========================================
+export type ReportTargetType = 'REVIEW' | 'RESTAURANT' | 'MEMBER';
+export type ReportStatus = 'PENDING' | 'RESOLVED' | 'DISMISSED';
+
+export interface Report {
+  id: number;
+  targetType: ReportTargetType;
+  targetId: number;
+  reason: string;
+  description?: string;
+  status: ReportStatus;
+  createdAt: string;
+  resolvedAt?: string;
+  adminNote?: string;
+  reporterId: number;
+  reporterNickname: string;
+  resolvedById?: number;
+  resolvedByNickname?: string;
+}
+
+export interface ReportCreateRequest {
+  targetType: ReportTargetType;
+  targetId: number;
+  reason: string;
+  description?: string;
+}
+
+export const reportApi = {
+  // 신고 생성
+  create: async (data: ReportCreateRequest): Promise<Report> => {
+    const response = await api.post<Report>('/reports', data);
     return response.data;
   },
 };

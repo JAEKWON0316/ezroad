@@ -3,13 +3,14 @@
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronLeft, Star, MapPin, Eye, Calendar, Edit, Trash2, ThumbsUp, Share2 } from 'lucide-react';
+import { ChevronLeft, Star, MapPin, Eye, Calendar, Edit, Trash2, ThumbsUp, Share2, Flag } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { reviewApi } from '@/lib/api';
 import { Review } from '@/types';
 import Button from '@/components/common/Button';
 import Loading from '@/components/common/Loading';
 import Modal from '@/components/common/Modal';
+import ReportModal from '@/components/common/ReportModal';
 import toast from 'react-hot-toast';
 
 export default function ReviewDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -22,6 +23,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
   const [deleteModal, setDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [reportModal, setReportModal] = useState(false);
 
   useEffect(() => {
     const fetchReview = async () => {
@@ -106,6 +108,15 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
             <button onClick={handleShare} className="p-2 hover:bg-gray-100 rounded-full">
               <Share2 className="h-5 w-5 text-gray-600" />
             </button>
+            {isAuthenticated && !isOwner && (
+              <button 
+                onClick={() => setReportModal(true)}
+                className="p-2 hover:bg-red-50 rounded-full"
+                title="신고하기"
+              >
+                <Flag className="h-5 w-5 text-gray-600" />
+              </button>
+            )}
             {isOwner && (
               <>
                 <Link href={`/reviews/${id}/edit`}>
@@ -266,6 +277,15 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
           </div>
         </div>
       </Modal>
+
+      {/* Report Modal */}
+      <ReportModal
+        isOpen={reportModal}
+        onClose={() => setReportModal(false)}
+        targetType="REVIEW"
+        targetId={parseInt(id)}
+        targetName={review.title || '리뷰'}
+      />
     </div>
   );
 }
