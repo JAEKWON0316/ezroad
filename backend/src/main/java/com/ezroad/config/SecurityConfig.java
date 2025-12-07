@@ -40,6 +40,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/reviews/**").permitAll()
                         // 테마: 공개 조회 전체 허용
                         .requestMatchers(HttpMethod.GET, "/api/themes/**").permitAll()
+                        // 검색: 인기 검색어 조회 허용
+                        .requestMatchers("/api/search/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

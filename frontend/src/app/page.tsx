@@ -14,8 +14,9 @@ import {
   Soup,
   Fish,
   Beef,
+  TrendingUp,
 } from 'lucide-react';
-import { restaurantApi, themeApi } from '@/lib/api';
+import { restaurantApi, themeApi, searchApi, SearchKeyword } from '@/lib/api';
 import { Restaurant, Theme } from '@/types';
 import Button from '@/components/common/Button';
 import SearchBar from '@/components/common/SearchBar';
@@ -42,6 +43,7 @@ const categories = [
 export default function HomePage() {
   const [popularRestaurants, setPopularRestaurants] = useState<Restaurant[]>([]);
   const [topThemes, setTopThemes] = useState<Theme[]>([]);
+  const [popularKeywords, setPopularKeywords] = useState<SearchKeyword[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -49,9 +51,10 @@ export default function HomePage() {
     const fetchData = async () => {
       try {
         // 개별적으로 fetch하여 하나가 실패해도 다른 것은 표시
-        const [restaurantsResult, themesResult] = await Promise.allSettled([
+        const [restaurantsResult, themesResult, keywordsResult] = await Promise.allSettled([
           restaurantApi.getList({ sort: 'avgRating', size: 6, page: 0 }),
           themeApi.getTop(),
+          searchApi.getPopular(),
         ]);
         
         if (restaurantsResult.status === 'fulfilled') {
@@ -59,6 +62,9 @@ export default function HomePage() {
         }
         if (themesResult.status === 'fulfilled') {
           setTopThemes(themesResult.value);
+        }
+        if (keywordsResult.status === 'fulfilled') {
+          setPopularKeywords(keywordsResult.value);
         }
       } catch (error) {
         console.error('Failed to fetch data:', error);
@@ -70,8 +76,17 @@ export default function HomePage() {
     fetchData();
   }, []);
 
-  const handleSearch = (query: string) => {
+  const handleSearch = async (query: string) => {
+    if (query.trim()) {
+      // 검색어 기록 (비동기, 에러 무시)
+      searchApi.record(query).catch(() => {});
+    }
     window.location.href = `/restaurants?keyword=${encodeURIComponent(query)}`;
+  };
+
+  const handleKeywordClick = (keyword: string) => {
+    setSearchQuery(keyword);
+    handleSearch(keyword);
   };
 
   return (
@@ -101,6 +116,28 @@ export default function HomePage() {
                   className="w-full"
                 />
               </div>
+              
+              {/* 인기 검색어 */}
+              {popularKeywords.length > 0 && (
+                <div className="mt-4">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <TrendingUp className="h-4 w-4 text-orange-200" />
+                    <span className="text-sm text-orange-200">인기 검색어</span>
+                  </div>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {popularKeywords.slice(0, 8).map((kw, index) => (
+                      <button
+                        key={kw.id}
+                        onClick={() => handleKeywordClick(kw.keyword)}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-full text-sm transition-colors"
+                      >
+                        <span className="text-orange-200 font-medium">{index + 1}</span>
+                        <span>{kw.keyword}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Quick Links */}

@@ -578,3 +578,32 @@ export const themeApi = {
     return response.data;
   },
 };
+
+// ========================================
+// 검색 API
+// ========================================
+export interface SearchKeyword {
+  id: number;
+  keyword: string;
+  searchCount: number;
+  lastSearchedAt: string;
+}
+
+export const searchApi = {
+  // 검색어 기록
+  record: async (keyword: string): Promise<void> => {
+    await api.post('/search/record', { keyword });
+  },
+
+  // 인기 검색어 TOP 10
+  getPopular: async (): Promise<SearchKeyword[]> => {
+    const response = await api.get<SearchKeyword[]>('/search/popular');
+    return response.data;
+  },
+
+  // 최근 검색어 TOP 10
+  getRecent: async (): Promise<SearchKeyword[]> => {
+    const response = await api.get<SearchKeyword[]>('/search/recent');
+    return response.data;
+  },
+};

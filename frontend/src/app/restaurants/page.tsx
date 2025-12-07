@@ -13,7 +13,7 @@ import {
   ChevronDown,
   Heart,
 } from 'lucide-react';
-import { restaurantApi, followApi } from '@/lib/api';
+import { restaurantApi, followApi, searchApi } from '@/lib/api';
 import { Restaurant, PageResponse } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/common/Button';
@@ -56,6 +56,11 @@ function RestaurantsContent() {
   const fetchRestaurants = useCallback(async () => {
     setIsLoading(true);
     try {
+      // 검색어가 있으면 기록 (비동기, 에러 무시)
+      if (keyword && keyword.trim().length >= 2) {
+        searchApi.record(keyword).catch(() => {});
+      }
+      
       const response: PageResponse<Restaurant> = await restaurantApi.getList({
         keyword: keyword || undefined,
         category: category === '전체' ? undefined : category,
