@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Search, MapPin, Navigation, Star, Utensils, X, ChevronRight, ChevronLeft, Layers, Route } from 'lucide-react';
+import { Search, MapPin, Navigation, Star, Utensils, X, ChevronRight, Layers, Route } from 'lucide-react';
 import { restaurantApi, themeApi } from '@/lib/api';
 import { Restaurant, Theme, ThemeDetail } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/common/Button';
 import Loading from '@/components/common/Loading';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function MapPage() {
   return (
@@ -22,7 +23,7 @@ function MapPageContent() {
   const searchParams = useSearchParams();
   const themeIdParam = searchParams.get('theme');
   const { isAuthenticated } = useAuth();
-  
+
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<any>(null);
   const [markers, setMarkers] = useState<any[]>([]);
@@ -32,7 +33,7 @@ function MapPageContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPosition, setCurrentPosition] = useState<{ lat: number; lng: number } | null>(null);
-  
+
   // 테마 관련 상태
   const [showThemeSidebar, setShowThemeSidebar] = useState(false);
   const [myThemes, setMyThemes] = useState<Theme[]>([]);
@@ -98,8 +99,8 @@ function MapPageContent() {
       setIsLoading(true);
       const theme = await themeApi.getDetail(themeId);
       setSelectedTheme(theme);
-      
-      // 테마 식당들로 지도 업데이트 (ThemeRestaurant → Restaurant 변환)
+
+      // 테마 식당들로 지도 업데이트
       const themeRestaurants: Restaurant[] = theme.restaurants.map(tr => ({
         id: tr.restaurantId,
         name: tr.name,
@@ -115,7 +116,7 @@ function MapPageContent() {
         createdAt: '',
       }));
       setRestaurants(themeRestaurants);
-      
+
       // 첫 번째 식당으로 지도 이동
       if (themeRestaurants.length > 0 && map) {
         const first = themeRestaurants[0];
@@ -123,10 +124,10 @@ function MapPageContent() {
           const kakao = (window as any).kakao;
           const moveLatLng = new kakao.maps.LatLng(first.latitude, first.longitude);
           map.setCenter(moveLatLng);
-          map.setLevel(6); // 좀 더 넓게 보기
+          map.setLevel(6);
         }
       }
-      
+
       setShowThemeSidebar(false);
     } catch (error) {
       console.error('Failed to load theme:', error);
@@ -167,12 +168,12 @@ function MapPageContent() {
         (position) => {
           const { latitude, longitude } = position.coords;
           setCurrentPosition({ lat: latitude, lng: longitude });
-          
-          // URL에 테마 ID가 없을 때만 현재 위치로 이동
+
           if (!themeIdParam) {
             const moveLatLng = new kakao.maps.LatLng(latitude, longitude);
             newMap.setCenter(moveLatLng);
-            
+
+            // 현재위치 마커
             new kakao.maps.Marker({
               map: newMap,
               position: moveLatLng,
@@ -213,7 +214,7 @@ function MapPageContent() {
     }
   }, []);
 
-  // 마커 업데이트 (테마 모드일 때 순서 번호 표시)
+  // 마커 업데이트
   useEffect(() => {
     if (!map || restaurants.length === 0) return;
     const kakao = (window as any).kakao;
@@ -240,14 +241,14 @@ function MapPageContent() {
       pathCoords.push(position);
 
       let marker;
-      
+
       // 테마 모드일 때 순서 번호 마커 사용
       if (selectedTheme) {
         const content = `
           <div style="
-            width: 30px; 
-            height: 30px; 
-            background: #f97316; 
+            width: 32px; 
+            height: 32px; 
+            background: #F97316; 
             border-radius: 50%; 
             display: flex; 
             align-items: center; 
@@ -255,8 +256,10 @@ function MapPageContent() {
             color: white; 
             font-weight: bold;
             font-size: 14px;
-            border: 2px solid white;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            border: 3px solid white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+            font-family: sans-serif;
+            transition: transform 0.2s;
           ">${index + 1}</div>
         `;
         const customOverlay = new kakao.maps.CustomOverlay({
@@ -265,15 +268,14 @@ function MapPageContent() {
           yAnchor: 1,
         });
         customOverlay.setMap(map);
-        
-        // CustomOverlay는 클릭 이벤트가 없어서 일반 마커도 같이 생성 (투명)
+
         marker = new kakao.maps.Marker({
           map,
           position,
           title: restaurant.name,
           opacity: 0,
         });
-        
+
         newMarkers.push({ marker, overlay: customOverlay });
       } else {
         marker = new kakao.maps.Marker({
@@ -295,9 +297,9 @@ function MapPageContent() {
       const newPolyline = new kakao.maps.Polyline({
         map,
         path: pathCoords,
-        strokeWeight: 4,
-        strokeColor: '#f97316',
-        strokeOpacity: 0.7,
+        strokeWeight: 5,
+        strokeColor: '#F97316',
+        strokeOpacity: 0.8,
         strokeStyle: 'solid',
       });
       setPolyline(newPolyline);
@@ -305,7 +307,6 @@ function MapPageContent() {
 
     setMarkers(newMarkers);
 
-    // cleanup
     return () => {
       newMarkers.forEach((m) => {
         m.marker.setMap(null);
@@ -361,93 +362,95 @@ function MapPageContent() {
   };
 
   return (
-    <div className="h-[calc(100vh-64px)] relative">
-      {/* Search Bar */}
-      <div className="absolute top-4 left-4 right-4 z-10 max-w-md">
-        <form onSubmit={handleSearch} className="flex gap-2">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+    <div className="h-[calc(100vh-64px)] relative bg-gray-100">
+      {/* Search Bar - Glassmorphism */}
+      <div className="absolute top-4 left-4 right-4 md:left-8 md:right-auto md:w-96 z-10">
+        <form onSubmit={handleSearch} className="relative group">
+          <div className="absolute inset-0 bg-white/40 backdrop-blur-xl rounded-2xl shadow-lg border border-white/40 transition-all duration-300 group-focus-within:bg-white/60"></div>
+          <div className="relative flex items-center p-2">
+            <Search className="h-5 w-5 text-gray-500 ml-2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="장소, 식당 검색"
-              className="w-full pl-10 pr-4 py-3 bg-white rounded-xl shadow-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full pl-3 pr-4 py-2 bg-transparent border-none text-gray-800 placeholder-gray-500 focus:ring-0 text-sm font-medium"
             />
+            <Button type="submit" size="sm" className="rounded-xl shadow-none">
+              검색
+            </Button>
           </div>
-          <Button type="submit" className="shadow-lg">
-            검색
-          </Button>
         </form>
       </div>
 
       {/* Theme Toggle Button */}
       <button
         onClick={() => setShowThemeSidebar(!showThemeSidebar)}
-        className="absolute top-20 left-4 z-10 p-3 bg-white rounded-full shadow-lg hover:bg-gray-50 flex items-center gap-2"
+        className="absolute top-20 left-4 md:left-8 z-10 h-10 px-3 bg-white/90 backdrop-blur-md rounded-full shadow-lg hover:bg-white flex items-center gap-2 border border-white/50 transition-all"
       >
-        <Layers className="h-5 w-5 text-orange-500" />
-        <span className="text-sm font-medium pr-1">테마</span>
+        <div className="bg-orange-100 p-1 rounded-full"><Layers className="h-4 w-4 text-orange-600" /></div>
+        <span className="text-sm font-medium text-gray-700 pr-1">테마 보기</span>
       </button>
 
       {/* Selected Theme Badge */}
       {selectedTheme && (
-        <div className="absolute top-20 left-32 z-10 flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-full shadow-lg">
+        <div className="absolute top-20 left-40 md:left-44 z-10 flex items-center gap-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white px-4 py-2 rounded-full shadow-lg animate-fade-in-up">
           <Route className="h-4 w-4" />
           <span className="text-sm font-medium">{selectedTheme.title}</span>
-          <button onClick={clearTheme} className="ml-1 hover:bg-orange-600 rounded-full p-0.5">
+          <button onClick={clearTheme} className="ml-1 hover:bg-white/20 rounded-full p-0.5 transition-colors">
             <X className="h-4 w-4" />
           </button>
         </div>
       )}
 
       {/* Theme Sidebar */}
-      <div className={`absolute top-0 left-0 h-full w-80 bg-white shadow-xl z-20 transition-transform duration-300 ${showThemeSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="p-4 border-b flex items-center justify-between">
-          <h2 className="font-semibold text-lg">테마 선택</h2>
-          <button onClick={() => setShowThemeSidebar(false)} className="p-1 hover:bg-gray-100 rounded">
-            <X className="h-5 w-5" />
+      <div className={`absolute top-0 left-0 h-full w-full md:w-96 bg-white/95 backdrop-blur-xl shadow-2xl z-20 transition-transform duration-300 transform ${showThemeSidebar ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-white/50">
+          <h2 className="font-bold text-xl text-gray-800">테마 선택</h2>
+          <button onClick={() => setShowThemeSidebar(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <X className="h-5 w-5 text-gray-500" />
           </button>
         </div>
 
         {/* Theme Tabs */}
-        <div className="flex border-b">
+        <div className="flex p-2 gap-2 bg-gray-50/50">
           <button
             onClick={() => setThemeTab('my')}
-            className={`flex-1 py-3 text-center font-medium ${themeTab === 'my' ? 'text-orange-500 border-b-2 border-orange-500' : 'text-gray-500'}`}
+            className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${themeTab === 'my' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:bg-white/50'}`}
           >
             내 테마
           </button>
           <button
             onClick={() => setThemeTab('public')}
-            className={`flex-1 py-3 text-center font-medium ${themeTab === 'public' ? 'text-orange-500 border-b-2 border-orange-500' : 'text-gray-500'}`}
+            className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${themeTab === 'public' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:bg-white/50'}`}
           >
             공개 테마
           </button>
         </div>
 
         {/* Theme List */}
-        <div className="overflow-y-auto h-[calc(100%-120px)]">
+        <div className="overflow-y-auto h-[calc(100%-140px)] p-2">
           {themeTab === 'my' ? (
             !isAuthenticated ? (
-              <div className="p-4 text-center text-gray-500">
-                <p className="mb-3">로그인하면 내 테마를 볼 수 있어요</p>
+              <div className="flex flex-col items-center justify-center h-full text-gray-500 p-6">
+                <Layers className="w-12 h-12 text-gray-300 mb-4" />
+                <p className="mb-4 text-center">로그인하고 나만의 맛집 지도를<br />만들어보세요!</p>
                 <Link href="/login">
                   <Button size="sm">로그인</Button>
                 </Link>
               </div>
             ) : myThemes.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">
-                <p className="mb-3">아직 테마가 없어요</p>
+              <div className="flex flex-col items-center justify-center h-full text-gray-500 p-6">
+                <p className="mb-4">아직 소중한 테마가 없으시네요</p>
                 <Link href="/themes/new">
-                  <Button size="sm">테마 만들기</Button>
+                  <Button size="sm" variant="outline">+ 첫 테마 만들기</Button>
                 </Link>
               </div>
             ) : (
               myThemes.map((theme) => (
-                <ThemeListItem 
-                  key={theme.id} 
-                  theme={theme} 
+                <ThemeListItem
+                  key={theme.id}
+                  theme={theme}
                   onClick={() => loadTheme(theme.id)}
                   isSelected={selectedTheme?.id === theme.id}
                 />
@@ -455,14 +458,14 @@ function MapPageContent() {
             )
           ) : (
             publicThemes.length === 0 ? (
-              <div className="p-4 text-center text-gray-500">
+              <div className="p-8 text-center text-gray-500">
                 공개 테마가 없습니다
               </div>
             ) : (
               publicThemes.map((theme) => (
-                <ThemeListItem 
-                  key={theme.id} 
-                  theme={theme} 
+                <ThemeListItem
+                  key={theme.id}
+                  theme={theme}
                   onClick={() => loadTheme(theme.id)}
                   isSelected={selectedTheme?.id === theme.id}
                 />
@@ -472,10 +475,10 @@ function MapPageContent() {
         </div>
       </div>
 
-      {/* Sidebar Overlay */}
+      {/* Sidebar Overlay (Mobile) */}
       {showThemeSidebar && (
-        <div 
-          className="absolute inset-0 bg-black/20 z-10"
+        <div
+          className="absolute inset-0 bg-black/20 backdrop-blur-sm z-10 md:hidden animate-fade-in"
           onClick={() => setShowThemeSidebar(false)}
         />
       )}
@@ -483,69 +486,72 @@ function MapPageContent() {
       {/* Current Location Button */}
       <button
         onClick={handleCurrentLocation}
-        className="absolute bottom-24 right-4 z-10 p-3 bg-white rounded-full shadow-lg hover:bg-gray-50"
+        className="absolute bottom-24 right-4 z-10 p-3 bg-white hover:bg-blue-50 text-gray-700 hover:text-blue-600 rounded-full shadow-lg transition-all transform hover:scale-105"
       >
-        <Navigation className="h-6 w-6 text-orange-500" />
+        <Navigation className="h-6 w-6" />
       </button>
 
       {/* Map Container */}
-      <div ref={mapRef} className="w-full h-full" />
+      <div ref={mapRef} className="w-full h-full z-0" />
 
       {/* Loading Overlay */}
       {isLoading && (
-        <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-20">
+        <div className="absolute inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-20">
           <Loading size="lg" />
         </div>
       )}
 
-      {/* Selected Restaurant Card */}
+      {/* Selected Restaurant Card - Modern */}
       {selectedRestaurant && (
-        <div className="absolute bottom-4 left-4 right-4 z-10 max-w-md mx-auto">
-          <div className="bg-white rounded-xl shadow-lg p-4">
+        <div className="absolute bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-96 z-10 animate-slide-up">
+          <div className="glass-card bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl p-4 border border-white/50">
             <button
               onClick={() => setSelectedRestaurant(null)}
-              className="absolute top-2 right-2 p-1 hover:bg-gray-100 rounded-full"
+              className="absolute top-2 right-2 p-1.5 hover:bg-gray-100/50 rounded-full transition-colors"
             >
-              <X className="h-5 w-5 text-gray-500" />
+              <X className="h-5 w-5 text-gray-400" />
             </button>
-            <Link href={`/restaurants/${selectedRestaurant.id}`}>
+            <Link href={`/restaurants/${selectedRestaurant.id}`} className="block group">
               <div className="flex gap-4">
-                <div className="w-20 h-20 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden">
+                <div className="w-24 h-24 rounded-xl bg-gray-100 flex-shrink-0 overflow-hidden shadow-sm relative">
                   {selectedRestaurant.thumbnail ? (
-                    <img
+                    <Image
                       src={selectedRestaurant.thumbnail}
                       alt={selectedRestaurant.name}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center">
+                    <div className="w-full h-full flex items-center justify-center bg-gray-100">
                       <Utensils className="h-8 w-8 text-gray-300" />
                     </div>
                   )}
                 </div>
-                <div className="flex-1">
-                  {selectedTheme && (
-                    <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">
-                      #{restaurants.findIndex(r => r.id === selectedRestaurant.id) + 1}
+                <div className="flex-1 min-w-0 py-1">
+                  <div className="flex flex-wrap gap-1 mb-1">
+                    {selectedTheme && (
+                      <span className="text-[10px] uppercase font-bold bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded">
+                        #{restaurants.findIndex(r => r.id === selectedRestaurant.id) + 1}
+                      </span>
+                    )}
+                    <span className="text-[10px] font-bold bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                      {selectedRestaurant.category}
                     </span>
-                  )}
-                  <span className="text-xs text-orange-500 font-medium ml-1">
-                    {selectedRestaurant.category}
-                  </span>
-                  <h3 className="font-semibold text-gray-900 line-clamp-1">
+                  </div>
+                  <h3 className="font-bold text-gray-900 text-lg leading-tight truncate mb-1 group-hover:text-orange-600 transition-colors">
                     {selectedRestaurant.name}
                   </h3>
-                  <p className="text-sm text-gray-500 line-clamp-1 flex items-center">
-                    <MapPin className="h-3 w-3 mr-1" />
+                  <p className="text-sm text-gray-500 truncate flex items-center mb-2">
+                    <MapPin className="h-3.5 w-3.5 mr-1 flex-shrink-0" />
                     {selectedRestaurant.address}
                   </p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm font-medium">
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center text-yellow-500 font-bold text-sm">
+                      <Star className="h-4 w-4 fill-current mr-0.5" />
                       {selectedRestaurant.avgRating.toFixed(1)}
-                    </span>
-                    <span className="text-sm text-gray-400">
-                      ({selectedRestaurant.reviewCount})
+                    </div>
+                    <span className="text-xs text-gray-400">
+                      ({selectedRestaurant.reviewCount} reviews)
                     </span>
                   </div>
                 </div>
@@ -555,37 +561,46 @@ function MapPageContent() {
         </div>
       )}
 
-      {/* Theme Restaurant List (Bottom) */}
+      {/* Theme Restaurant List (Bottom Horizontal Scroll) */}
       {selectedTheme && restaurants.length > 0 && !selectedRestaurant && (
-        <div className="absolute bottom-4 left-4 right-4 z-10">
-          <div className="bg-white rounded-xl shadow-lg p-3 max-w-2xl mx-auto">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700">
-                {selectedTheme.title} ({restaurants.length}개 식당)
-              </span>
-              <Link href={`/themes/${selectedTheme.id}`} className="text-sm text-orange-500">
-                상세보기
-              </Link>
-            </div>
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {restaurants.map((restaurant, index) => (
-                <button
-                  key={restaurant.id}
-                  onClick={() => {
-                    setSelectedRestaurant(restaurant);
-                    if (map && restaurant.latitude && restaurant.longitude) {
-                      const kakao = (window as any).kakao;
-                      map.panTo(new kakao.maps.LatLng(restaurant.latitude, restaurant.longitude));
-                    }
-                  }}
-                  className="flex-shrink-0 flex items-center gap-2 bg-gray-50 hover:bg-orange-50 rounded-lg p-2 transition-colors"
-                >
-                  <span className="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-medium">
-                    {index + 1}
-                  </span>
-                  <span className="text-sm font-medium whitespace-nowrap">{restaurant.name}</span>
-                </button>
-              ))}
+        <div className="absolute bottom-8 left-0 right-0 z-10 animate-fade-in-up">
+          <div className="max-w-3xl mx-auto px-4">
+            <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl p-3 border border-indigo-50/50">
+              <div className="flex items-center justify-between mb-2 px-1">
+                <span className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+                  {selectedTheme.title} ({restaurants.length})
+                </span>
+                <Link href={`/themes/${selectedTheme.id}`} className="text-xs font-medium text-indigo-600 hover:text-indigo-700 flex items-center">
+                  상세보기 <ChevronRight className="w-3 h-3" />
+                </Link>
+              </div>
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide px-1 snap-x">
+                {restaurants.map((restaurant, index) => (
+                  <button
+                    key={restaurant.id}
+                    onClick={() => {
+                      setSelectedRestaurant(restaurant);
+                      if (map && restaurant.latitude && restaurant.longitude) {
+                        const kakao = (window as any).kakao;
+                        map.panTo(new kakao.maps.LatLng(restaurant.latitude, restaurant.longitude));
+                      }
+                    }}
+                    className="flex-shrink-0 snap-start bg-white border border-gray-100 hover:border-orange-200 rounded-xl p-2 w-40 transition-all hover:-translate-y-1 shadow-sm hover:shadow-md text-left"
+                  >
+                    <div className="relative w-full h-24 bg-gray-100 rounded-lg mb-2 overflow-hidden">
+                      {restaurant.thumbnail && (
+                        <Image src={restaurant.thumbnail} alt={restaurant.name} fill className="object-cover" />
+                      )}
+                      <span className="absolute top-1 left-1 w-5 h-5 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-md">
+                        {index + 1}
+                      </span>
+                    </div>
+                    <div className="font-bold text-sm text-gray-900 truncate">{restaurant.name}</div>
+                    <div className="text-xs text-gray-500 truncate">{restaurant.category}</div>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -595,35 +610,40 @@ function MapPageContent() {
 }
 
 // Theme List Item Component
-function ThemeListItem({ 
-  theme, 
-  onClick, 
-  isSelected 
-}: { 
-  theme: Theme; 
+function ThemeListItem({
+  theme,
+  onClick,
+  isSelected
+}: {
+  theme: Theme;
   onClick: () => void;
   isSelected: boolean;
 }) {
   return (
     <button
       onClick={onClick}
-      className={`w-full p-4 text-left hover:bg-gray-50 border-b transition-colors ${isSelected ? 'bg-orange-50' : ''}`}
+      className={`w-full p-3 mb-2 rounded-xl text-left transition-all duration-200 border ${isSelected
+          ? 'bg-orange-50 border-orange-200 shadow-sm ring-1 ring-orange-200'
+          : 'bg-white border-transparent hover:bg-gray-50 hover:border-gray-200'
+        }`}
     >
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
+        <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0 shadow-sm relative">
           {theme.thumbnail ? (
-            <img src={theme.thumbnail} alt={theme.title} className="w-full h-full object-cover" />
+            <Image src={theme.thumbnail} alt={theme.title} fill className="object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-xl">🍽️</div>
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-gray-900 truncate">{theme.title}</h3>
-          <p className="text-sm text-gray-500">
-            {theme.restaurantCount}개 식당 · {theme.isPublic ? '공개' : '비공개'}
+          <h3 className={`font-bold text-sm truncate ${isSelected ? 'text-orange-900' : 'text-gray-900'}`}>
+            {theme.title}
+          </h3>
+          <p className="text-xs text-gray-500 mt-0.5">
+            {theme.restaurantCount} spots · {theme.isPublic ? 'Public' : 'Private'}
           </p>
         </div>
-        <ChevronRight className="h-5 w-5 text-gray-400" />
+        {isSelected && <div className="w-2 h-2 rounded-full bg-orange-500" />}
       </div>
     </button>
   );

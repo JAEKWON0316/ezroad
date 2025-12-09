@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
@@ -37,13 +38,13 @@ export default function Header() {
 
   const userMenuLinks = isAuthenticated
     ? [
-        { href: '/mypage', label: '마이페이지', icon: User },
-        { href: '/mypage/favorites', label: '찜한 식당', icon: Heart },
-        { href: '/mypage/reservations', label: '예약 내역', icon: Calendar },
-        ...(user?.role === 'BUSINESS'
-          ? [{ href: '/partner', label: '사업자 페이지', icon: Store }]
-          : []),
-      ]
+      { href: '/mypage', label: '마이페이지', icon: User },
+      { href: '/mypage/favorites', label: '찜한 식당', icon: Heart },
+      { href: '/mypage/reservations', label: '예약 내역', icon: Calendar },
+      ...(user?.role === 'BUSINESS'
+        ? [{ href: '/partner', label: '사업자 페이지', icon: Store }]
+        : []),
+    ]
     : [];
 
   const handleLogoutClick = () => {
@@ -71,30 +72,56 @@ export default function Header() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
+      <header className="fixed top-0 left-0 right-0 z-50 glass transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-orange-500">🍽️</span>
-              <span className="text-xl font-bold text-gray-900">EzenRoad</span>
+          <div className="flex items-center justify-between h-14">
+            <Link href="/" className="flex items-center gap-2 group">
+              <Image
+                src="/logo3.png"
+                alt="Linkisy"
+                width={200}
+                height={56}
+                priority
+                className="h-10 w-auto group-hover:opacity-90 transition-opacity"
+              />
             </Link>
 
             <nav className="hidden md:flex items-center gap-8">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    'flex items-center gap-1 text-sm font-medium transition-colors',
-                    pathname === link.href
-                      ? 'text-orange-500'
-                      : 'text-gray-600 hover:text-orange-500'
-                  )}
-                >
-                  <link.icon className="h-4 w-4" />
-                  {link.label}
-                </Link>
-              ))}
+              <Link
+                href="/restaurants"
+                className="text-gray-700 hover:text-orange-500 font-medium transition-colors relative group"
+              >
+                맛집 찾기
+                <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-orange-500 scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
+              </Link>
+              <Link
+                href="/themes"
+                className="text-gray-700 hover:text-orange-500 font-medium transition-colors relative group"
+              >
+                테마
+                <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-orange-500 scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
+              </Link>
+              <Link
+                href="/reviews"
+                className="text-gray-700 hover:text-orange-500 font-medium transition-colors relative group"
+              >
+                리뷰
+                <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-orange-500 scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
+              </Link>
+              <Link
+                href="/map"
+                className="text-gray-700 hover:text-orange-500 font-medium transition-colors relative group"
+              >
+                지도
+                <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-orange-500 scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
+              </Link>
+              <Link
+                href="/contact"
+                className="text-gray-700 hover:text-orange-500 font-medium transition-colors relative group"
+              >
+                고객지원
+                <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-orange-500 scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
+              </Link>
             </nav>
 
             <div className="hidden md:flex items-center gap-4">

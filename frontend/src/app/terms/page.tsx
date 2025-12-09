@@ -7,7 +7,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold mb-3">제1조 (목적)</h2>
             <p className="text-gray-600">
-              이 약관은 EzenRoad(이하 &quot;서비스&quot;)의 이용조건 및 절차, 
+              이 약관은 Linkisy(이하 &quot;서비스&quot;)의 이용조건 및 절차,
               회원과 서비스 제공자의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.
             </p>
           </section>

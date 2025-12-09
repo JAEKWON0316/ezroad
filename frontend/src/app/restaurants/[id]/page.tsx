@@ -3,12 +3,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  Star, 
-  MapPin, 
-  Phone, 
-  Clock, 
-  Globe, 
+import {
+  Star,
+  MapPin,
+  Phone,
+  Clock,
+  Globe,
   Heart,
   Share2,
   ChevronLeft,
@@ -188,265 +188,320 @@ export default function RestaurantDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header Image */}
-      <div className="relative h-64 md:h-80 bg-gray-200">
+    <div className="min-h-screen bg-gray-50/50 pb-20">
+      {/* Immersive Hero Image */}
+      <div className="relative h-[45vh] lg:h-[50vh] w-full overflow-hidden">
         {restaurant.thumbnail ? (
           <img
             src={restaurant.thumbnail}
             alt={restaurant.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover animate-scale-in"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Utensils className="h-16 w-16 text-gray-300" />
+          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+            <Utensils className="h-20 w-20 text-gray-400" />
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-        
-        {/* Back Button */}
-        <button
-          onClick={() => router.back()}
-          className="absolute top-4 left-4 p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </button>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-        {/* Actions */}
-        <div className="absolute top-4 right-4 flex gap-2">
-          {isAuthenticated && (
-            <button
-              onClick={handleOpenThemeModal}
-              className="p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white"
-              title="테마에 추가"
-            >
-              <span className="text-lg">📁</span>
-            </button>
-          )}
+        {/* Navigation & Actions */}
+        <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-start z-20">
           <button
-            onClick={handleShare}
-            className="p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white"
+            onClick={() => router.back()}
+            className="p-2.5 bg-white/20 backdrop-blur-md border border-white/10 rounded-full hover:bg-white/30 text-white transition-all"
           >
-            <Share2 className="h-5 w-5" />
+            <ChevronLeft className="h-6 w-6" />
           </button>
-          {isAuthenticated && (
-            <button
-              onClick={() => setShowReportModal(true)}
-              className="p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white"
-              title="신고하기"
-            >
-              <Flag className="h-5 w-5" />
-            </button>
-          )}
-          <button
-            onClick={handleFollow}
-            className={`p-2 rounded-full ${
-              isFollowed 
-                ? 'bg-red-500 text-white' 
-                : 'bg-white/90 backdrop-blur-sm hover:bg-white'
-            }`}
-          >
-            <Heart className={`h-5 w-5 ${isFollowed ? 'fill-current' : ''}`} />
-          </button>
-        </div>
 
-        {/* Restaurant Info Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-          <span className="inline-block px-3 py-1 bg-orange-500 rounded-full text-sm font-medium mb-2">
-            {restaurant.category}
-          </span>
-          <h1 className="text-2xl md:text-3xl font-bold">{restaurant.name}</h1>
-          <div className="flex items-center gap-4 mt-2">
-            <div className="flex items-center">
-              <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-              <span className="ml-1 font-semibold">{restaurant.avgRating.toFixed(1)}</span>
-              <span className="ml-1 opacity-80">({restaurant.reviewCount})</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="sticky top-16 bg-white border-b z-30">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex">
-            {(['info', 'menu', 'reviews'] as const).map((tab) => (
+          <div className="flex gap-2">
+            {isAuthenticated && (
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-4 text-center font-medium transition-colors relative ${
-                  activeTab === tab ? 'text-orange-500' : 'text-gray-500 hover:text-gray-700'
-                }`}
+                onClick={handleOpenThemeModal}
+                className="p-2.5 bg-white/20 backdrop-blur-md border border-white/10 rounded-full hover:bg-white/30 text-white transition-all"
+                title="테마에 추가"
               >
-                {tab === 'info' && '정보'}
-                {tab === 'menu' && '메뉴'}
-                {tab === 'reviews' && `리뷰 (${restaurant.reviewCount})`}
-                {activeTab === tab && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />
-                )}
+                <span className="text-lg leading-none">📁</span>
               </button>
-            ))}
+            )}
+            <button
+              onClick={handleShare}
+              className="p-2.5 bg-white/20 backdrop-blur-md border border-white/10 rounded-full hover:bg-white/30 text-white transition-all"
+            >
+              <Share2 className="h-5 w-5" />
+            </button>
+            {isAuthenticated && (
+              <button
+                onClick={() => setShowReportModal(true)}
+                className="p-2.5 bg-white/20 backdrop-blur-md border border-white/10 rounded-full hover:bg-white/30 text-white transition-all"
+                title="신고하기"
+              >
+                <Flag className="h-5 w-5" />
+              </button>
+            )}
+            <button
+              onClick={handleFollow}
+              className={`p-2.5 rounded-full transition-all shadow-lg ${isFollowed
+                ? 'bg-red-500 text-white border border-red-400'
+                : 'bg-white/20 backdrop-blur-md border border-white/10 text-white hover:bg-white/30'
+                }`}
+            >
+              <Heart className={`h-5 w-5 ${isFollowed ? 'fill-current' : ''}`} />
+            </button>
+          </div>
+        </div>
+
+        {/* Restaurant Title Texture */}
+        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 z-20 container mx-auto max-w-5xl">
+          <div className="animate-fade-in-up">
+            <span className="inline-block px-3 py-1 bg-orange-500/90 backdrop-blur-sm rounded-full text-xs font-bold text-white mb-3 shadow-lg">
+              {restaurant.category}
+            </span>
+            <h1 className="text-3xl md:text-5xl font-bold text-white font-display mb-2 text-shadow-lg leading-tight">
+              {restaurant.name}
+            </h1>
+            <div className="flex items-center gap-3 text-white/90">
+              <div className="flex items-center bg-black/30 px-2 py-1 rounded-lg backdrop-blur-sm">
+                <Star className="h-5 w-5 fill-yellow-400 text-yellow-400 mr-1" />
+                <span className="font-bold text-lg">{restaurant.avgRating.toFixed(1)}</span>
+                <span className="text-white/70 text-sm ml-1">({restaurant.reviewCount})</span>
+              </div>
+              <div className="h-4 w-[1px] bg-white/30 mx-1"></div>
+              <div className="flex items-center text-sm md:text-base font-medium">
+                <MapPin className="h-4 w-4 mr-1 text-white/80" />
+                {restaurant.address.split(' ')[0]} {restaurant.address.split(' ')[1]}
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        {/* Info Tab */}
-        {activeTab === 'info' && (
-          <div className="space-y-6">
-            {/* Notice */}
-            {restaurant.notice && (
-              <div className="bg-orange-50 border border-orange-100 rounded-xl p-4">
-                <h3 className="font-semibold text-orange-800 mb-2">📢 공지사항</h3>
-                <p className="text-orange-700">{restaurant.notice}</p>
-              </div>
-            )}
-
-            {/* Description */}
-            {restaurant.description && (
-              <div className="bg-white rounded-xl p-6 shadow-sm">
-                <h3 className="font-semibold text-gray-900 mb-3">소개</h3>
-                <p className="text-gray-600 whitespace-pre-line">{restaurant.description}</p>
-              </div>
-            )}
-
-            {/* Contact Info */}
-            <div className="bg-white rounded-xl p-6 shadow-sm space-y-4">
-              <h3 className="font-semibold text-gray-900 mb-3">기본 정보</h3>
-              
-              <div className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-gray-400 mt-0.5" />
-                <div>
-                  <p className="text-gray-900">{restaurant.address}</p>
-                  {restaurant.addressDetail && (
-                    <p className="text-gray-500 text-sm">{restaurant.addressDetail}</p>
+      {/* Main Content Container */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-10 -mt-6" id="content-container">
+        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 min-h-[500px]">
+          {/* Sticky Tabs */}
+          <div className="sticky top-[60px] md:top-[70px] bg-white/95 backdrop-blur-xl border-b border-gray-100 z-30 rounded-t-3xl">
+            <div className="flex">
+              {(['info', 'menu', 'reviews'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => {
+                    setActiveTab(tab);
+                    const container = document.getElementById('content-container');
+                    if (container) {
+                      const offset = container.getBoundingClientRect().top + window.scrollY - 80;
+                      window.scrollTo({ top: offset, behavior: 'smooth' });
+                    }
+                  }}
+                  className={`flex-1 py-4 text-center font-medium transition-all relative ${activeTab === tab ? 'text-orange-600 font-bold' : 'text-gray-400 hover:text-gray-600'
+                    }`}
+                >
+                  {tab === 'info' && '홈'}
+                  {tab === 'menu' && '메뉴'}
+                  {tab === 'reviews' && `리뷰 ${restaurant.reviewCount}`}
+                  {activeTab === tab && (
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-gradient-to-r from-orange-500 to-orange-400 rounded-t-full" />
                   )}
-                </div>
-              </div>
-
-              {restaurant.phone && (
-                <div className="flex items-center gap-3">
-                  <Phone className="h-5 w-5 text-gray-400" />
-                  <a href={`tel:${restaurant.phone}`} className="text-gray-900 hover:text-orange-500">
-                    {restaurant.phone}
-                  </a>
-                </div>
-              )}
-
-              {restaurant.businessHours && (
-                <div className="flex items-start gap-3">
-                  <Clock className="h-5 w-5 text-gray-400 mt-0.5" />
-                  <p className="text-gray-900 whitespace-pre-line">{restaurant.businessHours}</p>
-                </div>
-              )}
-
-              {restaurant.website && (
-                <div className="flex items-center gap-3">
-                  <Globe className="h-5 w-5 text-gray-400" />
-                  <a 
-                    href={restaurant.website} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-orange-500 hover:underline"
-                  >
-                    웹사이트 방문
-                  </a>
-                </div>
-              )}
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3">
-              <Button
-                className="flex-1"
-                size="lg"
-                onClick={() => setShowReservationModal(true)}
-                leftIcon={<Calendar className="h-5 w-5" />}
-              >
-                예약하기
-              </Button>
-              <Link href={`/waitings/new?restaurantId=${restaurantId}`} className="flex-1">
-                <Button variant="outline" className="w-full" size="lg" leftIcon={<Users className="h-5 w-5" />}>
-                  대기 등록
-                </Button>
-              </Link>
+                </button>
+              ))}
             </div>
           </div>
-        )}
 
-        {/* Menu Tab */}
-        {activeTab === 'menu' && (
-          <div className="space-y-4">
-            {menus.length === 0 ? (
-              <div className="text-center py-12">
-                <Utensils className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">등록된 메뉴가 없습니다</p>
-              </div>
-            ) : (
-              menus.filter(m => m.isVisible).map((menu) => (
-                <div key={menu.id} className="bg-white rounded-xl p-4 shadow-sm flex gap-4">
-                  {menu.thumbnail && (
-                    <img
-                      src={menu.thumbnail}
-                      alt={menu.name}
-                      className="w-24 h-24 rounded-lg object-cover flex-shrink-0"
-                    />
-                  )}
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">{menu.name}</h3>
-                    {menu.description && (
-                      <p className="text-gray-500 text-sm mt-1 line-clamp-2">{menu.description}</p>
+          {/* Tab Content */}
+          <div className="p-6 md:p-8">
+            {/* Info Tab */}
+            {activeTab === 'info' && (
+              <div className="space-y-8 animate-fade-in">
+                {/* Notice */}
+                {restaurant.notice && (
+                  <div className="bg-orange-50 border border-orange-100 rounded-2xl p-5 flex gap-3 items-start">
+                    <span className="text-xl">📢</span>
+                    <div>
+                      <h3 className="font-bold text-orange-900 mb-1">사장님 공지</h3>
+                      <p className="text-orange-800 text-sm leading-relaxed">{restaurant.notice}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Description */}
+                {restaurant.description && (
+                  <div className="prose prose-orange max-w-none">
+                    <h3 className="text-lg font-bold text-gray-900 mb-3 block border-l-4 border-orange-500 pl-3">소개</h3>
+                    <p className="text-gray-600 whitespace-pre-line leading-relaxed">{restaurant.description}</p>
+                  </div>
+                )}
+
+                {/* Information Grid */}
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-4 block border-l-4 border-orange-500 pl-3">상세 정보</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-gray-50 rounded-2xl p-4 flex items-start gap-3">
+                      <div className="p-2 bg-white rounded-xl shadow-sm"><MapPin className="h-5 w-5 text-orange-500" /></div>
+                      <div>
+                        <span className="text-xs font-bold text-gray-400 block mb-1">위치</span>
+                        <p className="text-gray-900 font-medium">{restaurant.address}</p>
+                        {restaurant.addressDetail && (
+                          <p className="text-gray-500 text-sm mt-0.5">{restaurant.addressDetail}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="bg-gray-50 rounded-2xl p-4 flex items-start gap-3">
+                      <div className="p-2 bg-white rounded-xl shadow-sm"><Clock className="h-5 w-5 text-orange-500" /></div>
+                      <div>
+                        <span className="text-xs font-bold text-gray-400 block mb-1">영업 시간</span>
+                        <p className="text-gray-900 font-medium whitespace-pre-line text-sm">{restaurant.businessHours || '정보 없음'}</p>
+                      </div>
+                    </div>
+
+                    {restaurant.phone && (
+                      <div className="bg-gray-50 rounded-2xl p-4 flex items-start gap-3">
+                        <div className="p-2 bg-white rounded-xl shadow-sm"><Phone className="h-5 w-5 text-orange-500" /></div>
+                        <div>
+                          <span className="text-xs font-bold text-gray-400 block mb-1">전화번호</span>
+                          <a href={`tel:${restaurant.phone}`} className="text-gray-900 font-medium hover:text-orange-500 transition-colors">
+                            {restaurant.phone}
+                          </a>
+                        </div>
+                      </div>
                     )}
-                    <p className="text-orange-500 font-semibold mt-2">
-                      {menu.price.toLocaleString()}원
-                    </p>
+
+                    {restaurant.website && (
+                      <div className="bg-gray-50 rounded-2xl p-4 flex items-start gap-3">
+                        <div className="p-2 bg-white rounded-xl shadow-sm"><Globe className="h-5 w-5 text-orange-500" /></div>
+                        <div>
+                          <span className="text-xs font-bold text-gray-400 block mb-1">웹사이트</span>
+                          <a href={restaurant.website} target="_blank" rel="noopener noreferrer" className="text-blue-500 font-medium hover:underline text-sm truncate block max-w-[200px]">
+                            방문하기
+                          </a>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
-              ))
-            )}
-          </div>
-        )}
 
-        {/* Reviews Tab */}
-        {activeTab === 'reviews' && (
-          <div className="space-y-4">
-            {/* Write Review Button */}
-            {isAuthenticated && (
-              <Link href={`/reviews/write?restaurantId=${restaurantId}`}>
-                <Button className="w-full" leftIcon={<MessageSquare className="h-5 w-5" />}>
-                  리뷰 작성하기
-                </Button>
-              </Link>
-            )}
 
-            {reviews.length === 0 ? (
-              <div className="text-center py-12">
-                <MessageSquare className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">아직 리뷰가 없습니다</p>
-                <p className="text-gray-400 text-sm mt-1">첫 번째 리뷰를 작성해보세요!</p>
               </div>
-            ) : (
-              <>
-                {reviews.map((review) => (
-                  <ReviewCard key={review.id} review={review} />
-                ))}
-                {hasMoreReviews && (
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={loadMoreReviews}
-                  >
-                    더보기
-                  </Button>
+            )}
+
+            {/* Menu Tab */}
+            {activeTab === 'menu' && (
+              <div className="space-y-6 animate-fade-in">
+                {menus.length === 0 ? (
+                  <div className="text-center py-20 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                    <Utensils className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 font-medium">등록된 메뉴가 없습니다</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {menus.filter(m => m.isVisible).map((menu, idx) => (
+                      <div key={menu.id} className="bg-white border border-gray-100 rounded-2xl p-4 flex gap-4 hover:shadow-lg hover:border-orange-100 transition-all duration-300 group">
+                        {menu.thumbnail ? (
+                          <img
+                            src={menu.thumbnail}
+                            alt={menu.name}
+                            className="w-28 h-28 rounded-xl object-cover flex-shrink-0 shadow-sm"
+                          />
+                        ) : (
+                          <div className="w-28 h-28 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+                            <Utensils className="h-8 w-8 text-gray-300" />
+                          </div>
+                        )}
+                        <div className="flex-1 flex flex-col justify-between">
+                          <div>
+                            <h3 className="font-bold text-gray-900 text-lg group-hover:text-orange-600 transition-colors">{menu.name}</h3>
+                            {menu.description && (
+                              <p className="text-gray-500 text-sm mt-1 line-clamp-2">{menu.description}</p>
+                            )}
+                          </div>
+                          <p className="text-orange-500 font-bold text-lg text-right">
+                            {menu.price.toLocaleString()}원
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
-              </>
+              </div>
+            )}
+
+            {/* Reviews Tab */}
+            {activeTab === 'reviews' && (
+              <div className="space-y-6 animate-fade-in">
+                {/* Header with Write Button */}
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-bold text-gray-900 text-lg">리뷰 <span className="text-orange-500">{restaurant.reviewCount}</span></h3>
+                  {isAuthenticated && (
+                    <Link href={`/reviews/write?restaurantId=${restaurantId}`}>
+                      <Button size="sm" leftIcon={<MessageSquare className="h-4 w-4" />}>
+                        리뷰 쓰기
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+
+                {reviews.length === 0 ? (
+                  <div className="text-center py-20 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                    <MessageSquare className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 font-medium">아직 작성된 리뷰가 없습니다</p>
+                    <p className="text-gray-400 text-sm mt-1">첫 번째 리뷰의 주인공이 되어보세요!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {reviews.map((review) => (
+                      <ReviewCard key={review.id} review={review} />
+                    ))}
+                    {hasMoreReviews && (
+                      <div className="pt-4">
+                        <Button
+                          variant="outline"
+                          className="w-full h-12 rounded-xl text-gray-600 border-gray-300 hover:bg-gray-50"
+                          onClick={loadMoreReviews}
+                        >
+                          리뷰 더보기
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             )}
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Reservation Modal */}
+      {/* Floating Bottom Bar (Mobile/Info Tab only or always?) - Let's keep it sticky at bottom for Reservation */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-xl border-t border-gray-200 z-50 md:hidden">
+        <div className="flex gap-3">
+          <Button
+            className="flex-1 rounded-xl shadow-lg shadow-orange-500/30"
+            size="lg"
+            onClick={() => setShowReservationModal(true)}
+          >
+            예약하기
+          </Button>
+        </div>
+      </div>
+
+      {/* Desktop Floating Action Buttons (Sticky on side or bottom right) - Keeping original simple buttons in Info Tab for now, or move to sidebar? The updated design puts them in Info tab content, but maybe we need a dedicated CTA area for Desktop */}
+      {activeTab === 'info' && (
+        <div className="hidden md:flex justify-end gap-3 mt-8 max-w-5xl mx-auto px-6 pb-10">
+          <Link href={`/waitings/new?restaurantId=${restaurantId}`} className="flex-1 max-w-[200px]">
+            <Button variant="outline" className="w-full h-14 text-lg rounded-2xl border-2" leftIcon={<Users className="h-5 w-5" />}>
+              대기 등록
+            </Button>
+          </Link>
+          <Button
+            className="flex-1 max-w-[200px] h-14 text-lg rounded-2xl shadow-xl shadow-orange-500/30 hover:-translate-y-1 transition-transform"
+            onClick={() => setShowReservationModal(true)}
+            leftIcon={<Calendar className="h-5 w-5" />}
+          >
+            예약하기
+          </Button>
+        </div>
+      )}
+
+
+      {/* Modals */}
       <ReservationModal
         isOpen={showReservationModal}
         onClose={() => setShowReservationModal(false)}
@@ -454,7 +509,6 @@ export default function RestaurantDetailPage() {
         restaurantName={restaurant.name}
       />
 
-      {/* Theme Modal */}
       <ThemeSelectModal
         isOpen={showThemeModal}
         onClose={() => setShowThemeModal(false)}
@@ -463,7 +517,6 @@ export default function RestaurantDetailPage() {
         restaurantName={restaurant.name}
       />
 
-      {/* Report Modal */}
       <ReportModal
         isOpen={showReportModal}
         onClose={() => setShowReportModal(false)}
@@ -475,46 +528,48 @@ export default function RestaurantDetailPage() {
   );
 }
 
-// Review Card Component
+// Modernized Review Card
 function ReviewCard({ review }: { review: Review }) {
   return (
-    <div className="bg-white rounded-xl p-4 shadow-sm">
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
-          {review.member?.profileImage ? (
-            <img
-              src={review.member.profileImage}
-              alt={review.member.nickname}
-              className="w-10 h-10 rounded-full object-cover"
-            />
-          ) : (
-            <span className="text-orange-500 font-medium">
-              {review.member?.nickname?.charAt(0)}
-            </span>
-          )}
-        </div>
-        <div className="flex-1">
-          <p className="font-medium text-gray-900">{review.member?.nickname}</p>
-          <div className="flex items-center gap-2">
-            <RatingStars rating={review.rating} size="sm" />
-            <span className="text-gray-400 text-sm">
+    <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-100 to-yellow-100 flex items-center justify-center border-2 border-white shadow-sm ring-1 ring-gray-100">
+            {review.member?.profileImage ? (
+              <img
+                src={review.member.profileImage}
+                alt={review.member.nickname}
+                className="w-full h-full rounded-full object-cover"
+              />
+            ) : (
+              <span className="text-orange-600 font-bold text-sm">
+                {review.member?.nickname?.charAt(0)}
+              </span>
+            )}
+          </div>
+          <div>
+            <p className="font-bold text-gray-900 text-sm">{review.member?.nickname}</p>
+            <span className="text-gray-400 text-xs">
               {new Date(review.createdAt).toLocaleDateString()}
             </span>
           </div>
         </div>
+        <RatingStars rating={review.rating} size="sm" />
       </div>
+
       {review.title && (
-        <h4 className="font-medium text-gray-900 mb-1">{review.title}</h4>
+        <h4 className="font-bold text-gray-900 mb-2">{review.title}</h4>
       )}
-      <p className="text-gray-600">{review.content}</p>
+      <p className="text-gray-600 text-sm leading-relaxed mb-4">{review.content}</p>
+
       {review.images && review.images.length > 0 && (
-        <div className="flex gap-2 mt-3 overflow-x-auto">
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-200">
           {review.images.map((imageUrl, index) => (
             <img
               key={index}
               src={imageUrl}
               alt="리뷰 이미지"
-              className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
+              className="w-24 h-24 rounded-xl object-cover flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity border border-gray-100"
             />
           ))}
         </div>

@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  reactStrictMode: false,  // <-- 이 줄 추가!
+
   images: {
     remotePatterns: [
       {
@@ -13,6 +15,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+
   async rewrites() {
     return [
       {

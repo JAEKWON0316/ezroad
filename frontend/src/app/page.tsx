@@ -2,42 +2,37 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { 
-  Search, 
-  MapPin, 
-  Star, 
-  Clock, 
+import {
+  MapPin,
+  Star,
   ArrowRight,
+  TrendingUp,
   Utensils,
   Coffee,
   Pizza,
   Soup,
   Fish,
   Beef,
-  TrendingUp,
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { restaurantApi, themeApi, searchApi, SearchKeyword } from '@/lib/api';
 import { Restaurant, Theme } from '@/types';
-import Button from '@/components/common/Button';
 import SearchBar from '@/components/common/SearchBar';
 
-// 카테고리 아이콘 매핑
-const categoryIcons: Record<string, React.ReactNode> = {
-  '한식': <Soup className="h-6 w-6" />,
-  '중식': <Utensils className="h-6 w-6" />,
-  '일식': <Fish className="h-6 w-6" />,
-  '양식': <Beef className="h-6 w-6" />,
-  '카페': <Coffee className="h-6 w-6" />,
-  '분식': <Pizza className="h-6 w-6" />,
-};
+// Dynamically load 3D Scene with no SSR
+const Scene3D = dynamic(() => import('@/components/home/Scene3D'), {
+  ssr: false,
+  loading: () => <div className="absolute inset-0 bg-transparent" />
+});
 
+// Categories with Modern Gradients
 const categories = [
-  { name: '한식', icon: <Soup className="h-8 w-8" />, color: 'bg-red-100 text-red-600' },
-  { name: '중식', icon: <Utensils className="h-8 w-8" />, color: 'bg-yellow-100 text-yellow-600' },
-  { name: '일식', icon: <Fish className="h-8 w-8" />, color: 'bg-blue-100 text-blue-600' },
-  { name: '양식', icon: <Beef className="h-8 w-8" />, color: 'bg-green-100 text-green-600' },
-  { name: '카페', icon: <Coffee className="h-8 w-8" />, color: 'bg-amber-100 text-amber-600' },
-  { name: '분식', icon: <Pizza className="h-8 w-8" />, color: 'bg-orange-100 text-orange-600' },
+  { name: '한식', icon: <Soup className="h-6 w-6" />, color: 'from-orange-50 to-orange-100 text-orange-600', border: 'border-orange-100' },
+  { name: '중식', icon: <Utensils className="h-6 w-6" />, color: 'from-orange-50 to-orange-100 text-orange-600', border: 'border-orange-100' },
+  { name: '일식', icon: <Fish className="h-6 w-6" />, color: 'from-orange-50 to-orange-100 text-orange-600', border: 'border-orange-100' },
+  { name: '양식', icon: <Beef className="h-6 w-6" />, color: 'from-orange-50 to-orange-100 text-orange-600', border: 'border-orange-100' },
+  { name: '카페', icon: <Coffee className="h-6 w-6" />, color: 'from-orange-50 to-orange-100 text-orange-600', border: 'border-orange-100' },
+  { name: '분식', icon: <Pizza className="h-6 w-6" />, color: 'from-orange-50 to-orange-100 text-orange-600', border: 'border-orange-100' },
 ];
 
 export default function HomePage() {
@@ -50,22 +45,15 @@ export default function HomePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // 개별적으로 fetch하여 하나가 실패해도 다른 것은 표시
         const [restaurantsResult, themesResult, keywordsResult] = await Promise.allSettled([
           restaurantApi.getList({ sort: 'avgRating', size: 6, page: 0 }),
           themeApi.getTop(),
           searchApi.getPopular(),
         ]);
-        
-        if (restaurantsResult.status === 'fulfilled') {
-          setPopularRestaurants(restaurantsResult.value.content);
-        }
-        if (themesResult.status === 'fulfilled') {
-          setTopThemes(themesResult.value);
-        }
-        if (keywordsResult.status === 'fulfilled') {
-          setPopularKeywords(keywordsResult.value);
-        }
+
+        if (restaurantsResult.status === 'fulfilled') setPopularRestaurants(restaurantsResult.value.content);
+        if (themesResult.status === 'fulfilled') setTopThemes(themesResult.value);
+        if (keywordsResult.status === 'fulfilled') setPopularKeywords(keywordsResult.value);
       } catch (error) {
         console.error('Failed to fetch data:', error);
       } finally {
@@ -77,10 +65,7 @@ export default function HomePage() {
   }, []);
 
   const handleSearch = async (query: string) => {
-    if (query.trim()) {
-      // 검색어 기록 (비동기, 에러 무시)
-      searchApi.record(query).catch(() => {});
-    }
+    if (query.trim()) searchApi.record(query).catch(() => { });
     window.location.href = `/restaurants?keyword=${encodeURIComponent(query)}`;
   };
 
@@ -90,317 +75,235 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-orange-500 to-orange-600 text-white">
-        <div className="absolute inset-0 bg-black/20" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-              내 주변 맛집을 <br className="sm:hidden" />
-              찾아보세요
+    <div className="min-h-screen bg-gray-50/50">
+
+      {/* 3D Hero Section */}
+      <section className="relative h-[600px] flex items-center justify-center overflow-hidden">
+        {/* 3D Background */}
+        <Scene3D />
+
+        {/* Gradient Overlay for better text readability - Reduced opacity to show 3D elements better */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-white/5 to-gray-50/60 pointer-events-none z-10" />
+
+        {/* Content */}
+        <div className="relative z-10 w-full max-w-4xl px-4 text-center space-y-8 animate-fade-in-up">
+          <div className="space-y-4">
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-gray-900 drop-shadow-sm">
+              <span className="text-gradient">Delicious</span> Discovery
             </h1>
-            <p className="text-lg md:text-xl text-orange-100 mb-8 max-w-2xl mx-auto">
-              EzenRoad와 함께 숨겨진 맛집을 발견하고, <br className="hidden sm:block" />
-              소중한 사람들과 특별한 식사를 즐겨보세요.
+            <p className="text-xl text-gray-600 font-medium max-w-2xl mx-auto backdrop-blur-sm bg-white/30 p-2 rounded-lg">
+              Linkisy와 함께 당신의 취향을 저격할 숨은 맛집을 찾아보세요.
             </p>
-            
-            {/* Search Bar */}
-            <div className="max-w-2xl mx-auto">
-              <div className="relative">
-                <SearchBar
-                  value={searchQuery}
-                  onChange={setSearchQuery}
-                  onSearch={handleSearch}
-                  placeholder="지역, 음식, 식당명으로 검색"
-                  className="w-full"
-                />
-              </div>
-              
-              {/* 인기 검색어 */}
-              {popularKeywords.length > 0 && (
-                <div className="mt-4">
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    <TrendingUp className="h-4 w-4 text-orange-200" />
-                    <span className="text-sm text-orange-200">인기 검색어</span>
-                  </div>
-                  <div className="flex flex-wrap justify-center gap-2">
-                    {popularKeywords.slice(0, 8).map((kw, index) => (
-                      <button
-                        key={kw.id}
-                        onClick={() => handleKeywordClick(kw.keyword)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-full text-sm transition-colors"
-                      >
-                        <span className="text-orange-200 font-medium">{index + 1}</span>
-                        <span>{kw.keyword}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Quick Links */}
-            <div className="flex flex-wrap justify-center gap-4 mt-8">
-              <Link 
-                href="/restaurants"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 rounded-full text-sm hover:bg-white/30 transition-colors"
-              >
-                <MapPin className="h-4 w-4" />
-                주변 맛집
-              </Link>
-              <Link 
-                href="/reviews"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 rounded-full text-sm hover:bg-white/30 transition-colors"
-              >
-                <Star className="h-4 w-4" />
-                인기 리뷰
-              </Link>
-            </div>
           </div>
-        </div>
 
-        {/* Wave Decoration */}
-        <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z"
-              fill="#F9FAFB"
+          {/* Glass Search Bar */}
+          <div className="max-w-2xl mx-auto transform transition-transform hover:scale-[1.01]">
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              onSearch={handleSearch}
+              placeholder="지역, 음식, 식당명으로 검색하세요..."
+              variant="glass"
+              inputClassName="h-14 text-lg shadow-2xl bg-white/30 backdrop-blur-xl border-white/40 text-gray-900 placeholder:text-gray-600 focus:bg-white/50"
             />
-          </svg>
-        </div>
-      </section>
-
-      {/* Categories Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-12">
-            카테고리로 찾기
-          </h2>
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-4 md:gap-6">
-            {categories.map((category) => (
-              <Link
-                key={category.name}
-                href={`/restaurants?category=${encodeURIComponent(category.name)}`}
-                className="flex flex-col items-center p-6 bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow group"
-              >
-                <div className={`p-4 rounded-full ${category.color} mb-3 group-hover:scale-110 transition-transform`}>
-                  {category.icon}
-                </div>
-                <span className="text-sm font-medium text-gray-700">{category.name}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Popular Restaurants Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
-              인기 맛집 🔥
-            </h2>
-            <Link
-              href="/restaurants?sort=rating"
-              className="inline-flex items-center text-orange-500 hover:text-orange-600 font-medium"
-            >
-              더보기
-              <ArrowRight className="h-4 w-4 ml-1" />
-            </Link>
           </div>
 
-          {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-gray-100 rounded-2xl h-72 animate-pulse" />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {popularRestaurants.map((restaurant) => (
-                <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+          {/* Popular Keywords */}
+          {popularKeywords.length > 0 && (
+            <div className="flex flex-wrap justify-center gap-2">
+              <div className="flex items-center gap-2 mr-2 bg-white/80 backdrop-blur px-3 py-1 rounded-full shadow-sm">
+                <TrendingUp className="h-4 w-4 text-orange-500" />
+                <span className="text-sm font-semibold text-gray-700">인기</span>
+              </div>
+              {popularKeywords.slice(0, 5).map((kw) => (
+                <button
+                  key={kw.id}
+                  onClick={() => handleKeywordClick(kw.keyword)}
+                  className="px-4 py-1.5 bg-white/60 hover:bg-white backdrop-blur-md rounded-full text-sm font-medium text-gray-700 shadow-sm hover:shadow-md hover:text-orange-600 transition-all"
+                >
+                  #{kw.keyword}
+                </button>
               ))}
             </div>
           )}
         </div>
       </section>
 
-      {/* Popular Themes Section */}
-      {topThemes.length > 0 && (
-        <section className="py-16 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900">
-                인기 테마 🗺️
-              </h2>
-              <Link
-                href="/themes"
-                className="inline-flex items-center text-orange-500 hover:text-orange-600 font-medium"
-              >
-                더보기
-                <ArrowRight className="h-4 w-4 ml-1" />
-              </Link>
+      {/* Categories Grid */}
+      <section className="py-12 -mt-20 relative z-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="glass p-8 rounded-3xl shadow-xl">
+            <h2 className="text-2xl font-bold text-gray-800 mb-8 flex items-center gap-2">
+              <Utensils className="h-6 w-6 text-orange-500" />
+              카테고리별 맛집
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {categories.map((category) => (
+                <Link
+                  key={category.name}
+                  href={`/restaurants?category=${encodeURIComponent(category.name)}`}
+                  className={`group relative flex flex-col items-center justify-center p-6 bg-gradient-to-br ${category.color} rounded-2xl border ${category.border} shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300`}
+                >
+                  <div className="mb-3 p-3 bg-white/60 rounded-full shadow-sm group-hover:scale-110 transition-transform">
+                    {category.icon}
+                  </div>
+                  <span className="font-bold text-gray-800">{category.name}</span>
+                </Link>
+              ))}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {topThemes.map((theme) => (
-                <ThemeCard key={theme.id} theme={theme} />
+          </div>
+        </div>
+      </section>
+
+      {/* Popular Restaurants - Modern Cards */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-10">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">🔥 실시간 인기 맛집</h2>
+              <p className="text-gray-500">지금 가장 핫한 플레이스를 만나보세요</p>
+            </div>
+            <Link
+              href="/restaurants?sort=rating"
+              className="group flex items-center gap-2 text-orange-600 font-semibold hover:text-orange-700 px-4 py-2 rounded-full bg-orange-50 hover:bg-orange-100 transition-colors"
+            >
+              모두 보기
+              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="bg-gray-100 rounded-3xl h-80 animate-pulse" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {popularRestaurants.map((restaurant) => (
+                <Link key={restaurant.id} href={`/restaurants/${restaurant.id}`} className="group">
+                  <div className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 h-full border border-gray-100">
+                    <div className="relative h-60 overflow-hidden">
+                      {restaurant.thumbnail ? (
+                        <img
+                          src={restaurant.thumbnail}
+                          alt={restaurant.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                          <Utensils className="h-12 w-12 text-gray-300" />
+                        </div>
+                      )}
+
+                      {/* Floating Badges */}
+                      <div className="absolute top-4 left-4 flex gap-2">
+                        <span className="bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-gray-800 shadow-sm">
+                          {restaurant.category}
+                        </span>
+                      </div>
+                      <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                        <Star className="h-3 w-3 fill-orange-400 text-orange-400" />
+                        <span className="text-sm font-bold text-gray-900">{restaurant.avgRating.toFixed(1)}</span>
+                      </div>
+                    </div>
+
+                    <div className="p-6">
+                      <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors line-clamp-1">
+                        {restaurant.name}
+                      </h3>
+                      <div className="flex items-center gap-2 text-gray-500 text-sm mb-4">
+                        <MapPin className="h-4 w-4" />
+                        <span className="line-clamp-1">{restaurant.address}</span>
+                      </div>
+                      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                            리뷰 {restaurant.reviewCount}
+                          </span>
+                        </div>
+                        <button className="text-sm font-semibold text-orange-500 group-hover:underline">
+                          예약하기
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Popular Themes - Bento Style */}
+      {topThemes.length > 0 && (
+        <section className="py-20 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-10">🗺️ 큐레이션 테마</h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 auto-rows-[300px]">
+              {topThemes.map((theme, idx) => (
+                <Link
+                  key={theme.id}
+                  href={`/themes/${theme.id}`}
+                  className={`group relative rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 ${idx === 0 ? 'md:col-span-2 md:row-span-2' : ''}`}
+                >
+                  {theme.thumbnail ? (
+                    <img src={theme.thumbnail} alt={theme.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+                  <div className="absolute bottom-0 left-0 p-8 w-full">
+                    <div className="mb-2">
+                      <span className="inline-block px-3 py-1 bg-orange-500 text-white text-xs font-bold rounded-full mb-2">
+                        {theme.restaurantCount} places
+                      </span>
+                    </div>
+                    <h3 className={`font-bold text-white mb-2 leading-tight ${idx === 0 ? 'text-3xl' : 'text-xl'}`}>
+                      {theme.title}
+                    </h3>
+                    <div className="flex items-center justify-between text-white/80 text-sm">
+                      <span>by {theme.member.nickname}</span>
+                      <div className="flex items-center gap-3">
+                        <span>❤️ {theme.likeCount || 0}</span>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
               ))}
             </div>
           </div>
         </section>
       )}
 
-      {/* Features Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 text-center mb-12">
-            EzenRoad 서비스
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <FeatureCard
-              icon={<Search className="h-8 w-8 text-orange-500" />}
-              title="맛집 검색"
-              description="지역, 음식 종류, 키워드로 원하는 맛집을 쉽게 찾아보세요."
-            />
-            <FeatureCard
-              icon={<Clock className="h-8 w-8 text-orange-500" />}
-              title="예약 & 대기"
-              description="원하는 시간에 예약하거나, 실시간으로 대기 순번을 확인하세요."
-            />
-            <FeatureCard
-              icon={<Star className="h-8 w-8 text-orange-500" />}
-              title="리뷰 & 평점"
-              description="다른 사용자들의 솔직한 리뷰를 확인하고 나만의 리뷰를 남겨보세요."
-            />
-          </div>
-        </div>
-      </section>
-
       {/* CTA Section */}
-      <section className="py-16 bg-orange-500">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+      <section className="py-24 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gray-900 z-0" />
+        <div className="absolute inset-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80')] bg-cover bg-center bg-fixed" />
+
+        <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
             사장님이신가요?
           </h2>
-          <p className="text-orange-100 mb-8 max-w-xl mx-auto">
-            EzenRoad에 가게를 등록하고 더 많은 고객을 만나보세요. <br />
-            무료로 시작할 수 있습니다.
+          <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto leading-relaxed">
+            Linkisy의 3D 기반 푸드 플랫폼과 함께 더 많은 고객을 만나보세요.<br />
+            혁신적인 예약 관리와 홍보 효과를 경험할 수 있습니다.
           </p>
-          <Link href="/register?role=business">
-            <Button variant="secondary" size="lg">
-              사업자 회원가입
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/register?role=business">
+              <button className="px-8 py-4 bg-orange-500 hover:bg-orange-600 text-white rounded-full font-bold text-lg shadow-lg shadow-orange-500/30 transition-all hover:-translate-y-1">
+                파트너로 시작하기
+              </button>
+            </Link>
+            <Link href="/contact">
+              <button className="px-8 py-4 bg-white/10 hover:bg-white/20 backdrop-blur text-white border border-white/20 rounded-full font-bold text-lg transition-all">
+                입점 문의하기
+              </button>
+            </Link>
+          </div>
         </div>
       </section>
     </div>
-  );
-}
-
-// 식당 카드 컴포넌트
-function RestaurantCard({ restaurant }: { restaurant: Restaurant }) {
-  return (
-    <Link href={`/restaurants/${restaurant.id}`}>
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition-shadow group">
-        <div className="relative h-48 bg-gray-200">
-          {restaurant.thumbnail ? (
-            <img
-              src={restaurant.thumbnail}
-              alt={restaurant.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-400">
-              <Utensils className="h-12 w-12" />
-            </div>
-          )}
-          <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-sm font-medium">
-            {restaurant.category}
-          </div>
-        </div>
-        <div className="p-4">
-          <h3 className="font-semibold text-gray-900 text-lg mb-1 line-clamp-1">
-            {restaurant.name}
-          </h3>
-          <p className="text-gray-500 text-sm mb-3 line-clamp-1">
-            {restaurant.address}
-          </p>
-          <div className="flex items-center gap-4 text-sm">
-            <div className="flex items-center text-yellow-500">
-              <Star className="h-4 w-4 fill-current" />
-              <span className="ml-1 font-medium">{restaurant.avgRating.toFixed(1)}</span>
-            </div>
-            <span className="text-gray-400">
-              리뷰 {restaurant.reviewCount}
-            </span>
-          </div>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-// 기능 소개 카드 컴포넌트
-function FeatureCard({ 
-  icon, 
-  title, 
-  description 
-}: { 
-  icon: React.ReactNode; 
-  title: string; 
-  description: string;
-}) {
-  return (
-    <div className="bg-white p-8 rounded-2xl shadow-sm text-center">
-      <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-50 rounded-full mb-4">
-        {icon}
-      </div>
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-      <p className="text-gray-500">{description}</p>
-    </div>
-  );
-}
-
-// 테마 카드 컴포넌트
-function ThemeCard({ theme }: { theme: Theme }) {
-  return (
-    <Link href={`/themes/${theme.id}`}>
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition-shadow group h-full">
-        <div className="relative h-40 bg-gray-200">
-          {theme.thumbnail ? (
-            <img
-              src={theme.thumbnail}
-              alt={theme.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-100 to-orange-200">
-              <span className="text-4xl">🍽️</span>
-            </div>
-          )}
-          <div className="absolute top-3 right-3 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
-            {theme.restaurantCount}개 식당
-          </div>
-        </div>
-        <div className="p-4">
-          <h3 className="font-semibold text-gray-900 text-lg mb-1 line-clamp-1">
-            {theme.title}
-          </h3>
-          {theme.description && (
-            <p className="text-gray-500 text-sm mb-3 line-clamp-2">
-              {theme.description}
-            </p>
-          )}
-          <div className="flex items-center justify-between text-sm text-gray-400">
-            <span>{theme.member.nickname}</span>
-            <div className="flex items-center gap-3">
-              <span>❤️ {theme.likeCount || 0}</span>
-              <span>👁 {theme.viewCount}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </Link>
   );
 }

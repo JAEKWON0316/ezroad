@@ -7,7 +7,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-semibold mb-3">1. 개인정보의 수집 및 이용 목적</h2>
             <p className="text-gray-600">
-              EzenRoad는 서비스 제공을 위해 필요한 최소한의 개인정보를 수집합니다.
+              Linkisy는 서비스 제공을 위해 필요한 최소한의 개인정보를 수집합니다.
             </p>
           </section>
           <section>

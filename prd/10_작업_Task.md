@@ -20,3 +20,13 @@
 - [x] Implement MemberService unit test <!-- id: 11 -->
 - [x] Implement AuthController integration test <!-- id: 12 -->
 - [x] Verify all tests pass <!-- id: 13 -->
+
+# Project Renaming Task (Frontend Only)
+
+- [x] Revert backend changes <!-- id: 14 -->
+- [x] Create implementation plan for frontend renaming <!-- id: 15 -->
+- [x] Frontend: Replace UI text 'EzenRoad' with 'Linkisy' <!-- id: 16 -->
+- [x] Frontend: Update metadata (title, description) <!-- id: 17 -->
+- [x] Verify frontend changes <!-- id: 18 -->
+
+

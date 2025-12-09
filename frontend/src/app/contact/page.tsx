@@ -20,7 +20,7 @@ export default function ContactPage() {
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-4xl mx-auto px-4">
         <h1 className="text-3xl font-bold mb-8">문의하기</h1>
-        
+
         <div className="grid md:grid-cols-2 gap-8">
           {/* 연락처 정보 */}
           <div className="bg-white rounded-lg shadow p-6">
@@ -28,7 +28,7 @@ export default function ContactPage() {
             <div className="space-y-4">
               <div>
                 <h3 className="font-medium text-gray-700">이메일</h3>
-                <p className="text-gray-600">support@ezenroad.com</p>
+                <p className="text-gray-600">support@linkisy.com</p>
               </div>
               <div>
                 <h3 className="font-medium text-gray-700">전화</h3>

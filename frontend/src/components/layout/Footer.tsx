@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { MapPin, Phone, Mail, Clock } from 'lucide-react';
 
 export default function Footer() {
@@ -24,17 +25,16 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-gray-900 text-gray-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+    <footer className="bg-gray-950 text-gray-400 font-sans">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
           {/* Company Info */}
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <span className="text-2xl">🍽️</span>
-              <span className="text-xl font-bold text-white">EzenRoad</span>
+              <Image src="/logo-footer2.png" alt="Linkisy" width={120} height={40} className="h-8 w-auto" />
             </Link>
             <p className="text-sm mb-4">
-              EzenRoad는 맛집 탐색과 예약을 손쉽게 할 수 있는 플랫폼입니다.
+              Linkisy는 맛집 탐색과 예약을 손쉽게 할 수 있는 플랫폼입니다.
               다양한 맛집 정보와 생생한 리뷰를 확인해보세요.
             </p>
             <div className="space-y-2 text-sm">
@@ -48,7 +48,7 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
-                <span>support@ezenroad.com</span>
+                <span>support@linkisy.com</span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
@@ -81,7 +81,7 @@ export default function Footer() {
         <div className="border-t border-gray-800 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-gray-500">
-              © {currentYear} EzenRoad. All rights reserved.
+              © {currentYear} Linkisy. All rights reserved.
             </p>
             <div className="flex items-center gap-4">
               <span className="text-sm text-gray-500">

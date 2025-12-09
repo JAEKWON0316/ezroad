@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ChevronLeft, User, Mail, Phone, MapPin, Camera } from 'lucide-react';
+import { ChevronLeft, User, Mail, Phone, MapPin, Camera, Save, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { fileApi } from '@/lib/api';
 import Button from '@/components/common/Button';
@@ -81,7 +81,7 @@ export default function EditProfilePage() {
         ...data,
         profileImage: profileImage || undefined,
       });
-      toast.success('프로필이 수정되었습니다');
+      toast.success('프로필이 성공적으로 수정되었습니다 ✨');
       router.push('/mypage');
     } catch {
       toast.error('프로필 수정에 실패했습니다');
@@ -92,121 +92,154 @@ export default function EditProfilePage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Loading size="lg" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b sticky top-16 z-30">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-full">
-            <ChevronLeft className="h-6 w-6" />
-          </button>
-          <h1 className="font-semibold text-gray-900">프로필 수정</h1>
+    <div className="min-h-screen bg-gray-50 pb-20">
+      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-100">
+        <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button onClick={() => router.back()} className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors">
+              <ArrowLeft className="h-6 w-6 text-gray-700" />
+            </button>
+            <h1 className="text-xl font-bold text-gray-900">프로필 수정</h1>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-6">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Profile Image */}
-          <div className="bg-white rounded-xl p-6 shadow-sm">
-            <div className="flex flex-col items-center">
-              <div className="relative">
-                <div className="w-24 h-24 rounded-full bg-orange-100 flex items-center justify-center overflow-hidden">
-                  {profileImage ? (
-                    <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
-                  ) : (
-                    <User className="h-12 w-12 text-orange-500" />
-                  )}
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          {/* Profile Image Section */}
+          <div className="flex flex-col items-center">
+            <div className="relative group">
+              <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gradient-to-br from-orange-100 to-yellow-100 flex items-center justify-center">
+                {profileImage ? (
+                  <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <User className="h-14 w-14 text-orange-300" />
+                )}
+              </div>
+
+              <label className="absolute bottom-0 right-0 w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center cursor-pointer shadow-md hover:bg-orange-600 transition-all hover:scale-110">
+                {isUploadingImage ? (
+                  <Loading size="sm" />
+                ) : (
+                  <Camera className="h-5 w-5" />
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                  disabled={isUploadingImage}
+                />
+              </label>
+            </div>
+            <p className="text-sm text-gray-500 mt-3">프로필 사진을 클릭하여 변경하세요</p>
+          </div>
+
+          <div className="space-y-6">
+            {/* Basic Info Card */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <h2 className="text-lg font-bold text-gray-900 mb-5 flex items-center gap-2">
+                <User className="h-5 w-5 text-orange-500" />
+                기본 정보
+              </h2>
+
+              <div className="space-y-5">
+                <div className="p-4 bg-gray-50 rounded-xl flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm">
+                    <Mail className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-400 font-medium">이메일 (변경불가)</p>
+                    <p className="text-gray-900 font-medium">{user?.email}</p>
+                  </div>
                 </div>
-                <label className="absolute bottom-0 right-0 p-2 bg-orange-500 text-white rounded-full cursor-pointer hover:bg-orange-600">
-                  {isUploadingImage ? (
-                    <Loading size="sm" />
-                  ) : (
-                    <Camera className="h-4 w-4" />
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="hidden"
-                    disabled={isUploadingImage}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <Input
+                    label="이름"
+                    leftIcon={<User className="h-5 w-5 text-gray-400" />}
+                    error={errors.name?.message}
+                    {...register('name')}
+                    className="bg-gray-50/50 focus:bg-white"
                   />
-                </label>
+
+                  <Input
+                    label="닉네임"
+                    leftIcon={<User className="h-5 w-5 text-gray-400" />}
+                    error={errors.nickname?.message}
+                    {...register('nickname')}
+                    className="bg-gray-50/50 focus:bg-white"
+                  />
+                </div>
+
+                <Input
+                  label="전화번호"
+                  leftIcon={<Phone className="h-5 w-5 text-gray-400" />}
+                  placeholder="010-0000-0000"
+                  error={errors.phone?.message}
+                  {...register('phone')}
+                  className="bg-gray-50/50 focus:bg-white"
+                />
               </div>
-              <p className="text-sm text-gray-500 mt-2">프로필 사진 변경</p>
+            </div>
+
+            {/* Address Card */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <h2 className="text-lg font-bold text-gray-900 mb-5 flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-orange-500" />
+                주소 정보
+              </h2>
+
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <div className="w-1/3">
+                    <Input
+                      label="우편번호"
+                      placeholder="12345"
+                      error={errors.zipcode?.message}
+                      {...register('zipcode')}
+                      className="bg-gray-50/50 focus:bg-white"
+                    />
+                  </div>
+                </div>
+
+                <Input
+                  label="기본 주소"
+                  placeholder="주소를 입력하세요"
+                  error={errors.address?.message}
+                  {...register('address')}
+                  className="bg-gray-50/50 focus:bg-white"
+                />
+
+                <Input
+                  label="상세 주소"
+                  placeholder="동/호수 등 상세주소를 입력하세요"
+                  error={errors.addressDetail?.message}
+                  {...register('addressDetail')}
+                  className="bg-gray-50/50 focus:bg-white"
+                />
+              </div>
             </div>
           </div>
 
-          {/* Basic Info */}
-          <div className="bg-white rounded-xl p-6 shadow-sm space-y-4">
-            <h2 className="font-semibold text-gray-900 mb-4">기본 정보</h2>
-            
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <Mail className="h-5 w-5 text-gray-400" />
-              <div>
-                <p className="text-xs text-gray-500">이메일</p>
-                <p className="text-gray-900">{user?.email}</p>
-              </div>
-            </div>
-
-            <Input
-              label="이름"
-              leftIcon={<User className="h-5 w-5 text-gray-400" />}
-              error={errors.name?.message}
-              {...register('name')}
-            />
-
-            <Input
-              label="닉네임"
-              leftIcon={<User className="h-5 w-5 text-gray-400" />}
-              error={errors.nickname?.message}
-              {...register('nickname')}
-            />
-
-            <Input
-              label="전화번호"
-              leftIcon={<Phone className="h-5 w-5 text-gray-400" />}
-              placeholder="010-0000-0000"
-              error={errors.phone?.message}
-              {...register('phone')}
-            />
+          <div className="pt-4 pb-12">
+            <Button
+              type="submit"
+              className="w-full py-4 text-lg font-bold shadow-xl shadow-orange-200"
+              size="lg"
+              isLoading={isSubmitting}
+            >
+              <Save className="w-5 h-5 mr-2" />
+              변경사항 저장하기
+            </Button>
           </div>
-
-          {/* Address */}
-          <div className="bg-white rounded-xl p-6 shadow-sm space-y-4">
-            <h2 className="font-semibold text-gray-900 mb-4">주소</h2>
-
-            <Input
-              label="우편번호"
-              placeholder="12345"
-              error={errors.zipcode?.message}
-              {...register('zipcode')}
-            />
-
-            <Input
-              label="주소"
-              leftIcon={<MapPin className="h-5 w-5 text-gray-400" />}
-              placeholder="주소를 입력하세요"
-              error={errors.address?.message}
-              {...register('address')}
-            />
-
-            <Input
-              label="상세 주소"
-              placeholder="상세 주소를 입력하세요"
-              error={errors.addressDetail?.message}
-              {...register('addressDetail')}
-            />
-          </div>
-
-          <Button type="submit" className="w-full" size="lg" isLoading={isSubmitting}>
-            저장하기
-          </Button>
         </form>
       </div>
     </div>

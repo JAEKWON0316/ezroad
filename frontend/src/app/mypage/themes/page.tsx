@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { ChevronLeft, Plus, Trash2, Edit, Globe, Lock } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { themeApi } from '@/lib/api';
 import type { Theme, PageResponse } from '@/types';
+import Button from '@/components/common/Button';
 
 export default function MyThemesPage() {
   const router = useRouter();
@@ -47,7 +49,7 @@ export default function MyThemesPage() {
   const handleDelete = async (themeId: number, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (!confirm('정말 이 테마를 삭제하시겠습니까?')) return;
 
     try {
@@ -65,131 +67,153 @@ export default function MyThemesPage() {
 
   if (authLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex justify-center items-center min-h-screen bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* 헤더 */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">내 테마</h1>
-          <p className="text-gray-600 mt-2">내가 만든 맛집 테마를 관리하세요</p>
-        </div>
-        <Link
-          href="/themes/new"
-          className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-medium transition"
-        >
-          + 새 테마
-        </Link>
-      </div>
+    <div className="min-h-screen bg-gray-50 pb-20">
+      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button onClick={() => router.back()} className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors">
+              <ChevronLeft className="h-6 w-6 text-gray-700" />
+            </button>
+            <h1 className="text-xl font-bold text-gray-900">내 테마 관리</h1>
+          </div>
 
-      {/* 테마 목록 */}
-      {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
-        </div>
-      ) : themes.length === 0 ? (
-        <div className="text-center py-16 bg-gray-50 rounded-xl">
-          <p className="text-gray-500 text-lg mb-4">아직 만든 테마가 없습니다</p>
-          <Link
-            href="/themes/new"
-            className="inline-block bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition"
-          >
-            첫 테마 만들기
+          <Link href="/themes/new">
+            <Button size="sm" className="shadow-md shadow-orange-100">
+              <Plus className="w-4 h-4 mr-1" /> 새 테마
+            </Button>
           </Link>
         </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {themes.map((theme) => (
-              <div key={theme.id} className="relative group">
-                <Link href={`/themes/${theme.id}`}>
-                  <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition cursor-pointer">
-                    {/* 썸네일 */}
-                    <div className="relative h-40 bg-gray-100">
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+          </div>
+        ) : themes.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
+            <span className="text-6xl mb-4 block">🎨</span>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">아직 만든 테마가 없습니다</h3>
+            <p className="text-gray-500 mb-6">나만의 맛집 리스트를 만들어 공유해보세요!</p>
+            <Link href="/themes/new">
+              <Button size="lg" className="shadow-lg shadow-orange-200">첫 테마 만들기</Button>
+            </Link>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {themes.map((theme, index) => (
+                <div
+                  key={theme.id}
+                  className="group relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden flex flex-col h-full"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <Link href={`/themes/${theme.id}`} className="block h-full">
+                    {/* Thumbnail Area */}
+                    <div className="relative h-48 bg-gray-100 overflow-hidden">
                       {theme.thumbnail ? (
-                        <Image src={theme.thumbnail} alt={theme.title} fill className="object-cover" />
+                        <Image
+                          src={theme.thumbnail}
+                          alt={theme.title}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-100 to-orange-200">
-                          <span className="text-4xl">🍽️</span>
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-100 to-yellow-100">
+                          <span className="text-4xl group-hover:scale-110 transition-transform duration-300">🍽️</span>
                         </div>
                       )}
+
+                      {/* Privacy Badge */}
                       <div className="absolute top-3 right-3 flex gap-2">
-                        <span className={`px-2 py-1 rounded-full text-xs ${theme.isPublic ? 'bg-green-500 text-white' : 'bg-gray-500 text-white'}`}>
-                          {theme.isPublic ? '공개' : '비공개'}
-                        </span>
-                        <span className="bg-black/70 text-white px-2 py-1 rounded-full text-xs">
-                          {theme.restaurantCount}개
-                        </span>
+                        {theme.isPublic ? (
+                          <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-green-500/90 text-white backdrop-blur shadow-sm">
+                            <Globe className="w-3 h-3" /> 공개
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-gray-700/90 text-white backdrop-blur shadow-sm">
+                            <Lock className="w-3 h-3" /> 비공개
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Count Badge */}
+                      <div className="absolute bottom-3 right-3 bg-black/50 text-white px-2.5 py-1 rounded-lg text-xs font-medium backdrop-blur">
+                        {theme.restaurantCount}곳의 맛집
                       </div>
                     </div>
 
-                    {/* 내용 */}
-                    <div className="p-4">
-                      <h3 className="font-bold text-gray-900 mb-1 line-clamp-1">{theme.title}</h3>
-                      {theme.description && (
-                        <p className="text-gray-500 text-sm line-clamp-2 mb-2">{theme.description}</p>
-                      )}
-                      <div className="text-sm text-gray-400">👁 {theme.viewCount}</div>
+                    {/* Content Area */}
+                    <div className="p-5 flex-1 flex flex-col">
+                      <h3 className="font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-orange-600 transition-colors text-lg">
+                        {theme.title}
+                      </h3>
+                      <p className="text-gray-500 text-sm line-clamp-2 mb-4 flex-1 leading-relaxed">
+                        {theme.description || '설명이 없습니다.'}
+                      </p>
+                      <div className="flex items-center text-xs text-gray-400 pt-3 border-t border-gray-100">
+                        <span className="flex-1">👁 조회수 {theme.viewCount}</span>
+                        <span>{new Date(theme.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </Link>
+
+                  {/* Actions Overlay (Visible on Hover) */}
+                  <div className="absolute top-0 left-0 w-full p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <div className="flex gap-2">
+                      <Link
+                        href={`/themes/${theme.id}/edit`}
+                        className="p-2 bg-white/90 backdrop-blur text-gray-700 rounded-xl shadow-lg hover:text-orange-600 hover:bg-white transition-all transform hover:scale-105"
+                        onClick={(e) => e.stopPropagation()}
+                        title="수정"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Link>
+                      <button
+                        onClick={(e) => handleDelete(theme.id, e)}
+                        disabled={deleting === theme.id}
+                        className="p-2 bg-white/90 backdrop-blur text-red-500 rounded-xl shadow-lg hover:bg-red-500 hover:text-white transition-all transform hover:scale-105"
+                        title="삭제"
+                      >
+                        {deleting === theme.id ? <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                      </button>
                     </div>
                   </div>
-                </Link>
-
-                {/* 액션 버튼 (호버 시 표시) */}
-                <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition flex gap-2">
-                  <Link
-                    href={`/themes/${theme.id}/edit`}
-                    className="px-3 py-1 bg-white shadow rounded-lg text-sm hover:bg-gray-50"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    수정
-                  </Link>
-                  <button
-                    onClick={(e) => handleDelete(theme.id, e)}
-                    disabled={deleting === theme.id}
-                    className="px-3 py-1 bg-red-500 text-white shadow rounded-lg text-sm hover:bg-red-600 disabled:opacity-50"
-                  >
-                    {deleting === theme.id ? '삭제중...' : '삭제'}
-                  </button>
                 </div>
-              </div>
-            ))}
-          </div>
-
-          {/* 페이지네이션 */}
-          {totalPages > 1 && (
-            <div className="flex justify-center gap-2 mt-8">
-              <button
-                onClick={() => setPage(p => p - 1)}
-                disabled={page === 0}
-                className="px-4 py-2 border rounded-lg disabled:opacity-50 hover:bg-gray-50"
-              >
-                이전
-              </button>
-              <span className="px-4 py-2">
-                {page + 1} / {totalPages}
-              </span>
-              <button
-                onClick={() => setPage(p => p + 1)}
-                disabled={page >= totalPages - 1}
-                className="px-4 py-2 border rounded-lg disabled:opacity-50 hover:bg-gray-50"
-              >
-                다음
-              </button>
+              ))}
             </div>
-          )}
-        </>
-      )}
 
-      {/* 하단 링크 */}
-      <div className="mt-8 pt-8 border-t">
-        <Link href="/mypage" className="text-gray-600 hover:text-gray-900">
-          ← 마이페이지로 돌아가기
-        </Link>
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center gap-2 mt-12">
+                <Button
+                  variant="outline"
+                  onClick={() => setPage(p => p - 1)}
+                  disabled={page === 0}
+                >
+                  이전
+                </Button>
+                <span className="flex items-center px-4 font-medium text-gray-600">
+                  {page + 1} / {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  onClick={() => setPage(p => p + 1)}
+                  disabled={page >= totalPages - 1}
+                >
+                  다음
+                </Button>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

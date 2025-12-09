@@ -2,12 +2,15 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Star, MessageSquare, User, MapPin } from 'lucide-react';
+import Image from 'next/image';
+import { Star, MessageSquare, User, MapPin, Quote } from 'lucide-react';
 import { reviewApi } from '@/lib/api';
 import { Review, PageResponse } from '@/types';
 import Loading from '@/components/common/Loading';
 import Pagination from '@/components/common/Pagination';
 import RatingStars from '@/components/common/RatingStars';
+import { useAuth } from '@/context/AuthContext';
+import Button from '@/components/common/Button';
 
 export default function ReviewsPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -35,40 +38,49 @@ export default function ReviewsPage() {
   }, [fetchReviews]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-            맛집 리뷰 ⭐
+    <div className="min-h-screen bg-gray-50 pb-20">
+      {/* Modern Header */}
+      <div className="relative bg-gradient-to-br from-yellow-500 to-orange-600 text-white overflow-hidden mb-12">
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-20 mix-blend-overlay" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent" />
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 text-center">
+          <div className="inline-flex items-center justify-center p-3 bg-white/20 backdrop-blur-md rounded-full mb-6 shadow-lg animate-fade-in-up">
+            <MessageSquare className="h-8 w-8 text-yellow-100" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 shadow-sm animate-fade-in-up delay-75">
+            생생한 맛집 리뷰
           </h1>
-          <p className="text-gray-500 mt-2">
-            {totalElements.toLocaleString()}개의 솔직한 리뷰를 확인해보세요
+          <p className="text-lg text-orange-100 max-w-2xl mx-auto animate-fade-in-up delay-150">
+            <span className="font-bold text-white">{totalElements.toLocaleString()}</span>개의 솔직한 후기가 여러분을 기다리고 있어요.
           </p>
         </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {isLoading ? (
-          <div className="flex justify-center py-12">
+          <div className="flex justify-center py-20">
             <Loading size="lg" />
           </div>
         ) : reviews.length === 0 ? (
-          <div className="text-center py-12">
-            <MessageSquare className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">아직 리뷰가 없습니다</p>
+          <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
+            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <MessageSquare className="h-10 w-10 text-gray-300" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">아직 작성된 리뷰가 없어요</h3>
+            <p className="text-gray-500">첫 번째 리뷰의 주인공이 되어보세요!</p>
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {reviews.map((review) => (
-                <ReviewCard key={review.id} review={review} />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {reviews.map((review, index) => (
+                <ReviewCard key={review.id} review={review} index={index} />
               ))}
             </div>
 
             {totalPages > 1 && (
-              <div className="mt-12">
+              <div className="mt-16 flex justify-center">
                 <Pagination
                   currentPage={page}
                   totalPages={totalPages}
@@ -83,74 +95,94 @@ export default function ReviewsPage() {
   );
 }
 
-function ReviewCard({ review }: { review: Review }) {
+function ReviewCard({ review, index }: { review: Review; index: number }) {
   return (
-    <Link href={`/restaurants/${review.restaurantId}`}>
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow h-full flex flex-col">
-        {/* Review Image */}
-        {review.images && review.images.length > 0 ? (
-          <div className="relative h-48">
-            <img
+    <Link href={`/restaurants/${review.restaurantId}`} className="group h-full block">
+      <div
+        className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 h-full flex flex-col hover:-translate-y-1 transform"
+        style={{ animationDelay: `${index * 50}ms` }}
+      >
+        {/* Review Image Area */}
+        <div className="relative h-56 overflow-hidden bg-gray-100">
+          {review.images && review.images.length > 0 ? (
+            <Image
               src={review.images[0]}
               alt="리뷰 이미지"
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover group-hover:scale-110 transition-transform duration-700"
             />
-            {review.images.length > 1 && (
-              <span className="absolute bottom-2 right-2 bg-black/60 text-white px-2 py-1 rounded text-xs">
-                +{review.images.length - 1}
-              </span>
-            )}
-          </div>
-        ) : (
-          <div className="h-32 bg-gradient-to-br from-orange-100 to-orange-50 flex items-center justify-center">
-            <MessageSquare className="h-10 w-10 text-orange-300" />
-          </div>
-        )}
-
-        <div className="p-4 flex-1 flex flex-col">
-          {/* Restaurant Info */}
-          {review.restaurant && (
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-sm font-medium text-orange-500 bg-orange-50 px-2 py-0.5 rounded">
-                {review.restaurant.category}
-              </span>
-              <span className="text-sm font-semibold text-gray-900 line-clamp-1">
-                {review.restaurant.name}
-              </span>
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-50 to-yellow-50 group-hover:scale-110 transition-transform duration-700">
+              <Quote className="h-12 w-12 text-orange-200" />
             </div>
           )}
 
-          {/* Rating */}
-          <div className="flex items-center gap-2 mb-2">
-            <RatingStars rating={review.rating} size="sm" />
-            <span className="text-sm font-medium text-gray-900">{review.rating}.0</span>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
+
+          {/* Top Badge: Restaurant Category */}
+          {review.restaurant && (
+            <span className="absolute top-3 left-3 bg-white/90 backdrop-blur text-gray-800 text-xs font-bold px-2 py-1 rounded-lg shadow-sm">
+              {review.restaurant.category}
+            </span>
+          )}
+
+          {/* Bottom Badge: Rating */}
+          <div className="absolute bottom-3 right-3 flex items-center bg-white/95 backdrop-blur px-2 py-1 rounded-lg shadow-lg">
+            <Star className="w-3.5 h-3.5 text-yellow-400 fill-current mr-1" />
+            <span className="text-sm font-bold text-gray-900">{review.rating.toFixed(1)}</span>
           </div>
 
-          {/* Content */}
-          {review.title && (
-            <h3 className="font-medium text-gray-900 mb-1 line-clamp-1">{review.title}</h3>
+          {review.images && review.images.length > 1 && (
+            <span className="absolute bottom-3 left-3 bg-black/50 backdrop-blur text-white text-[10px] px-2 py-1 rounded-full">
+              +{review.images.length - 1} more
+            </span>
           )}
-          <p className="text-gray-600 text-sm line-clamp-3 flex-1">{review.content}</p>
+        </div>
 
-          {/* Author & Date */}
-          <div className="flex items-center justify-between mt-4 pt-3 border-t">
+        {/* Content Area */}
+        <div className="p-5 flex-1 flex flex-col">
+          {/* Restaurant Name */}
+          {review.restaurant && (
+            <h3 className="font-bold text-lg text-gray-900 mb-2 truncate group-hover:text-orange-600 transition-colors">
+              {review.restaurant.name}
+            </h3>
+          )}
+
+          {/* Review Text */}
+          <div className="relative mb-4 flex-1">
+            <Quote className="absolute -top-1 -left-1 w-6 h-6 text-gray-100 fill-current -z-10 transform scale-150 rotate-180" />
+            {review.title && (
+              <h4 className="font-medium text-gray-800 text-sm mb-1 line-clamp-1">{review.title}</h4>
+            )}
+            <p className="text-gray-600 text-sm line-clamp-3 leading-relaxed">
+              {review.content}
+            </p>
+          </div>
+
+          {/* Footer: User & Date */}
+          <div className="flex items-center justify-between pt-4 border-t border-gray-50 mt-auto">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
+              <div className="relative w-8 h-8 rounded-full bg-gray-100 overflow-hidden ring-2 ring-white shadow-sm">
                 {review.member?.profileImage ? (
-                  <img
+                  <Image
                     src={review.member.profileImage}
                     alt={review.member.nickname}
-                    className="w-6 h-6 rounded-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 ) : (
-                  <User className="h-3 w-3 text-gray-400" />
+                  <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                    <User className="h-4 w-4 text-gray-400" />
+                  </div>
                 )}
               </div>
-              <span className="text-sm text-gray-600">{review.member?.nickname}</span>
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-gray-700 line-clamp-1 max-w-[100px]">{review.member?.nickname}</span>
+                <span className="text-[10px] text-gray-400">
+                  {new Date(review.createdAt).toLocaleDateString()}
+                </span>
+              </div>
             </div>
-            <span className="text-xs text-gray-400">
-              {new Date(review.createdAt).toLocaleDateString()}
-            </span>
           </div>
         </div>
       </div>
