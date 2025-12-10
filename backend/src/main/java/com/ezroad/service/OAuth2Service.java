@@ -318,7 +318,6 @@ public class OAuth2Service {
                         .nickname(uniqueNickname)
                         .profileImage(userInfo.getProfileImage())
                         .role(MemberRole.USER)
-                        .provider(Provider.LOCAL) // 기본값 LOCAL
                         .build();
                 member = memberRepository.save(member);
                 
