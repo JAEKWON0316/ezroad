@@ -129,4 +129,13 @@ public class Member {
     public void updatePassword(String password) {
         this.password = password;
     }
+
+    // 소셜 계정 연동 (Auto Link)
+    public void linkSocialAccount(Provider provider, String providerId, String profileImage) {
+        this.provider = provider;
+        this.providerId = providerId;
+        if (this.profileImage == null && profileImage != null) {
+            this.profileImage = profileImage;
+        }
+    }
 }

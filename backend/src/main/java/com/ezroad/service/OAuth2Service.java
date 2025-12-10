@@ -277,35 +277,47 @@ public class OAuth2Service {
     // ==================== 공통 로그인 처리 ====================
 
     private AuthResponse processOAuth2Login(OAuth2UserInfo userInfo) {
-        // 1. 기존 소셜 회원 조회
-        Optional<Member> existingMember = memberRepository.findByProviderAndProviderId(
+        // 1. provider + providerId로 기존 소셜 회원 조회
+        Optional<Member> existingBySocial = memberRepository.findByProviderAndProviderId(
                 userInfo.getProvider(), userInfo.getProviderId());
 
         Member member;
-        if (existingMember.isPresent()) {
-            // 기존 회원 로그인
-            member = existingMember.get();
-            log.info("소셜 로그인 성공 (기존 회원): {} - {}", userInfo.getProvider(), userInfo.getEmail());
+        
+        if (existingBySocial.isPresent()) {
+            // 기존 소셜 회원 로그인
+            member = existingBySocial.get();
+            log.info("소셜 로그인 성공 (기존 소셜 회원): {} - {}", userInfo.getProvider(), userInfo.getEmail());
         } else {
-            // 신규 회원 생성
-            String uniqueNickname = generateUniqueNickname(userInfo.getNickname());
+            // 2. 같은 이메일의 기존 회원 조회 (Auto Link)
+            Optional<Member> existingByEmail = memberRepository.findByEmail(userInfo.getEmail());
             
-            member = Member.builder()
-                    .email(userInfo.getEmail())
-                    .password(UUID.randomUUID().toString()) // 소셜 로그인은 비밀번호 불필요 (랜덤값)
-                    .name(userInfo.getName())
-                    .nickname(uniqueNickname)
-                    .profileImage(userInfo.getProfileImage())
-                    .role(MemberRole.USER)
-                    .provider(userInfo.getProvider())
-                    .providerId(userInfo.getProviderId())
-                    .build();
-            
-            member = memberRepository.save(member);
-            log.info("소셜 로그인 성공 (신규 회원): {} - {}", userInfo.getProvider(), userInfo.getEmail());
+            if (existingByEmail.isPresent()) {
+                // 기존 이메일 회원에 소셜 계정 연동
+                member = existingByEmail.get();
+                member.linkSocialAccount(userInfo.getProvider(), userInfo.getProviderId(), userInfo.getProfileImage());
+                member = memberRepository.save(member);
+                log.info("소셜 계정 연동 성공 (Auto Link): {} - {}", userInfo.getProvider(), userInfo.getEmail());
+            } else {
+                // 3. 신규 회원 생성
+                String uniqueNickname = generateUniqueNickname(userInfo.getNickname());
+                
+                member = Member.builder()
+                        .email(userInfo.getEmail())
+                        .password(UUID.randomUUID().toString()) // 소셜 로그인은 비밀번호 불필요
+                        .name(userInfo.getName())
+                        .nickname(uniqueNickname)
+                        .profileImage(userInfo.getProfileImage())
+                        .role(MemberRole.USER)
+                        .provider(userInfo.getProvider())
+                        .providerId(userInfo.getProviderId())
+                        .build();
+                
+                member = memberRepository.save(member);
+                log.info("소셜 로그인 성공 (신규 회원): {} - {}", userInfo.getProvider(), userInfo.getEmail());
+            }
         }
 
-        // 2. JWT 토큰 발급
+        // JWT 토큰 발급
         String accessToken = jwtTokenProvider.generateToken(member.getId(), member.getEmail(), member.getRole().name());
         String refreshToken = jwtTokenProvider.generateRefreshToken(member.getId(), member.getEmail());
 
