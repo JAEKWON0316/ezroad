@@ -5,8 +5,10 @@ import com.ezroad.dto.response.AuthResponse;
 import com.ezroad.dto.response.MemberResponse;
 import com.ezroad.dto.response.OAuth2UserInfo;
 import com.ezroad.entity.Member;
+import com.ezroad.entity.MemberOAuth;
 import com.ezroad.entity.MemberRole;
 import com.ezroad.entity.Provider;
+import com.ezroad.repository.MemberOAuthRepository;
 import com.ezroad.repository.MemberRepository;
 import com.ezroad.security.JwtTokenProvider;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -32,6 +34,7 @@ public class OAuth2Service {
 
     private final OAuth2Properties oAuth2Properties;
     private final MemberRepository memberRepository;
+    private final MemberOAuthRepository memberOAuthRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -66,13 +69,8 @@ public class OAuth2Service {
 
     @Transactional
     public AuthResponse processKakaoCallback(String code) {
-        // 1. 인가코드로 액세스 토큰 교환
         String accessToken = getKakaoAccessToken(code);
-        
-        // 2. 액세스 토큰으로 사용자 정보 조회
         OAuth2UserInfo userInfo = getKakaoUserInfo(accessToken);
-        
-        // 3. 회원 조회 또는 생성 + JWT 발급
         return processOAuth2Login(userInfo);
     }
 
@@ -274,46 +272,65 @@ public class OAuth2Service {
         }
     }
 
-    // ==================== 공통 로그인 처리 ====================
+    // ==================== 공통 로그인 처리 (member_oauth 테이블 사용) ====================
 
     private AuthResponse processOAuth2Login(OAuth2UserInfo userInfo) {
-        // 1. provider + providerId로 기존 소셜 회원 조회
-        Optional<Member> existingBySocial = memberRepository.findByProviderAndProviderId(
+        // 1. member_oauth에서 provider + providerId로 기존 연동 조회
+        Optional<MemberOAuth> existingOAuth = memberOAuthRepository.findByProviderAndProviderId(
                 userInfo.getProvider(), userInfo.getProviderId());
 
         Member member;
         
-        if (existingBySocial.isPresent()) {
-            // 기존 소셜 회원 로그인
-            member = existingBySocial.get();
-            log.info("소셜 로그인 성공 (기존 소셜 회원): {} - {}", userInfo.getProvider(), userInfo.getEmail());
+        if (existingOAuth.isPresent()) {
+            // 기존 소셜 연동으로 로그인
+            member = existingOAuth.get().getMember();
+            log.info("소셜 로그인 성공 (기존 연동): {} - {}", userInfo.getProvider(), userInfo.getEmail());
         } else {
-            // 2. 같은 이메일의 기존 회원 조회 (Auto Link)
+            // 2. 같은 이메일의 기존 회원 조회
             Optional<Member> existingByEmail = memberRepository.findByEmail(userInfo.getEmail());
             
             if (existingByEmail.isPresent()) {
-                // 기존 이메일 회원에 소셜 계정 연동
+                // 기존 회원에 소셜 연동 추가
                 member = existingByEmail.get();
-                member.linkSocialAccount(userInfo.getProvider(), userInfo.getProviderId(), userInfo.getProfileImage());
-                member = memberRepository.save(member);
-                log.info("소셜 계정 연동 성공 (Auto Link): {} - {}", userInfo.getProvider(), userInfo.getEmail());
+                
+                MemberOAuth newOAuth = MemberOAuth.builder()
+                        .member(member)
+                        .provider(userInfo.getProvider())
+                        .providerId(userInfo.getProviderId())
+                        .build();
+                memberOAuthRepository.save(newOAuth);
+                
+                // 프로필 이미지가 없으면 소셜 프로필로 업데이트
+                if (member.getProfileImage() == null && userInfo.getProfileImage() != null) {
+                    member.updateProfile(null, null, null, null, userInfo.getProfileImage());
+                    memberRepository.save(member);
+                }
+                
+                log.info("소셜 계정 연동 추가: {} - {}", userInfo.getProvider(), userInfo.getEmail());
             } else {
-                // 3. 신규 회원 생성
+                // 3. 신규 회원 생성 + 소셜 연동
                 String uniqueNickname = generateUniqueNickname(userInfo.getNickname());
                 
                 member = Member.builder()
                         .email(userInfo.getEmail())
-                        .password(UUID.randomUUID().toString()) // 소셜 로그인은 비밀번호 불필요
+                        .password(UUID.randomUUID().toString())
                         .name(userInfo.getName())
                         .nickname(uniqueNickname)
                         .profileImage(userInfo.getProfileImage())
                         .role(MemberRole.USER)
+                        .provider(Provider.LOCAL) // 기본값 LOCAL
+                        .build();
+                member = memberRepository.save(member);
+                
+                // member_oauth에 연동 추가
+                MemberOAuth newOAuth = MemberOAuth.builder()
+                        .member(member)
                         .provider(userInfo.getProvider())
                         .providerId(userInfo.getProviderId())
                         .build();
+                memberOAuthRepository.save(newOAuth);
                 
-                member = memberRepository.save(member);
-                log.info("소셜 로그인 성공 (신규 회원): {} - {}", userInfo.getProvider(), userInfo.getEmail());
+                log.info("소셜 로그인 신규 가입: {} - {}", userInfo.getProvider(), userInfo.getEmail());
             }
         }
 
