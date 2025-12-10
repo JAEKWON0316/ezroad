@@ -2,6 +2,7 @@ package com.ezroad.repository;
 
 import com.ezroad.entity.Member;
 import com.ezroad.entity.MemberRole;
+import com.ezroad.entity.Provider;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,6 +25,12 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     boolean existsByNickname(String nickname);
     
     Optional<Member> findByEmailAndDeletedAtIsNull(String email);
+    
+    // ==================== 소셜 로그인 ====================
+    
+    Optional<Member> findByProviderAndProviderId(Provider provider, String providerId);
+    
+    Optional<Member> findByEmailAndProvider(String email, Provider provider);
     
     // ==================== 관리자용 검색 ====================
     

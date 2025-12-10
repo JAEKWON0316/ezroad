@@ -17,6 +17,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   updateUser: (data: Partial<User>) => Promise<void>;
   refreshUser: () => Promise<void>;
+  setTokens: (accessToken: string, refreshToken: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -159,6 +160,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await fetchUser();
   };
 
+  // 소셜 로그인용 토큰 직접 설정
+  const setTokens = async (accessToken: string, refreshToken: string) => {
+    // 7일간 유지
+    Cookies.set('accessToken', accessToken, { expires: 7 });
+    Cookies.set('refreshToken', refreshToken, { expires: 7 });
+    
+    // 사용자 정보 가져오기
+    await fetchUser();
+  };
+
   const value = {
     user,
     isLoading,
@@ -168,6 +179,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logout,
     updateUser,
     refreshUser,
+    setTokens,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

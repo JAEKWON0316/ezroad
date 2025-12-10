@@ -27,6 +27,8 @@ import {
 } from '@/types';
 
 // ==================== Auth API ====================
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+
 export const authApi = {
   login: async (data: LoginRequest): Promise<AuthResponse> => {
     const response = await api.post<AuthResponse>('/auth/login', data);
@@ -46,6 +48,11 @@ export const authApi = {
   logout: async (): Promise<void> => {
     await api.post('/auth/logout');
   },
+
+  // OAuth2 소셜 로그인 URL
+  getKakaoLoginUrl: (): string => `${API_BASE_URL}/auth/oauth2/kakao`,
+  getNaverLoginUrl: (): string => `${API_BASE_URL}/auth/oauth2/naver`,
+  getGoogleLoginUrl: (): string => `${API_BASE_URL}/auth/oauth2/google`,
 };
 
 // ==================== Member API ====================
