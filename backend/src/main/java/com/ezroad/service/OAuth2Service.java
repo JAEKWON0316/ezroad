@@ -42,7 +42,8 @@ public class OAuth2Service {
         return "https://kauth.kakao.com/oauth/authorize"
                 + "?client_id=" + oAuth2Properties.getKakao().getClientId()
                 + "&redirect_uri=" + URLEncoder.encode(oAuth2Properties.getKakao().getRedirectUri(), StandardCharsets.UTF_8)
-                + "&response_type=code";
+                + "&response_type=code"
+                + "&prompt=login"; // 매번 로그인 창 표시
     }
 
     public String getNaverLoginUrl() {
@@ -51,7 +52,8 @@ public class OAuth2Service {
                 + "?client_id=" + oAuth2Properties.getNaver().getClientId()
                 + "&redirect_uri=" + URLEncoder.encode(oAuth2Properties.getNaver().getRedirectUri(), StandardCharsets.UTF_8)
                 + "&response_type=code"
-                + "&state=" + state;
+                + "&state=" + state
+                + "&auth_type=reauthenticate"; // 매번 로그인 창 표시
     }
 
     public String getGoogleLoginUrl() {
@@ -59,7 +61,8 @@ public class OAuth2Service {
                 + "?client_id=" + oAuth2Properties.getGoogle().getClientId()
                 + "&redirect_uri=" + URLEncoder.encode(oAuth2Properties.getGoogle().getRedirectUri(), StandardCharsets.UTF_8)
                 + "&response_type=code"
-                + "&scope=" + URLEncoder.encode("email profile", StandardCharsets.UTF_8);
+                + "&scope=" + URLEncoder.encode("email profile", StandardCharsets.UTF_8)
+                + "&prompt=select_account"; // 매번 계정 선택 창 표시
     }
 
     // ==================== 콜백 처리 ====================

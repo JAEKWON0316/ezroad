@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, Suspense } from 'react';
+import { useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
@@ -9,24 +9,31 @@ function OAuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setTokens } = useAuth();
+  const hasProcessed = useRef(false); // 중복 실행 방지
 
   useEffect(() => {
+    // 이미 처리됐으면 무시 (Strict Mode 중복 실행 방지)
+    if (hasProcessed.current) return;
+    
     const accessToken = searchParams.get('accessToken');
     const refreshToken = searchParams.get('refreshToken');
     const error = searchParams.get('error');
 
     if (error) {
+      hasProcessed.current = true;
       toast.error(decodeURIComponent(error));
       router.replace('/login');
       return;
     }
 
     if (accessToken && refreshToken) {
+      hasProcessed.current = true;
       // 토큰 저장 및 로그인 처리
       setTokens(accessToken, refreshToken);
       toast.success('소셜 로그인 성공!');
       router.replace('/');
     } else {
+      hasProcessed.current = true;
       toast.error('로그인 처리 중 오류가 발생했습니다');
       router.replace('/login');
     }
