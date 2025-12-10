@@ -139,6 +139,7 @@ java -jar build\libs\ezroad-0.0.1-SNAPSHOT.jar
 - `GET /api/restaurants` - 식당 목록
 - `GET /api/menus?restaurantId={id}` - 메뉴 목록
 - `GET /api/restaurants/{restaurantId}/reviews` - 리뷰 목록
+- `GET /api/themes` - 테마 목록
 
 ## 🔧 문제 해결
 
