@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { ChevronLeft, Plus, Edit, Trash2, Eye, EyeOff, Camera, Utensils } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { menuApi, fileApi } from '@/lib/api';
@@ -215,10 +216,12 @@ export default function MenuManagementPage({ params }: { params: Promise<{ id: s
                 {/* Image Area */}
                 <div className="relative aspect-video bg-gray-100 overflow-hidden">
                   {menu.thumbnail ? (
-                    <img
+                    <Image
                       src={menu.thumbnail}
                       alt={menu.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      fill
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gray-50/50">
@@ -294,7 +297,7 @@ export default function MenuManagementPage({ params }: { params: Promise<{ id: s
               }`}>
               {formData.thumbnail ? (
                 <>
-                  <img src={formData.thumbnail} alt="Menu" className="w-full h-full object-cover" />
+                  <Image src={formData.thumbnail} alt="Menu" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <Camera className="text-white h-8 w-8" />
                   </div>

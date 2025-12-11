@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -169,9 +170,9 @@ export default function EditRestaurantPage({ params }: { params: Promise<{ id: s
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-600 mb-2">대표 이미지</p>
-                <label className="block w-full aspect-video bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 overflow-hidden">
+                <label className="block w-full aspect-video bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 overflow-hidden relative">
                   {thumbnail ? (
-                    <img src={thumbnail} alt="Thumbnail" className="w-full h-full object-cover" />
+                    <Image src={thumbnail} alt="Thumbnail" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
                       {isUploadingThumbnail ? <Loading size="sm" /> : <Camera className="h-8 w-8 mb-2" />}
@@ -190,9 +191,9 @@ export default function EditRestaurantPage({ params }: { params: Promise<{ id: s
 
               <div>
                 <p className="text-sm text-gray-600 mb-2">메뉴판 이미지</p>
-                <label className="block w-full aspect-video bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 overflow-hidden">
+                <label className="block w-full aspect-video bg-gray-100 rounded-lg cursor-pointer hover:bg-gray-200 overflow-hidden relative">
                   {menuBoardImage ? (
-                    <img src={menuBoardImage} alt="Menu Board" className="w-full h-full object-cover" />
+                    <Image src={menuBoardImage} alt="Menu Board" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
                       {isUploadingMenuBoard ? <Loading size="sm" /> : <FileText className="h-8 w-8 mb-2" />}

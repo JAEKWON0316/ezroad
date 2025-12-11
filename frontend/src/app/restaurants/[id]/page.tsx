@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Star,
   MapPin,
@@ -192,10 +193,13 @@ export default function RestaurantDetailPage() {
       {/* Immersive Hero Image */}
       <div className="relative h-[45vh] lg:h-[50vh] w-full overflow-hidden">
         {restaurant.thumbnail ? (
-          <img
+          <Image
             src={restaurant.thumbnail}
             alt={restaurant.name}
-            className="w-full h-full object-cover animate-scale-in"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover animate-scale-in"
           />
         ) : (
           <div className="w-full h-full bg-gray-200 flex items-center justify-center">
@@ -396,11 +400,15 @@ export default function RestaurantDetailPage() {
                     {menus.filter(m => m.isVisible).map((menu, idx) => (
                       <div key={menu.id} className="bg-white border border-gray-100 rounded-2xl p-4 flex gap-4 hover:shadow-lg hover:border-orange-100 transition-all duration-300 group">
                         {menu.thumbnail ? (
-                          <img
-                            src={menu.thumbnail}
-                            alt={menu.name}
-                            className="w-28 h-28 rounded-xl object-cover flex-shrink-0 shadow-sm"
-                          />
+                          <div className="relative w-28 h-28 rounded-xl overflow-hidden flex-shrink-0 shadow-sm">
+                            <Image
+                              src={menu.thumbnail}
+                              alt={menu.name}
+                              fill
+                              sizes="112px"
+                              className="object-cover"
+                            />
+                          </div>
                         ) : (
                           <div className="w-28 h-28 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
                             <Utensils className="h-8 w-8 text-gray-300" />
@@ -534,12 +542,14 @@ function ReviewCard({ review }: { review: Review }) {
     <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-100 to-yellow-100 flex items-center justify-center border-2 border-white shadow-sm ring-1 ring-gray-100">
+          <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-orange-100 to-yellow-100 flex items-center justify-center border-2 border-white shadow-sm ring-1 ring-gray-100 overflow-hidden">
             {review.member?.profileImage ? (
-              <img
+              <Image
                 src={review.member.profileImage}
                 alt={review.member.nickname}
-                className="w-full h-full rounded-full object-cover"
+                fill
+                sizes="40px"
+                className="object-cover"
               />
             ) : (
               <span className="text-orange-600 font-bold text-sm">
@@ -565,12 +575,15 @@ function ReviewCard({ review }: { review: Review }) {
       {review.images && review.images.length > 0 && (
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-200">
           {review.images.map((imageUrl, index) => (
-            <img
-              key={index}
-              src={imageUrl}
-              alt="리뷰 이미지"
-              className="w-24 h-24 rounded-xl object-cover flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity border border-gray-100"
-            />
+            <div key={index} className="relative w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 cursor-pointer border border-gray-100">
+              <Image
+                src={imageUrl}
+                alt={`리뷰 이미지 ${index + 1}`}
+                fill
+                sizes="96px"
+                className="object-cover hover:opacity-90 transition-opacity"
+              />
+            </div>
           ))}
         </div>
       )}
@@ -656,11 +669,15 @@ function ThemeSelectModal({
               >
                 <div className="flex items-center gap-3">
                   {theme.thumbnail ? (
-                    <img
-                      src={theme.thumbnail}
-                      alt={theme.title}
-                      className="w-12 h-12 rounded-lg object-cover"
-                    />
+                    <div className="relative w-12 h-12 rounded-lg overflow-hidden">
+                      <Image
+                        src={theme.thumbnail}
+                        alt={theme.title}
+                        fill
+                        sizes="48px"
+                        className="object-cover"
+                      />
+                    </div>
                   ) : (
                     <div className="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center">
                       <span className="text-xl">🍽️</span>

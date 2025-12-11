@@ -49,7 +49,7 @@ export default function Pagination({
   const pages = getPageNumbers();
 
   return (
-    <nav className="flex items-center justify-center gap-1" aria-label="Pagination">
+    <nav className="flex items-center justify-center gap-1" aria-label="페이지네이션">
       {/* Previous Button */}
       <button
         onClick={() => onPageChange(currentPage - 1)}
@@ -60,7 +60,7 @@ export default function Pagination({
             ? 'text-gray-300 cursor-not-allowed'
             : 'text-gray-600 hover:bg-gray-100'
         )}
-        aria-label="Previous page"
+        aria-label="이전 페이지"
       >
         <ChevronLeft className="h-5 w-5" />
       </button>
@@ -88,7 +88,7 @@ export default function Pagination({
                 ? 'bg-orange-500 text-white'
                 : 'text-gray-600 hover:bg-gray-100'
             )}
-            aria-label={`Page ${pageNumber}`}
+            aria-label={`${pageNumber} 페이지`}
             aria-current={isActive ? 'page' : undefined}
           >
             {pageNumber}
@@ -106,7 +106,7 @@ export default function Pagination({
             ? 'text-gray-300 cursor-not-allowed'
             : 'text-gray-600 hover:bg-gray-100'
         )}
-        aria-label="Next page"
+        aria-label="다음 페이지"
       >
         <ChevronRight className="h-5 w-5" />
       </button>

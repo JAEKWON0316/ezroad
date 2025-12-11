@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -238,10 +239,12 @@ function WriteReviewContent() {
             <div className="flex flex-wrap gap-3">
               {previewUrls.map((url, index) => (
                 <div key={index} className="relative w-24 h-24">
-                  <img
+                  <Image
                     src={url}
                     alt={`Preview ${index + 1}`}
-                    className="w-full h-full object-cover rounded-lg"
+                    fill
+                    sizes="96px"
+                    className="object-cover rounded-lg"
                   />
                   <button
                     type="button"

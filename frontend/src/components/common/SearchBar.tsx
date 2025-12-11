@@ -56,14 +56,15 @@ export default function SearchBar({
   };
 
   return (
-    <form onSubmit={handleSubmit} className={cn('relative w-full', className)}>
+    <form onSubmit={handleSubmit} className={cn('relative w-full', className)} role="search">
       <div className="relative">
-        <Search className={cn("absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5", variant === 'glass' ? 'text-white/70' : 'text-gray-400')} />
+        <Search className={cn("absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5", variant === 'glass' ? 'text-white/70' : 'text-gray-400')} aria-hidden="true" />
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={placeholder}
+          aria-label={placeholder}
           className={cn(
             'w-full pl-12 pr-12 py-3 text-base rounded-full transition-all duration-300',
             variantStyles[variant],
@@ -76,6 +77,7 @@ export default function SearchBar({
             type="button"
             onClick={handleClear}
             className="absolute right-14 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+            aria-label="검색어 지우기"
           >
             <X className="h-4 w-4" />
           </button>
@@ -87,6 +89,7 @@ export default function SearchBar({
             'bg-orange-500 text-white p-2 rounded-full',
             'hover:bg-orange-600 transition-colors shadow-md hover:shadow-lg hover:scale-105 active:scale-95'
           )}
+          aria-label="검색"
         >
           <Search className="h-5 w-5" />
         </button>

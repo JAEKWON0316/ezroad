@@ -64,6 +64,8 @@ export default function RestaurantCard({
                   ? 'bg-red-500 text-white'
                   : 'bg-white/90 backdrop-blur-sm text-gray-500 hover:text-red-500'
               )}
+              aria-label={isFollowed ? `${restaurant.name} 찜 취소` : `${restaurant.name} 찜하기`}
+              aria-pressed={isFollowed}
             >
               <Heart className={cn('h-4 w-4', isFollowed && 'fill-current')} />
             </button>

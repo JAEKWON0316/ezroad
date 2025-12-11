@@ -254,11 +254,15 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
           className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
           onClick={() => setSelectedImage(null)}
         >
-          <img 
-            src={selectedImage} 
-            alt="리뷰 이미지"
-            className="max-w-full max-h-full object-contain"
-          />
+          <div className="relative w-full h-full max-w-4xl max-h-[90vh]">
+            <Image 
+              src={selectedImage} 
+              alt="리뷰 이미지"
+              fill
+              sizes="100vw"
+              className="object-contain"
+            />
+          </div>
         </div>
       )}
 

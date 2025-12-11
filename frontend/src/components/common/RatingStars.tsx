@@ -57,7 +57,7 @@ export default function RatingStars({
                 !interactive && 'cursor-default'
               )}
               disabled={!interactive}
-              aria-label={`${starValue} stars`}
+              aria-label={`${starValue}점`}
             >
               <Star
                 className={cn(

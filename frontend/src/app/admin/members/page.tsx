@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { Search, MoreVertical, Shield, User, Briefcase, Trash2 } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { User as UserType, PageResponse } from '@/types';
@@ -158,9 +159,9 @@ export default function AdminMembersPage() {
                   <tr key={member.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                        <div className="relative w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center overflow-hidden">
                           {member.profileImage ? (
-                            <img src={member.profileImage} alt="" className="w-full h-full rounded-full object-cover" />
+                            <Image src={member.profileImage} alt={`${member.nickname} 프로필`} fill sizes="40px" className="object-cover" />
                           ) : (
                             <span className="text-orange-500 font-medium">{member.nickname?.charAt(0)}</span>
                           )}

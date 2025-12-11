@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -219,7 +220,7 @@ export default function EditRestaurantPage({ params }: { params: Promise<{ id: s
                                         }`}>
                                         {thumbnail ? (
                                             <>
-                                                <img src={thumbnail} alt="Thumbnail" className="w-full h-full object-cover" />
+                                                <Image src={thumbnail} alt="Thumbnail" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
                                                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <Camera className="text-white h-8 w-8" />
                                                 </div>
@@ -253,7 +254,7 @@ export default function EditRestaurantPage({ params }: { params: Promise<{ id: s
                                         }`}>
                                         {menuBoardImage ? (
                                             <>
-                                                <img src={menuBoardImage} alt="Menu Board" className="w-full h-full object-cover" />
+                                                <Image src={menuBoardImage} alt="Menu Board" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
                                                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <FileText className="text-white h-8 w-8" />
                                                 </div>

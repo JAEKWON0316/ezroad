@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { Search, MapPin, Star, Eye } from 'lucide-react';
 import { adminApi } from '@/lib/api';
 import { Restaurant, PageResponse } from '@/types';
@@ -137,9 +138,9 @@ export default function AdminRestaurantsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
             {restaurants.map((restaurant) => (
               <div key={restaurant.id} className="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                <div className="h-40 bg-gray-100">
+                <div className="relative h-40 bg-gray-100">
                   {restaurant.thumbnail ? (
-                    <img src={restaurant.thumbnail} alt={restaurant.name} className="w-full h-full object-cover" />
+                    <Image src={restaurant.thumbnail} alt={restaurant.name} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-4xl">🍽️</div>
                   )}
