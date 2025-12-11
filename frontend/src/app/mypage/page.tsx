@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   User,
   Star,
@@ -93,12 +94,14 @@ export default function MyPage() {
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full opacity-75 blur transition duration-500 group-hover:opacity-100" />
               <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-full bg-white p-1 shadow-xl">
-                <div className="w-full h-full rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                <div className="relative w-full h-full rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
                   {user.profileImage ? (
-                    <img
+                    <Image
                       src={user.profileImage}
                       alt={user.nickname}
-                      className="w-full h-full object-cover"
+                      fill
+                      sizes="128px"
+                      className="object-cover"
                     />
                   ) : (
                     <User className="h-12 w-12 text-gray-400" />
@@ -221,10 +224,12 @@ export default function MyPage() {
                         <div className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 h-full flex flex-col">
                           <div className="relative h-36 bg-gray-200 overflow-hidden">
                             {restaurant.thumbnail ? (
-                              <img
+                              <Image
                                 src={restaurant.thumbnail}
                                 alt={restaurant.name}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                fill
+                                sizes="(max-width: 640px) 100vw, 50vw"
+                                className="object-cover group-hover:scale-105 transition-transform duration-500"
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-100">
@@ -272,9 +277,9 @@ export default function MyPage() {
                         <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all group">
                           <div className="flex justify-between items-start mb-2">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
+                              <div className="relative w-10 h-10 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
                                 {review.restaurant?.thumbnail ? (
-                                  <img src={review.restaurant.thumbnail} alt={review.restaurant.name} className="w-full h-full object-cover" />
+                                  <Image src={review.restaurant.thumbnail} alt={review.restaurant.name} fill sizes="40px" className="object-cover" />
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center text-gray-400"><Utensils className="w-5 h-5" /></div>
                                 )}

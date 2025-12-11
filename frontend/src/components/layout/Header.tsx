@@ -137,9 +137,9 @@ export default function Header() {
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                     className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-orange-500"
                   >
-                    <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
+                    <div className="relative w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center overflow-hidden">
                       {user?.profileImage ? (
-                        <img src={user.profileImage} alt={user.nickname} className="w-8 h-8 rounded-full object-cover" />
+                        <Image src={user.profileImage} alt={user.nickname || ''} fill sizes="32px" className="object-cover" />
                       ) : (
                         <User className="h-4 w-4 text-orange-500" />
                       )}

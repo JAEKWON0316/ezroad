@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ChevronLeft, Star, MapPin, Eye, Calendar, Edit, Trash2, ThumbsUp, Share2, Flag } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { reviewApi } from '@/lib/api';
@@ -141,12 +142,14 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
         <Link href={`/restaurants/${review.restaurantId}`}>
           <div className="bg-white rounded-xl p-4 shadow-sm mb-4 hover:shadow-md transition-shadow">
             <div className="flex items-center gap-3">
-              <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+              <div className="relative w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                 {review.restaurant?.thumbnail ? (
-                  <img 
+                  <Image 
                     src={review.restaurant.thumbnail} 
                     alt={review.restaurant.name}
-                    className="w-full h-full object-cover"
+                    fill
+                    sizes="64px"
+                    className="object-cover"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-2xl">🍽️</div>
@@ -171,12 +174,14 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
           <div className="p-4 border-b">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                <div className="relative w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center overflow-hidden">
                   {review.member?.profileImage ? (
-                    <img 
+                    <Image 
                       src={review.member.profileImage} 
                       alt={review.member.nickname}
-                      className="w-full h-full rounded-full object-cover"
+                      fill
+                      sizes="40px"
+                      className="object-cover"
                     />
                   ) : (
                     <span className="text-orange-500 font-medium">
@@ -204,12 +209,14 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
                   <button
                     key={index}
                     onClick={() => setSelectedImage(image)}
-                    className="aspect-square bg-gray-100 rounded-lg overflow-hidden"
+                    className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden"
                   >
-                    <img 
+                    <Image 
                       src={image} 
                       alt={`리뷰 이미지 ${index + 1}`}
-                      className="w-full h-full object-cover hover:scale-105 transition-transform"
+                      fill
+                      sizes="33vw"
+                      className="object-cover hover:scale-105 transition-transform"
                     />
                   </button>
                 ))}

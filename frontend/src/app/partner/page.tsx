@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Store,
   Plus,
@@ -218,15 +219,17 @@ export default function PartnerPage() {
                           : 'hover:bg-white/60 hover:shadow-sm text-gray-700'
                         }`}
                     >
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden shrink-0 border transition-colors ${selectedRestaurant?.id === restaurant.id
+                      <div className={`relative w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden shrink-0 border transition-colors ${selectedRestaurant?.id === restaurant.id
                           ? 'bg-white/20 border-white/20'
                           : 'bg-gray-100 border-gray-200 group-hover:bg-white'
                         }`}>
                         {restaurant.thumbnail ? (
-                          <img
+                          <Image
                             src={restaurant.thumbnail}
                             alt={restaurant.name}
-                            className="w-full h-full object-cover"
+                            fill
+                            sizes="40px"
+                            className="object-cover"
                           />
                         ) : (
                           <Utensils className={`h-5 w-5 ${selectedRestaurant?.id === restaurant.id ? 'text-white' : 'text-gray-400'

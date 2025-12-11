@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ChevronLeft, Heart, MapPin, Star, HeartOff } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { followApi } from '@/lib/api';
@@ -108,10 +109,12 @@ export default function MyFavoritesPage() {
                   <Link href={`/restaurants/${restaurant.id}`}>
                     <div className="relative h-40 bg-gray-100">
                       {restaurant.thumbnail ? (
-                        <img
+                        <Image
                           src={restaurant.thumbnail}
                           alt={restaurant.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-400">

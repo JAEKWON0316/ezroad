@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ChevronLeft, Users, UserMinus } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { followApi } from '@/lib/api';
@@ -126,12 +127,14 @@ export default function FollowersPage() {
               {followers.map((follower) => (
                 <div key={follower.id} className="bg-white rounded-xl p-4 shadow-sm flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center overflow-hidden">
+                    <div className="relative w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center overflow-hidden">
                       {follower.profileImage ? (
-                        <img 
+                        <Image 
                           src={follower.profileImage} 
                           alt={follower.nickname}
-                          className="w-full h-full object-cover"
+                          fill
+                          sizes="48px"
+                          className="object-cover"
                         />
                       ) : (
                         <span className="text-orange-500 font-medium text-lg">

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -160,12 +161,14 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
         {/* Restaurant Info */}
         <div className="bg-white rounded-xl p-4 shadow-sm mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-14 h-14 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+            <div className="relative w-14 h-14 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
               {review.restaurant?.thumbnail ? (
-                <img 
+                <Image 
                   src={review.restaurant.thumbnail} 
                   alt={review.restaurant.name}
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="56px"
+                  className="object-cover"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-xl">🍽️</div>
@@ -222,10 +225,12 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
             <div className="grid grid-cols-5 gap-2">
               {images.map((image, index) => (
                 <div key={index} className="relative aspect-square">
-                  <img
+                  <Image
                     src={image}
                     alt={`리뷰 이미지 ${index + 1}`}
-                    className="w-full h-full object-cover rounded-lg"
+                    fill
+                    sizes="20vw"
+                    className="object-cover rounded-lg"
                   />
                   <button
                     type="button"

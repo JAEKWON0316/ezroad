@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -116,9 +117,9 @@ export default function EditProfilePage() {
           {/* Profile Image Section */}
           <div className="flex flex-col items-center">
             <div className="relative group">
-              <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gradient-to-br from-orange-100 to-yellow-100 flex items-center justify-center">
+              <div className="relative w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gradient-to-br from-orange-100 to-yellow-100 flex items-center justify-center">
                 {profileImage ? (
-                  <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+                  <Image src={profileImage} alt="Profile" fill sizes="128px" className="object-cover" />
                 ) : (
                   <User className="h-14 w-14 text-orange-300" />
                 )}

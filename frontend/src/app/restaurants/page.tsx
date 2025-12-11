@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Search,
   MapPin,
@@ -312,10 +313,12 @@ function RestaurantCard({
         {/* Image Section */}
         <div className="relative h-56 overflow-hidden">
           {restaurant.thumbnail ? (
-            <img
+            <Image
               src={restaurant.thumbnail}
               alt={restaurant.name}
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover group-hover:scale-110 transition-transform duration-500"
             />
           ) : (
             <div className="w-full h-full bg-gray-100 flex items-center justify-center">

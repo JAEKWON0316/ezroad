@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import {
   MapPin,
@@ -185,10 +186,12 @@ export default function HomePage() {
                   <div className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 h-full border border-gray-100">
                     <div className="relative h-60 overflow-hidden">
                       {restaurant.thumbnail ? (
-                        <img
+                        <Image
                           src={restaurant.thumbnail}
                           alt={restaurant.name}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          className="object-cover group-hover:scale-110 transition-transform duration-500"
                         />
                       ) : (
                         <div className="w-full h-full bg-gray-100 flex items-center justify-center">
@@ -248,7 +251,7 @@ export default function HomePage() {
                   className={`group relative rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 ${idx === 0 ? 'md:col-span-2 md:row-span-2' : ''}`}
                 >
                   {theme.thumbnail ? (
-                    <img src={theme.thumbnail} alt={theme.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <Image src={theme.thumbnail} alt={theme.title} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover group-hover:scale-105 transition-transform duration-700" />
                   ) : (
                     <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200" />
                   )}
