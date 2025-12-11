@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Star, MapPin, Heart } from 'lucide-react';
 import { Restaurant } from '@/types';
 import { cn } from '@/lib/utils';
@@ -35,10 +36,12 @@ export default function RestaurantCard({
         {/* 이미지 */}
         <div className="relative aspect-[4/3] bg-gray-100">
           {restaurant.thumbnail ? (
-            <img
+            <Image
               src={restaurant.thumbnail}
               alt={restaurant.name}
-              className="w-full h-full object-cover"
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-gray-300">
@@ -47,7 +50,7 @@ export default function RestaurantCard({
           )}
           
           {/* 카테고리 배지 */}
-          <span className="absolute top-3 left-3 px-2 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-medium text-gray-700">
+          <span className="absolute top-3 left-3 px-2 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-medium text-gray-700 z-10">
             {restaurant.category}
           </span>
 
@@ -56,7 +59,7 @@ export default function RestaurantCard({
             <button
               onClick={handleFollowClick}
               className={cn(
-                'absolute top-3 right-3 p-2 rounded-full transition-colors',
+                'absolute top-3 right-3 p-2 rounded-full transition-colors z-10',
                 isFollowed
                   ? 'bg-red-500 text-white'
                   : 'bg-white/90 backdrop-blur-sm text-gray-500 hover:text-red-500'

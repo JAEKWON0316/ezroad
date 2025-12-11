@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Flag } from 'lucide-react';
 import { Review } from '@/types';
 import RatingStars from '@/components/common/RatingStars';
@@ -30,12 +31,14 @@ export default function ReviewCard({
         {/* 헤더 */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center overflow-hidden">
+            <div className="relative w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center overflow-hidden">
               {review.member?.profileImage ? (
-                <img
+                <Image
                   src={review.member.profileImage}
                   alt={review.member.nickname}
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="40px"
+                  className="object-cover"
                 />
               ) : (
                 <span className="text-orange-500 font-medium">
@@ -103,12 +106,15 @@ export default function ReviewCard({
         {review.images && review.images.length > 0 && (
           <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
             {review.images.map((imageUrl, index) => (
-              <img
-                key={index}
-                src={imageUrl}
-                alt="리뷰 이미지"
-                className="w-24 h-24 rounded-lg object-cover flex-shrink-0"
-              />
+              <div key={index} className="relative w-24 h-24 flex-shrink-0">
+                <Image
+                  src={imageUrl}
+                  alt={`리뷰 이미지 ${index + 1}`}
+                  fill
+                  sizes="96px"
+                  className="rounded-lg object-cover"
+                />
+              </div>
             ))}
           </div>
         )}
