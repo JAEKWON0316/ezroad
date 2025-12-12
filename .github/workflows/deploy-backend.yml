@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'backend/**'
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -34,16 +35,23 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_PORT }}
           script: |
-            cd /opt/ezroad/temp
+            echo "=== 1. 디스크 정리 (빌드 전) ==="
+            docker system prune -af --volumes || true
+            df -h /
             
-            # 기존 컨테이너 중지 및 삭제
+            echo "=== 2. 기존 컨테이너 중지 ==="
             docker stop ezroad-backend || true
             docker rm ezroad-backend || true
             
-            # 이미지 빌드
-            docker build -t ezroad-backend:latest .
+            echo "=== 3. 기존 이미지 삭제 ==="
+            docker rmi ezroad-backend:latest || true
+            docker rmi $(docker images -q --filter "dangling=true") 2>/dev/null || true
             
-            # 컨테이너 실행
+            echo "=== 4. 이미지 빌드 ==="
+            cd /opt/ezroad/temp
+            docker build --no-cache -t ezroad-backend:latest .
+            
+            echo "=== 5. 컨테이너 실행 ==="
             docker run -d \
               --name ezroad-backend \
               --restart unless-stopped \
@@ -70,11 +78,7 @@ jobs:
               -e GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }} \
               ezroad-backend:latest
             
-            # 임시 폴더 정리
+            echo "=== 6. 정리 및 확인 ==="
             rm -rf /opt/ezroad/temp
-            
-            # 오래된 이미지 정리
-            docker image prune -f
-            
-            # 상태 확인
             docker ps | grep ezroad-backend
+            df -h /
