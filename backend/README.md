@@ -164,3 +164,4 @@ server:
 2. 데이터베이스 및 사용자 생성 확인
 3. username, password 확인
 4. `application.yml`의 연결 정보 확인
+#  
