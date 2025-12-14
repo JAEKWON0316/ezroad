@@ -29,24 +29,30 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/auth/oauth2/**").permitAll()
-                        .requestMatchers("/api/restaurants/**").permitAll()
-                        .requestMatchers("/api/menus/**").permitAll()
-                        .requestMatchers("/api/reviews/**").permitAll()
-                        // 테마: 공개 조회 전체 허용
-                        .requestMatchers(HttpMethod.GET, "/api/themes/**").permitAll()
-                        // 검색: 인기 검색어 조회 허용
-                        .requestMatchers("/api/search/**").permitAll()
-                        .anyRequest().authenticated()
-                )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
+            .csrf(AbstractHttpConfigurer::disable)
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                // 🔥 Docker / ALB Health Check
+                .requestMatchers("/actuator/health").permitAll()
+    
+                // Auth
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/auth/oauth2/**").permitAll()
+    
+                // Public APIs
+                .requestMatchers("/api/restaurants/**").permitAll()
+                .requestMatchers("/api/menus/**").permitAll()
+                .requestMatchers("/api/reviews/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/themes/**").permitAll()
+                .requestMatchers("/api/search/**").permitAll()
+    
+                // 나머지는 인증 필요
+                .anyRequest().authenticated()
+            )
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+    
         return http.build();
     }
 
