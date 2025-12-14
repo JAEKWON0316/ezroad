@@ -165,3 +165,9 @@ server:
 3. username, password 확인
 4. `application.yml`의 연결 정보 확인
 #  
+
+## 12-15 백엔드 마이그레이션
+
+1. Neon(싱가포르) -> Supabase(서울)
+2. AWS EC2(시드니) -> AWS EC2(서울)
+3. 리전 변경으로 API 호출 시간 기존 600ms -> 40ms 으로 단축축 확인.
