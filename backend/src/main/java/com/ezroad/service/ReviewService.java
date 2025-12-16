@@ -57,10 +57,10 @@ public class ReviewService {
     public ReviewResponse getReviewById(Long id) {
         Review review = reviewRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 리뷰입니다"));
-        
+
         // 조회수 증가
         review.incrementHit();
-        
+
         return ReviewResponse.from(review);
     }
 
@@ -69,7 +69,7 @@ public class ReviewService {
     public ReviewResponse createReview(Long memberId, ReviewCreateRequest request) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 회원입니다"));
-        
+
         Restaurant restaurant = restaurantRepository.findById(request.getRestaurantId())
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 식당입니다"));
 
@@ -80,6 +80,18 @@ public class ReviewService {
                 .content(request.getContent())
                 .rating(request.getRating())
                 .build();
+
+        if (request.getImages() != null && !request.getImages().isEmpty()) {
+            for (int i = 0; i < request.getImages().size(); i++) {
+                String imageUrl = request.getImages().get(i);
+                com.ezroad.entity.ReviewImage reviewImage = com.ezroad.entity.ReviewImage.builder()
+                        .review(review)
+                        .imageUrl(imageUrl)
+                        .sortOrder(i)
+                        .build();
+                review.addImage(reviewImage);
+            }
+        }
 
         Review savedReview = reviewRepository.save(review);
         return ReviewResponse.from(savedReview);
@@ -96,7 +108,7 @@ public class ReviewService {
         }
 
         review.update(request.getTitle(), request.getContent(), request.getRating());
-        
+
         return ReviewResponse.from(review);
     }
 

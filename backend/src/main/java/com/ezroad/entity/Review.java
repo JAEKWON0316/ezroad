@@ -60,7 +60,7 @@ public class Review {
 
     @Builder
     public Review(Restaurant restaurant, Member member, String title,
-                  String content, Integer rating) {
+            String content, Integer rating) {
         this.restaurant = restaurant;
         this.member = member;
         this.title = title;
@@ -69,17 +69,23 @@ public class Review {
     }
 
     public void update(String title, String content, Integer rating) {
-        if (title != null) this.title = title;
-        if (content != null) this.content = content;
-        if (rating != null) this.rating = rating;
+        if (title != null)
+            this.title = title;
+        if (content != null)
+            this.content = content;
+        if (rating != null)
+            this.rating = rating;
     }
 
     public void incrementHit() {
         this.hit++;
     }
 
+    public void addImage(ReviewImage image) {
+        this.images.add(image);
+    }
+
     public void delete() {
         this.deletedAt = LocalDateTime.now();
     }
 }
-

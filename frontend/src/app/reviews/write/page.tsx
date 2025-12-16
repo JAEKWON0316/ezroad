@@ -138,6 +138,7 @@ function WriteReviewContent() {
         title: data.title,
         content: data.content,
         rating: data.rating,
+        images: imageUrls,
       });
 
       toast.success('리뷰가 등록되었습니다');

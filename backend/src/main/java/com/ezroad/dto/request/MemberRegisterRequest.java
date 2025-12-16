@@ -36,4 +36,5 @@ public class MemberRegisterRequest {
     private String addressDetail;
     private LocalDate birthDate;
     private String businessNumber;
+    private String profileImage;
 }

@@ -72,9 +72,9 @@ public class Member {
 
     @Builder
     public Member(String email, String password, String name, String nickname,
-                  String phone, String zipcode, String address, String addressDetail,
-                  LocalDate birthDate, String profileImage, MemberRole role,
-                  String businessNumber) {
+            String phone, String zipcode, String address, String addressDetail,
+            LocalDate birthDate, String profileImage, MemberRole role,
+            String businessNumber) {
         this.email = email;
         this.password = password;
         this.name = name;
@@ -90,23 +90,36 @@ public class Member {
     }
 
     // 비즈니스 로직
-    public void updateInfo(String name, String nickname, String phone, 
-                          String zipcode, String address, String addressDetail) {
-        if (name != null) this.name = name;
-        if (nickname != null) this.nickname = nickname;
-        if (phone != null) this.phone = phone;
-        if (zipcode != null) this.zipcode = zipcode;
-        if (address != null) this.address = address;
-        if (addressDetail != null) this.addressDetail = addressDetail;
+    public void updateInfo(String name, String nickname, String phone,
+            String zipcode, String address, String addressDetail, String profileImage) {
+        if (name != null)
+            this.name = name;
+        if (nickname != null)
+            this.nickname = nickname;
+        if (phone != null)
+            this.phone = phone;
+        if (zipcode != null)
+            this.zipcode = zipcode;
+        if (address != null)
+            this.address = address;
+        if (addressDetail != null)
+            this.addressDetail = addressDetail;
+        if (profileImage != null)
+            this.profileImage = profileImage;
     }
 
     public void updateProfile(String nickname, String phone, String address,
-                             String addressDetail, String profileImage) {
-        if (nickname != null) this.nickname = nickname;
-        if (phone != null) this.phone = phone;
-        if (address != null) this.address = address;
-        if (addressDetail != null) this.addressDetail = addressDetail;
-        if (profileImage != null) this.profileImage = profileImage;
+            String addressDetail, String profileImage) {
+        if (nickname != null)
+            this.nickname = nickname;
+        if (phone != null)
+            this.phone = phone;
+        if (address != null)
+            this.address = address;
+        if (addressDetail != null)
+            this.addressDetail = addressDetail;
+        if (profileImage != null)
+            this.profileImage = profileImage;
     }
 
     public void delete() {
