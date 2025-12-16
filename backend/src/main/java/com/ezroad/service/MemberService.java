@@ -49,6 +49,9 @@ public class MemberService {
                                 ? MemberRole.BUSINESS
                                 : MemberRole.USER;
 
+                log.info("Registering member with email: {}, zipcode: {}, address: {}",
+                                request.getEmail(), request.getZipcode(), request.getAddress());
+
                 // 회원 생성
                 Member member = Member.builder()
                                 .email(request.getEmail())
@@ -116,6 +119,10 @@ public class MemberService {
         public MemberResponse updateMember(Long id, MemberUpdateRequest request) {
                 Member member = memberRepository.findById(id)
                                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 회원입니다"));
+
+                log.info("Updating member {} info. Name: {}, Nickname: {}, Zipcode: {}, Address: {}",
+                                id, request.getName(), request.getNickname(), request.getZipcode(),
+                                request.getAddress());
 
                 member.updateInfo(
                                 request.getName(),

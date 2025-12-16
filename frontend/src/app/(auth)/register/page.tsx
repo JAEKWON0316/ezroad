@@ -6,8 +6,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff, Mail, Lock, User, Phone, Building2, MapPin } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Phone, Building2, MapPin, Search, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import DaumPostcodeEmbed from 'react-daum-postcode';
 import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/common/Button';
 import Input from '@/components/common/Input';
@@ -23,8 +24,10 @@ const registerSchema = z.object({
   name: z.string().min(2, '이름은 2자 이상이어야 합니다'),
   nickname: z.string().min(2, '닉네임은 2자 이상이어야 합니다'),
   phone: z.string().optional(),
-  businessNumber: z.string().optional(),
+  zipcode: z.string().optional(),
   address: z.string().optional(),
+  addressDetail: z.string().optional(),
+  businessNumber: z.string().optional(),
 }).refine((data) => data.password === data.passwordConfirm, {
   message: '비밀번호가 일치하지 않습니다',
   path: ['passwordConfirm'],
@@ -41,14 +44,37 @@ function RegisterPageContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
 
   const {
     register,
     handleSubmit,
+    setValue,
+    setFocus,
     formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
   });
+
+  const handleComplete = (data: any) => {
+    let fullAddress = data.address;
+    let extraAddress = '';
+
+    if (data.addressType === 'R') {
+      if (data.bname !== '') {
+        extraAddress += data.bname;
+      }
+      if (data.buildingName !== '') {
+        extraAddress += (extraAddress !== '' ? `, ${data.buildingName}` : data.buildingName);
+      }
+      fullAddress += (extraAddress !== '' ? ` (${extraAddress})` : '');
+    }
+
+    setValue('zipcode', data.zonecode);
+    setValue('address', fullAddress);
+    setIsAddressModalOpen(false);
+    setFocus('addressDetail');
+  };
 
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
@@ -195,28 +221,53 @@ function RegisterPageContent() {
               className="bg-white/50 focus:bg-white transition-all border-gray-200 focus:border-orange-500 rounded-xl"
             />
 
-            {isBusiness && (
-              <>
-                <Input
-                  label="사업자등록번호"
-                  type="text"
-                  placeholder="123-45-67890"
-                  leftIcon={<Building2 className="h-5 w-5 text-gray-400 group-focus-within:text-orange-500 transition-colors" />}
-                  error={errors.businessNumber?.message}
-                  {...register('businessNumber')}
-                  className="bg-white/50 focus:bg-white transition-all border-gray-200 focus:border-orange-500 rounded-xl"
-                />
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700">주소</label>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Input
+                    placeholder="우편번호"
+                    leftIcon={<MapPin className="h-5 w-5 text-gray-400 group-focus-within:text-orange-500 transition-colors" />}
+                    error={errors.zipcode?.message}
+                    {...register('zipcode')}
+                    className="bg-white/50 focus:bg-white transition-all border-gray-200 focus:border-orange-500 rounded-xl"
+                    readOnly
+                  />
+                </div>
+                <Button
+                  type="button"
+                  onClick={() => setIsAddressModalOpen(true)}
+                  className="mb-0 h-[46px] shrink-0"
+                  variant="outline"
+                >
+                  <Search className="w-4 h-4" />
+                </Button>
+              </div>
+              <Input
+                placeholder="기본 주소"
+                error={errors.address?.message}
+                {...register('address')}
+                className="bg-white/50 focus:bg-white transition-all border-gray-200 focus:border-orange-500 rounded-xl"
+                readOnly
+              />
+              <Input
+                placeholder="상세 주소"
+                error={errors.addressDetail?.message}
+                {...register('addressDetail')}
+                className="bg-white/50 focus:bg-white transition-all border-gray-200 focus:border-orange-500 rounded-xl"
+              />
+            </div>
 
-                <Input
-                  label="사업장 주소"
-                  type="text"
-                  placeholder="사업장 주소를 입력하세요"
-                  leftIcon={<MapPin className="h-5 w-5 text-gray-400 group-focus-within:text-orange-500 transition-colors" />}
-                  error={errors.address?.message}
-                  {...register('address')}
-                  className="bg-white/50 focus:bg-white transition-all border-gray-200 focus:border-orange-500 rounded-xl"
-                />
-              </>
+            {isBusiness && (
+              <Input
+                label="사업자등록번호"
+                type="text"
+                placeholder="123-45-67890"
+                leftIcon={<Building2 className="h-5 w-5 text-gray-400 group-focus-within:text-orange-500 transition-colors" />}
+                error={errors.businessNumber?.message}
+                {...register('businessNumber')}
+                className="bg-white/50 focus:bg-white transition-all border-gray-200 focus:border-orange-500 rounded-xl"
+              />
             )}
 
             <div className="pt-2">
@@ -240,6 +291,31 @@ function RegisterPageContent() {
           </form>
         </div>
       </div>
+
+      {/* Address Search Modal */}
+      {isAddressModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="font-bold text-lg">주소 검색</h3>
+              <button
+                onClick={() => setIsAddressModalOpen(false)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                type="button"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="h-[400px]">
+              <DaumPostcodeEmbed
+                onComplete={handleComplete}
+                autoClose
+                style={{ height: '100%' }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

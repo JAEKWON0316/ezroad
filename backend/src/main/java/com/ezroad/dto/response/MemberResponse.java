@@ -10,12 +10,13 @@ import java.time.LocalDateTime;
 @Getter
 @Builder
 public class MemberResponse {
-    
+
     private Long id;
     private String email;
     private String name;
     private String nickname;
     private String phone;
+    private String zipcode;
     private String address;
     private String addressDetail;
     private LocalDate birthDate;
@@ -32,6 +33,7 @@ public class MemberResponse {
                 .phone(member.getPhone())
                 .address(member.getAddress())
                 .addressDetail(member.getAddressDetail())
+                .zipcode(member.getZipcode())
                 .birthDate(member.getBirthDate())
                 .profileImage(member.getProfileImage())
                 .role(member.getRole().name())

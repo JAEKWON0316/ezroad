@@ -15,6 +15,9 @@ import Loading from '@/components/common/Loading';
 import FormSkeleton from '@/components/common/FormSkeleton';
 import toast from 'react-hot-toast';
 
+import DaumPostcodeEmbed from 'react-daum-postcode';
+import { X, Search } from 'lucide-react';
+
 const profileSchema = z.object({
   name: z.string().min(2, '이름은 2자 이상이어야 합니다'),
   nickname: z.string().min(2, '닉네임은 2자 이상이어야 합니다'),
@@ -32,11 +35,14 @@ export default function EditProfilePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
+    setFocus,
     formState: { errors },
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
@@ -48,6 +54,7 @@ export default function EditProfilePage() {
       return;
     }
     if (user) {
+      console.log('EditProfilePage User:', user);
       reset({
         name: user.name,
         nickname: user.nickname,
@@ -74,6 +81,26 @@ export default function EditProfilePage() {
     } finally {
       setIsUploadingImage(false);
     }
+  };
+
+  const handleComplete = (data: any) => {
+    let fullAddress = data.address;
+    let extraAddress = '';
+
+    if (data.addressType === 'R') {
+      if (data.bname !== '') {
+        extraAddress += data.bname;
+      }
+      if (data.buildingName !== '') {
+        extraAddress += (extraAddress !== '' ? `, ${data.buildingName}` : data.buildingName);
+      }
+      fullAddress += (extraAddress !== '' ? ` (${extraAddress})` : '');
+    }
+
+    setValue('zipcode', data.zonecode);
+    setValue('address', fullAddress);
+    setIsAddressModalOpen(false);
+    setFocus('addressDetail');
   };
 
   const onSubmit = async (data: ProfileFormData) => {
@@ -200,24 +227,35 @@ export default function EditProfilePage() {
               </h2>
 
               <div className="space-y-4">
-                <div className="flex gap-4">
-                  <div className="w-1/3">
+                <div className="flex gap-4 items-end">
+                  <div className="flex-1">
                     <Input
                       label="우편번호"
-                      placeholder="12345"
+                      placeholder="우편번호 검색"
                       error={errors.zipcode?.message}
                       {...register('zipcode')}
                       className="bg-gray-50/50 focus:bg-white"
+                      readOnly
                     />
                   </div>
+                  <Button
+                    type="button"
+                    onClick={() => setIsAddressModalOpen(true)}
+                    className="mb-0 h-[50px]"
+                    variant="outline"
+                  >
+                    <Search className="w-4 h-4 mr-2" />
+                    주소 검색
+                  </Button>
                 </div>
 
                 <Input
                   label="기본 주소"
-                  placeholder="주소를 입력하세요"
+                  placeholder="주소를 검색하세요"
                   error={errors.address?.message}
                   {...register('address')}
                   className="bg-gray-50/50 focus:bg-white"
+                  readOnly
                 />
 
                 <Input
@@ -244,6 +282,31 @@ export default function EditProfilePage() {
           </div>
         </form>
       </div>
+
+      {/* Address Search Modal */}
+      {isAddressModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="font-bold text-lg">주소 검색</h3>
+              <button
+                onClick={() => setIsAddressModalOpen(false)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                type="button"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="h-[400px]">
+              <DaumPostcodeEmbed
+                onComplete={handleComplete}
+                autoClose
+                style={{ height: '100%' }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
