@@ -38,8 +38,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       Cookies.remove('accessToken');
       Cookies.remove('refreshToken');
+      localStorage.removeItem('rememberMe'); // 상태 초기화
       setUser(null);
-      
+
       // 타이머 정리
       if (inactivityTimerRef.current) {
         clearTimeout(inactivityTimerRef.current);
@@ -53,6 +54,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (inactivityTimerRef.current) {
       clearTimeout(inactivityTimerRef.current);
     }
+
+    // 로그인 유지 상태 확인
+    const isRemembered = typeof window !== 'undefined' && localStorage.getItem('rememberMe') === 'true';
+    if (isRemembered) return; // 로그인 유지 시 타이머 동작 안 함
 
     // 로그인된 상태에서만 타이머 설정
     if (user) {
@@ -68,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
 
     const activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
-    
+
     const handleActivity = () => {
       resetInactivityTimer();
     };
@@ -86,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       activityEvents.forEach(event => {
         window.removeEventListener(event, handleActivity);
       });
-      
+
       if (inactivityTimerRef.current) {
         clearTimeout(inactivityTimerRef.current);
       }
@@ -127,17 +132,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // 로그인
   const login = async (data: LoginRequest, rememberMe: boolean = false) => {
     const response: AuthResponse = await authApi.login(data);
-    
+
     if (rememberMe) {
-      // "로그인 유지" 체크 시: 7일간 유지
+      // "로그인 유지" 체크 시: 7일간 유지 및 localStorage에 상태 저장
       Cookies.set('accessToken', response.accessToken, { expires: 7 });
       Cookies.set('refreshToken', response.refreshToken, { expires: 7 });
+      localStorage.setItem('rememberMe', 'true');
     } else {
       // 기본: 세션 쿠키 (브라우저 닫으면 삭제)
       Cookies.set('accessToken', response.accessToken);
       Cookies.set('refreshToken', response.refreshToken);
+      localStorage.removeItem('rememberMe');
     }
-    
+
     // 사용자 정보 가져오기
     await fetchUser();
   };
@@ -165,7 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // 7일간 유지
     Cookies.set('accessToken', accessToken, { expires: 7 });
     Cookies.set('refreshToken', refreshToken, { expires: 7 });
-    
+
     // 사용자 정보 가져오기
     await fetchUser();
   };
