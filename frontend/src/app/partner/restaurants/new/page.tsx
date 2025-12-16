@@ -12,6 +12,7 @@ import { restaurantApi, fileApi } from '@/lib/api';
 import Button from '@/components/common/Button';
 import Input from '@/components/common/Input';
 import Loading from '@/components/common/Loading';
+import RestaurantEditSkeleton from '@/components/partner/RestaurantEditSkeleton';
 import toast from 'react-hot-toast';
 
 const restaurantSchema = z.object({
@@ -51,11 +52,7 @@ export default function NewRestaurantPage() {
   });
 
   if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50/50">
-        <Loading size="lg" />
-      </div>
-    );
+    return <RestaurantEditSkeleton />;
   }
 
   if (!isAuthenticated || user?.role !== 'BUSINESS') {

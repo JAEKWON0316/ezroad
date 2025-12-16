@@ -24,6 +24,8 @@ import { Restaurant, Menu, Review, PageResponse, Theme } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/common/Button';
 import Loading from '@/components/common/Loading';
+import { useRestaurantDetail } from '@/hooks/useRestaurantDetail';
+import RestaurantDetailSkeleton from '@/components/restaurant/RestaurantDetailSkeleton';
 import RatingStars from '@/components/common/RatingStars';
 import Modal from '@/components/common/Modal';
 import ReportModal from '@/components/common/ReportModal';
@@ -35,10 +37,17 @@ export default function RestaurantDetailPage() {
   const { isAuthenticated, user } = useAuth();
   const restaurantId = Number(params.id);
 
-  const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
-  const [menus, setMenus] = useState<Menu[]>([]);
+  const {
+    restaurant,
+    menus,
+    initialReviews: reviewsData,
+    isFollowed: initialIsFollowed,
+    isLoading,
+    isError,
+    refetchFollow
+  } = useRestaurantDetail(restaurantId, isAuthenticated);
+
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isFollowed, setIsFollowed] = useState(false);
   const [activeTab, setActiveTab] = useState<'info' | 'menu' | 'reviews'>('info');
   const [showReservationModal, setShowReservationModal] = useState(false);
@@ -48,25 +57,17 @@ export default function RestaurantDetailPage() {
   const [reviewPage, setReviewPage] = useState(0);
   const [hasMoreReviews, setHasMoreReviews] = useState(true);
 
-  const fetchRestaurant = useCallback(async () => {
-    try {
-      const data = await restaurantApi.getById(restaurantId);
-      setRestaurant(data);
-    } catch (error) {
-      console.error('Failed to fetch restaurant:', error);
-      toast.error('식당 정보를 불러오는데 실패했습니다');
-      router.push('/restaurants');
+  // Sync React Query data to local state for updates (like load more reviews)
+  useEffect(() => {
+    if (reviewsData) {
+      setReviews(reviewsData.content);
+      setHasMoreReviews(0 < reviewsData.totalPages - 1);
     }
-  }, [restaurantId, router]);
+  }, [reviewsData]);
 
-  const fetchMenus = useCallback(async () => {
-    try {
-      const data = await menuApi.getByRestaurant(restaurantId);
-      setMenus(data);
-    } catch (error) {
-      console.error('Failed to fetch menus:', error);
-    }
-  }, [restaurantId]);
+  useEffect(() => {
+    setIsFollowed(initialIsFollowed);
+  }, [initialIsFollowed]);
 
   const fetchReviews = useCallback(async (page: number) => {
     try {
@@ -81,30 +82,6 @@ export default function RestaurantDetailPage() {
       console.error('Failed to fetch reviews:', error);
     }
   }, [restaurantId]);
-
-  const checkFollow = useCallback(async () => {
-    if (!isAuthenticated) return;
-    try {
-      const followed = await followApi.checkFollow(restaurantId);
-      setIsFollowed(followed);
-    } catch (error) {
-      console.error('Failed to check follow:', error);
-    }
-  }, [isAuthenticated, restaurantId]);
-
-  useEffect(() => {
-    const init = async () => {
-      setIsLoading(true);
-      await Promise.all([
-        fetchRestaurant(),
-        fetchMenus(),
-        fetchReviews(0),
-        checkFollow(),
-      ]);
-      setIsLoading(false);
-    };
-    init();
-  }, [fetchRestaurant, fetchMenus, fetchReviews, checkFollow]);
 
   const handleFollow = async () => {
     if (!isAuthenticated) {
@@ -177,9 +154,13 @@ export default function RestaurantDetailPage() {
   };
 
   if (isLoading) {
+    return <RestaurantDetailSkeleton />;
+  }
+
+  if (isError || !restaurant) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loading size="lg" />
+        <p>식당 정보를 찾을 수 없습니다.</p>
       </div>
     );
   }

@@ -1,4 +1,4 @@
-# EzRoad Supabase 마이그레이션 가이드
+# Linkisy Supabase 마이그레이션 가이드
 
 ## 📋 마이그레이션 순서
 
@@ -17,7 +17,7 @@ Supabase Dashboard → SQL Editor에서 아래 순서로 실행:
 
 ### Step 2: 백엔드 .env 파일 수정
 
-`C:\linkisy\ezenroad\backend\.env` 파일을 아래와 같이 수정:
+`C:\linkisy\ezroad\backend\.env` 파일을 아래와 같이 수정:
 
 ```env
 # Supabase Seoul 연결
@@ -29,7 +29,7 @@ DATABASE_PASSWORD=diwo0206^
 ### Step 3: 로컬 테스트
 
 ```bash
-cd C:\linkisy\ezenroad\backend
+cd C:\linkisy\ezroad\backend
 .\gradlew.bat build -x test
 java -jar build/libs/ezroad-0.0.1-SNAPSHOT.jar
 ```

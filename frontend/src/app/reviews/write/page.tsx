@@ -13,6 +13,7 @@ import { Restaurant } from '@/types';
 import Button from '@/components/common/Button';
 import Input from '@/components/common/Input';
 import Loading from '@/components/common/Loading';
+import FormSkeleton from '@/components/common/FormSkeleton';
 import toast from 'react-hot-toast';
 
 const reviewSchema = z.object({
@@ -35,7 +36,7 @@ function WriteReviewContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  
+
   const restaurantId = searchParams.get('restaurantId');
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -150,8 +151,8 @@ function WriteReviewContent() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loading size="lg" />
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <FormSkeleton />
       </div>
     );
   }
@@ -193,11 +194,10 @@ function WriteReviewContent() {
                   className="p-1"
                 >
                   <Star
-                    className={`h-10 w-10 transition-colors ${
-                      value <= (hoverRating || rating)
-                        ? 'fill-yellow-400 text-yellow-400'
-                        : 'text-gray-300'
-                    }`}
+                    className={`h-10 w-10 transition-colors ${value <= (hoverRating || rating)
+                      ? 'fill-yellow-400 text-yellow-400'
+                      : 'text-gray-300'
+                      }`}
                   />
                 </button>
               ))}

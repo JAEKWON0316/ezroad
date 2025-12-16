@@ -12,6 +12,7 @@ import Loading from '@/components/common/Loading';
 import Pagination from '@/components/common/Pagination';
 import Modal from '@/components/common/Modal';
 import toast from 'react-hot-toast';
+import CardListSkeleton from '@/components/common/CardListSkeleton';
 
 const statusStyles: Record<string, string> = {
   PENDING: 'bg-yellow-100/80 text-yellow-700 border-yellow-200',
@@ -83,8 +84,18 @@ export default function MyReservationsPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Loading size="lg" />
+      <div className="min-h-screen bg-gray-50 pb-20">
+        <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-100">
+          <div className="max-w-4xl mx-auto px-4 h-16 flex items-center gap-4">
+            <button onClick={() => router.back()} className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors">
+              <ChevronLeft className="h-6 w-6 text-gray-700" />
+            </button>
+            <h1 className="text-xl font-bold text-gray-900">예약 내역</h1>
+          </div>
+        </div>
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <CardListSkeleton viewMode="list" count={5} />
+        </div>
       </div>
     );
   }
@@ -103,9 +114,7 @@ export default function MyReservationsPage() {
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         {isLoading ? (
-          <div className="flex justify-center py-20">
-            <Loading size="lg" />
-          </div>
+          <CardListSkeleton viewMode="list" count={5} />
         ) : reservations.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-gray-200 shadow-sm">
             <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mb-6">
@@ -130,8 +139,8 @@ export default function MyReservationsPage() {
                 >
                   {/* Status Bar */}
                   <div className={`h-1.5 w-full ${reservation.status === 'CONFIRMED' ? 'bg-green-500' :
-                      reservation.status === 'PENDING' ? 'bg-yellow-400' :
-                        reservation.status === 'CANCELLED' ? 'bg-red-400' : 'bg-gray-300'
+                    reservation.status === 'PENDING' ? 'bg-yellow-400' :
+                      reservation.status === 'CANCELLED' ? 'bg-red-400' : 'bg-gray-300'
                     }`} />
 
                   <div className="p-6">

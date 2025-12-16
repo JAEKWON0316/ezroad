@@ -9,6 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { themeApi } from '@/lib/api';
 import type { Theme, PageResponse } from '@/types';
 import Button from '@/components/common/Button';
+import ThemeCardSkeleton from '@/components/theme/ThemeCardSkeleton';
 
 export default function MyThemesPage() {
   const router = useRouter();
@@ -67,8 +68,24 @@ export default function MyThemesPage() {
 
   if (authLoading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+      <div className="min-h-screen bg-gray-50">
+        <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-100">
+          <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <button onClick={() => router.back()} className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors">
+                <ChevronLeft className="h-6 w-6 text-gray-700" />
+              </button>
+              <h1 className="text-xl font-bold text-gray-900">내 테마 관리</h1>
+            </div>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <ThemeCardSkeleton key={i} />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -94,8 +111,10 @@ export default function MyThemesPage() {
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <ThemeCardSkeleton key={i} />
+            ))}
           </div>
         ) : themes.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">

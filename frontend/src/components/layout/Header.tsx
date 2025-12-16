@@ -115,13 +115,30 @@ export default function Header() {
                 지도
                 <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-orange-500 scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
               </Link>
-              <Link
-                href="/contact"
-                className="text-gray-700 hover:text-orange-500 font-medium transition-colors relative group"
-              >
-                고객지원
-                <span className="absolute inset-x-0 -bottom-1 h-0.5 bg-orange-500 scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
-              </Link>
+              <div className="relative group/dropdown">
+                <button
+                  className="flex items-center gap-1 text-gray-700 hover:text-orange-500 font-medium transition-colors py-4"
+                >
+                  고객지원
+                  <ChevronDown className="h-4 w-4 transition-transform group-hover/dropdown:rotate-180" />
+                </button>
+                <div className="absolute top-full right-0 w-48 bg-white rounded-xl shadow-lg border border-gray-100 opacity-0 invisible group-hover/dropdown:opacity-100 group-hover/dropdown:visible transition-all duration-300 transform translate-y-2 group-hover/dropdown:translate-y-0 z-50">
+                  <div className="py-2">
+                    <Link href="/notice" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors">
+                      <span className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                      공지사항
+                    </Link>
+                    <Link href="/faq" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors">
+                      <span className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                      자주 묻는 질문
+                    </Link>
+                    <Link href="/contact" className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-colors">
+                      <span className="w-1.5 h-1.5 rounded-full bg-orange-400" />
+                      1:1 문의
+                    </Link>
+                  </div>
+                </div>
+              </div>
             </nav>
 
             <div className="hidden md:flex items-center gap-4">
@@ -172,8 +189,8 @@ export default function Header() {
               )}
             </div>
 
-            <button 
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="md:hidden p-2 text-gray-600"
               aria-label={isMobileMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
               aria-expanded={isMobileMenuOpen}

@@ -9,6 +9,7 @@ import { waitingApi } from '@/lib/api';
 import { Waiting, PageResponse } from '@/types';
 import Button from '@/components/common/Button';
 import Loading from '@/components/common/Loading';
+import CardListSkeleton from '@/components/common/CardListSkeleton';
 import Pagination from '@/components/common/Pagination';
 import Modal from '@/components/common/Modal';
 import toast from 'react-hot-toast';
@@ -104,9 +105,7 @@ export default function MyWaitingsPage() {
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         {isLoading ? (
-          <div className="flex justify-center py-20">
-            <Loading size="lg" />
-          </div>
+          <CardListSkeleton viewMode="list" count={5} />
         ) : waitings.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-gray-200 shadow-sm">
             <div className="w-20 h-20 bg-purple-50 rounded-full flex items-center justify-center mb-6">
@@ -131,9 +130,9 @@ export default function MyWaitingsPage() {
                 >
                   {/* Status Bar */}
                   <div className={`h-1.5 w-full ${waiting.status === 'SEATED' ? 'bg-green-500' :
-                      waiting.status === 'CALLED' ? 'bg-blue-500' :
-                        waiting.status === 'WAITING' ? 'bg-purple-500' :
-                          waiting.status === 'CANCELLED' ? 'bg-red-400' : 'bg-gray-300'
+                    waiting.status === 'CALLED' ? 'bg-blue-500' :
+                      waiting.status === 'WAITING' ? 'bg-purple-500' :
+                        waiting.status === 'CANCELLED' ? 'bg-red-400' : 'bg-gray-300'
                     }`} />
 
                   <div className="p-6">

@@ -13,6 +13,7 @@ import { Review } from '@/types';
 import Button from '@/components/common/Button';
 import Input from '@/components/common/Input';
 import Loading from '@/components/common/Loading';
+import FormSkeleton from '@/components/common/FormSkeleton';
 import toast from 'react-hot-toast';
 
 const reviewSchema = z.object({
@@ -26,7 +27,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
   const { id } = use(params);
   const router = useRouter();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-  
+
   const [review, setReview] = useState<Review | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,7 +54,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
     const fetchReview = async () => {
       try {
         const data = await reviewApi.getById(parseInt(id));
-        
+
         // Check ownership
         if (data.memberId !== user?.id) {
           toast.error('수정 권한이 없습니다');
@@ -131,8 +132,8 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
 
   if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loading size="lg" />
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <FormSkeleton />
       </div>
     );
   }
@@ -163,8 +164,8 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
           <div className="flex items-center gap-3">
             <div className="relative w-14 h-14 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
               {review.restaurant?.thumbnail ? (
-                <Image 
-                  src={review.restaurant.thumbnail} 
+                <Image
+                  src={review.restaurant.thumbnail}
                   alt={review.restaurant.name}
                   fill
                   sizes="56px"
@@ -201,11 +202,10 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
                   className="p-1"
                 >
                   <Star
-                    className={`h-10 w-10 transition-colors ${
-                      star <= (hoverRating || rating)
-                        ? 'text-yellow-400 fill-yellow-400'
-                        : 'text-gray-300'
-                    }`}
+                    className={`h-10 w-10 transition-colors ${star <= (hoverRating || rating)
+                      ? 'text-yellow-400 fill-yellow-400'
+                      : 'text-gray-300'
+                      }`}
                   />
                 </button>
               ))}

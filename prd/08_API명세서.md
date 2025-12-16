@@ -1,7 +1,7 @@
 # API 명세서
 
 ## 🎯 개요
-EzenRoad REST API 명세서
+Linkisy REST API 명세서
 
 ---
 

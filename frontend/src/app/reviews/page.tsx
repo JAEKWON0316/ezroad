@@ -10,32 +10,18 @@ import Loading from '@/components/common/Loading';
 import Pagination from '@/components/common/Pagination';
 import RatingStars from '@/components/common/RatingStars';
 import { useAuth } from '@/context/AuthContext';
+import { useReviews } from '@/hooks/useReviews';
 import Button from '@/components/common/Button';
+import ReviewCardSkeleton from '@/components/review/ReviewCardSkeleton';
 
 export default function ReviewsPage() {
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalElements, setTotalElements] = useState(0);
 
-  const fetchReviews = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const response: PageResponse<Review> = await reviewApi.getAll(page, 12);
-      setReviews(response.content);
-      setTotalPages(response.totalPages);
-      setTotalElements(response.totalElements);
-    } catch (error) {
-      console.error('Failed to fetch reviews:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [page]);
+  const { data, isLoading } = useReviews(page, 12);
 
-  useEffect(() => {
-    fetchReviews();
-  }, [fetchReviews]);
+  const reviews = data?.content || [];
+  const totalPages = data?.totalPages || 0;
+  const totalElements = data?.totalElements || 0;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -59,9 +45,11 @@ export default function ReviewsPage() {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {isLoading ? (
-          <div className="flex justify-center py-20">
-            <Loading size="lg" />
+        {isLoading && !data ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <ReviewCardSkeleton key={i} />
+            ))}
           </div>
         ) : reviews.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">

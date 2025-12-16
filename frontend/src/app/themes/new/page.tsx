@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { themeApi, restaurantApi, fileApi } from '@/lib/api';
 import type { Restaurant, ThemeCreateRequest } from '@/types';
+import FormSkeleton from '@/components/common/FormSkeleton';
 
 export default function NewThemePage() {
   const router = useRouter();
@@ -101,10 +102,10 @@ export default function NewThemePage() {
 
     try {
       setSubmitting(true);
-      
+
       // 1. 테마 생성
       const theme = await themeApi.create(formData);
-      
+
       // 2. 선택된 식당들 추가
       for (const restaurant of selectedRestaurants) {
         await themeApi.addRestaurant(theme.id, { restaurantId: restaurant.id });
@@ -122,8 +123,8 @@ export default function NewThemePage() {
 
   if (authLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <FormSkeleton />
       </div>
     );
   }
@@ -136,7 +137,7 @@ export default function NewThemePage() {
         {/* 기본 정보 */}
         <div className="bg-white p-6 rounded-xl shadow-sm border">
           <h2 className="text-xl font-bold mb-4">테마 정보</h2>
-          
+
           {/* 제목 */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">

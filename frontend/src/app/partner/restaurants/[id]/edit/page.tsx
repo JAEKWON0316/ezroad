@@ -12,6 +12,7 @@ import { restaurantApi, fileApi } from '@/lib/api';
 import Button from '@/components/common/Button';
 import Input from '@/components/common/Input';
 import Loading from '@/components/common/Loading';
+import RestaurantEditSkeleton from '@/components/partner/RestaurantEditSkeleton';
 import toast from 'react-hot-toast';
 
 const restaurantSchema = z.object({
@@ -143,11 +144,7 @@ export default function EditRestaurantPage({ params }: { params: Promise<{ id: s
   };
 
   if (authLoading || isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loading size="lg" />
-      </div>
-    );
+    return <RestaurantEditSkeleton />;
   }
 
   return (
@@ -166,7 +163,7 @@ export default function EditRestaurantPage({ params }: { params: Promise<{ id: s
           {/* Images */}
           <div className="bg-white rounded-xl p-6 shadow-sm">
             <h2 className="font-semibold text-gray-900 mb-4">이미지</h2>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-600 mb-2">대표 이미지</p>
@@ -215,7 +212,7 @@ export default function EditRestaurantPage({ params }: { params: Promise<{ id: s
           {/* Basic Info */}
           <div className="bg-white rounded-xl p-6 shadow-sm space-y-4">
             <h2 className="font-semibold text-gray-900 mb-4">기본 정보</h2>
-            
+
             <Input
               label="식당명 *"
               leftIcon={<Store className="h-5 w-5 text-gray-400" />}

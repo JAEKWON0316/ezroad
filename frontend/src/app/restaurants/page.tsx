@@ -14,13 +14,16 @@ import {
   ChevronDown,
   Heart,
 } from 'lucide-react';
-import { restaurantApi, followApi, searchApi } from '@/lib/api';
-import { Restaurant, PageResponse } from '@/types';
+import { followApi, searchApi } from '@/lib/api'; // restaurantApi removed
+import { Restaurant } from '@/types';
 import { useAuth } from '@/context/AuthContext';
-import Button from '@/components/common/Button';
-import Loading from '@/components/common/Loading';
+// Button removed if not used
+// Loading removed, replaced safely
 import Pagination from '@/components/common/Pagination';
 import toast from 'react-hot-toast';
+import { useRestaurants } from '@/hooks/useRestaurants';
+import RestaurantCardSkeleton from '@/components/restaurant/RestaurantCardSkeleton';
+import Loading from '@/components/common/Loading'; // Keep for Suspense fallback
 
 const categories = ['전체', '한식', '중식', '일식', '양식', '카페', '분식', '기타'];
 const sortOptions = [
@@ -31,7 +34,7 @@ const sortOptions = [
 
 export default function RestaurantsPage() {
   return (
-    <Suspense fallback={<Loading />}>
+    <Suspense fallback={<Loading fullScreen />}>
       <RestaurantsContent />
     </Suspense>
   );
@@ -41,12 +44,6 @@ function RestaurantsContent() {
   const searchParams = useSearchParams();
   const { isAuthenticated } = useAuth();
 
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalElements, setTotalElements] = useState(0);
-  const [followedIds, setFollowedIds] = useState<number[]>([]);
-
   // Filters
   const [keyword, setKeyword] = useState(searchParams.get('keyword') || '');
   const [category, setCategory] = useState(searchParams.get('category') || '전체');
@@ -54,31 +51,27 @@ function RestaurantsContent() {
   const [page, setPage] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
 
-  const fetchRestaurants = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      // 검색어가 있으면 기록 (비동기, 에러 무시)
-      if (keyword && keyword.trim().length >= 2) {
-        searchApi.record(keyword).catch(() => { });
-      }
+  const [followedIds, setFollowedIds] = useState<number[]>([]);
 
-      const response: PageResponse<Restaurant> = await restaurantApi.getList({
-        keyword: keyword || undefined,
-        category: category === '전체' ? undefined : category,
-        sort: sort as 'avgRating' | 'reviewCount' | 'createdAt',
-        page,
-        size: 12,
-      });
-      setRestaurants(response.content);
-      setTotalPages(response.totalPages);
-      setTotalElements(response.totalElements);
-    } catch (error) {
-      console.error('Failed to fetch restaurants:', error);
-      toast.error('식당 목록을 불러오는데 실패했습니다');
-    } finally {
-      setIsLoading(false);
+  // React Query
+  const { data, isLoading } = useRestaurants({
+    keyword: keyword || undefined,
+    category: category === '전체' ? undefined : category,
+    sort: sort as 'avgRating' | 'reviewCount' | 'createdAt',
+    page,
+    size: 12,
+  });
+
+  const restaurants = data?.content || [];
+  const totalPages = data?.totalPages || 0;
+  const totalElements = data?.totalElements || 0;
+
+  // Search recording side-effect (could be moved to event handler)
+  useEffect(() => {
+    if (keyword && keyword.trim().length >= 2 && !isLoading && data) {
+      searchApi.record(keyword).catch(() => { });
     }
-  }, [keyword, category, sort, page]);
+  }, [keyword, isLoading, data]);
 
   const fetchFollowedIds = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -91,17 +84,13 @@ function RestaurantsContent() {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    fetchRestaurants();
-  }, [fetchRestaurants]);
-
-  useEffect(() => {
     fetchFollowedIds();
   }, [fetchFollowedIds]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setPage(0);
-    fetchRestaurants();
+    // Refetch handled automatically by React Query when params change
   };
 
   const handleFollow = async (restaurantId: number, e: React.MouseEvent) => {
@@ -164,8 +153,8 @@ function RestaurantsContent() {
                   key={cat}
                   onClick={() => { setCategory(cat); setPage(0); }}
                   className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-300 ${category === cat
-                      ? 'bg-gradient-to-r from-orange-500 to-orange-400 text-white shadow-lg shadow-orange-500/30 scale-105'
-                      : 'bg-white text-gray-500 border border-gray-200 hover:bg-orange-50 hover:text-orange-500 hover:border-orange-200'
+                    ? 'bg-gradient-to-r from-orange-500 to-orange-400 text-white shadow-lg shadow-orange-500/30 scale-105'
+                    : 'bg-white text-gray-500 border border-gray-200 hover:bg-orange-50 hover:text-orange-500 hover:border-orange-200'
                     }`}
                 >
                   {cat}
@@ -200,8 +189,8 @@ function RestaurantsContent() {
                     key={cat}
                     onClick={() => setCategory(cat)}
                     className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${category === cat
-                        ? 'bg-orange-500 text-white'
-                        : 'bg-white border border-gray-200 text-gray-600'
+                      ? 'bg-orange-500 text-white'
+                      : 'bg-white border border-gray-200 text-gray-600'
                       }`}
                   >
                     {cat}
@@ -254,8 +243,10 @@ function RestaurantsContent() {
         )}
 
         {isLoading ? (
-          <div className="flex justify-center py-20">
-            <Loading size="lg" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <RestaurantCardSkeleton key={i} />
+            ))}
           </div>
         ) : restaurants.length === 0 ? (
           <div className="text-center py-20 bg-white/50 rounded-3xl border border-dashed border-gray-300">
@@ -341,8 +332,8 @@ function RestaurantCard({
           <button
             onClick={(e) => onFollow(restaurant.id, e)}
             className={`absolute top-4 right-4 p-2.5 rounded-full transition-all duration-300 shadow-md hover:scale-110 ${isFollowed
-                ? 'bg-red-500 text-white'
-                : 'bg-white/90 backdrop-blur-md text-gray-400 hover:text-red-500'
+              ? 'bg-red-500 text-white'
+              : 'bg-white/90 backdrop-blur-md text-gray-400 hover:text-red-500'
               }`}
           >
             <Heart className={`h-4 w-4 ${isFollowed ? 'fill-current' : ''}`} />

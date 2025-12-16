@@ -8,6 +8,7 @@ import { restaurantApi, reservationApi } from '@/lib/api';
 import { Restaurant, Reservation } from '@/types';
 import Button from '@/components/common/Button';
 import Loading from '@/components/common/Loading';
+import CardListSkeleton from '@/components/common/CardListSkeleton';
 import Pagination from '@/components/common/Pagination';
 import toast from 'react-hot-toast';
 
@@ -107,8 +108,20 @@ export default function ReservationsManagementPage({ params }: { params: Promise
 
   if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50/50">
-        <Loading size="lg" />
+      <div className="min-h-screen bg-gray-50/50 pb-20">
+        <div className="sticky top-0 z-30 bg-white/70 border-b border-white/50 shadow-sm h-16 flex items-center px-4">
+          <div className="max-w-5xl mx-auto w-full flex items-center gap-4">
+            <div className="h-8 w-8 bg-gray-200 rounded-full animate-pulse" />
+            <div>
+              <div className="h-6 w-24 bg-gray-200 rounded animate-pulse mb-1" />
+              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
+            </div>
+          </div>
+        </div>
+        <div className="max-w-5xl mx-auto px-4 py-8">
+          <div className="mb-6 h-10 w-full bg-gray-200 rounded-2xl animate-pulse" />
+          <CardListSkeleton viewMode="list" count={5} />
+        </div>
       </div>
     );
   }
@@ -141,8 +154,8 @@ export default function ReservationsManagementPage({ params }: { params: Promise
               key={status}
               onClick={() => setStatusFilter(status)}
               className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${statusFilter === status
-                  ? 'bg-white text-orange-600 shadow-md transform scale-[1.02]'
-                  : 'text-gray-500 hover:text-gray-800 hover:bg-white/50'
+                ? 'bg-white text-orange-600 shadow-md transform scale-[1.02]'
+                : 'text-gray-500 hover:text-gray-800 hover:bg-white/50'
                 }`}
             >
               {status === 'all' ? '전체' : statusLabels[status]}
@@ -165,8 +178,8 @@ export default function ReservationsManagementPage({ params }: { params: Promise
               <div
                 key={reservation.id}
                 className={`glass-card p-0 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 border-l-4 ${reservation.status === 'PENDING' ? 'border-l-yellow-400' :
-                    reservation.status === 'CONFIRMED' ? 'border-l-blue-500' :
-                      reservation.status === 'COMPLETED' ? 'border-l-green-500' : 'border-l-gray-300'
+                  reservation.status === 'CONFIRMED' ? 'border-l-blue-500' :
+                    reservation.status === 'COMPLETED' ? 'border-l-green-500' : 'border-l-gray-300'
                   }`}
               >
                 <div className="p-5">

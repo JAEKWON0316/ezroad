@@ -1,4 +1,4 @@
-# EzenRoad Backend
+# Linkisy Backend
 
 Spring Boot 3.2.0 기반 백엔드 서버
 

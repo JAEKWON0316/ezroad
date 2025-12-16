@@ -23,6 +23,7 @@ import Loading from '@/components/common/Loading';
 import Button from '@/components/common/Button';
 import RatingStars from '@/components/common/RatingStars';
 import toast from 'react-hot-toast';
+import MyPageSkeleton from '@/components/mypage/MyPageSkeleton';
 
 export default function MyPage() {
   const router = useRouter();
@@ -72,11 +73,7 @@ export default function MyPage() {
   };
 
   if (authLoading || isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Loading size="lg" />
-      </div>
-    );
+    return <MyPageSkeleton />;
   }
 
   if (!user) return null;

@@ -24,6 +24,7 @@ import { useAuth } from '@/context/AuthContext';
 import { restaurantApi, reservationApi, waitingApi, partnerApi, PartnerStats } from '@/lib/api';
 import { Restaurant, Reservation, Waiting } from '@/types';
 import Loading from '@/components/common/Loading';
+import DashboardSkeleton from '@/components/layout/DashboardSkeleton';
 import Button from '@/components/common/Button';
 import toast from 'react-hot-toast';
 
@@ -140,11 +141,7 @@ export default function PartnerPage() {
   };
 
   if (authLoading || isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50/50">
-        <Loading size="lg" />
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (
@@ -215,13 +212,13 @@ export default function PartnerPage() {
                       key={restaurant.id}
                       onClick={() => handleRestaurantChange(restaurant)}
                       className={`w-full p-3 flex items-center gap-3 rounded-xl transition-all duration-200 group ${selectedRestaurant?.id === restaurant.id
-                          ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md shadow-orange-500/20'
-                          : 'hover:bg-white/60 hover:shadow-sm text-gray-700'
+                        ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-md shadow-orange-500/20'
+                        : 'hover:bg-white/60 hover:shadow-sm text-gray-700'
                         }`}
                     >
                       <div className={`relative w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden shrink-0 border transition-colors ${selectedRestaurant?.id === restaurant.id
-                          ? 'bg-white/20 border-white/20'
-                          : 'bg-gray-100 border-gray-200 group-hover:bg-white'
+                        ? 'bg-white/20 border-white/20'
+                        : 'bg-gray-100 border-gray-200 group-hover:bg-white'
                         }`}>
                         {restaurant.thumbnail ? (
                           <Image
@@ -360,8 +357,8 @@ export default function PartnerPage() {
                             <Star
                               key={star}
                               className={`h-3 w-3 ${star <= Math.round(partnerStats.avgRating)
-                                  ? 'text-yellow-400 fill-current'
-                                  : 'text-gray-200'
+                                ? 'text-yellow-400 fill-current'
+                                : 'text-gray-200'
                                 }`}
                             />
                           ))}
@@ -461,13 +458,13 @@ export default function PartnerPage() {
                       ) : (
                         activeWaitings.map((waiting) => (
                           <div key={waiting.id} className={`bg-white rounded-xl p-4 shadow-sm border flex items-center justify-between transition-all ${waiting.status === 'CALLED'
-                              ? 'border-red-200 bg-red-50/30'
-                              : 'border-gray-100 hover:border-blue-200'
+                            ? 'border-red-200 bg-red-50/30'
+                            : 'border-gray-100 hover:border-blue-200'
                             }`}>
                             <div className="flex items-center gap-4">
                               <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 font-bold text-xl shadow-sm ${waiting.status === 'CALLED'
-                                  ? 'bg-red-500 text-white animate-pulse'
-                                  : 'bg-white border border-gray-200 text-gray-900'
+                                ? 'bg-red-500 text-white animate-pulse'
+                                : 'bg-white border border-gray-200 text-gray-900'
                                 }`}>
                                 {waiting.waitingNumber}
                               </div>

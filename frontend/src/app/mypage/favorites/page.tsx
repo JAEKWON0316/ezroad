@@ -13,11 +13,12 @@ import Loading from '@/components/common/Loading';
 import Pagination from '@/components/common/Pagination';
 import Modal from '@/components/common/Modal';
 import toast from 'react-hot-toast';
+import CardListSkeleton from '@/components/common/CardListSkeleton';
 
 export default function MyFavoritesPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  
+
   const [favorites, setFavorites] = useState<Restaurant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(0);
@@ -55,7 +56,7 @@ export default function MyFavoritesPage() {
 
   const handleUnfollow = async () => {
     if (!unfollowModal.id) return;
-    
+
     setIsUnfollowing(true);
     try {
       await followApi.unfollowRestaurant(unfollowModal.id);
@@ -71,8 +72,18 @@ export default function MyFavoritesPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loading size="lg" />
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white border-b sticky top-16 z-30">
+          <div className="max-w-6xl mx-auto px-4 py-4 flex items-center gap-4">
+            <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-full">
+              <ChevronLeft className="h-6 w-6" />
+            </button>
+            <h1 className="font-semibold text-gray-900">찜한 맛집</h1>
+          </div>
+        </div>
+        <div className="max-w-6xl mx-auto px-4 py-6">
+          <CardListSkeleton viewMode="grid" count={6} />
+        </div>
       </div>
     );
   }
@@ -90,9 +101,7 @@ export default function MyFavoritesPage() {
 
       <div className="max-w-6xl mx-auto px-4 py-6">
         {isLoading ? (
-          <div className="flex justify-center py-12">
-            <Loading size="lg" />
-          </div>
+          <CardListSkeleton viewMode="grid" count={6} />
         ) : favorites.length === 0 ? (
           <div className="text-center py-12">
             <Heart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
@@ -128,31 +137,31 @@ export default function MyFavoritesPage() {
                       </div>
                     </div>
                   </Link>
-                  
+
                   <div className="p-4">
                     <Link href={`/restaurants/${restaurant.id}`}>
                       <h3 className="font-semibold text-gray-900 hover:text-orange-500 mb-1">
                         {restaurant.name}
                       </h3>
                     </Link>
-                    
+
                     <p className="text-sm text-gray-500 flex items-center mb-2">
                       <MapPin className="h-3.5 w-3.5 mr-1 flex-shrink-0" />
                       <span className="truncate">{restaurant.address}</span>
                     </p>
-                    
+
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1">
                         <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
                         <span className="text-sm font-medium">{restaurant.avgRating?.toFixed(1) || '0.0'}</span>
                         <span className="text-sm text-gray-400">({restaurant.reviewCount || 0})</span>
                       </div>
-                      
+
                       <button
-                        onClick={() => setUnfollowModal({ 
-                          isOpen: true, 
-                          id: restaurant.id, 
-                          name: restaurant.name 
+                        onClick={() => setUnfollowModal({
+                          isOpen: true,
+                          id: restaurant.id,
+                          name: restaurant.name
                         })}
                         className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
                       >

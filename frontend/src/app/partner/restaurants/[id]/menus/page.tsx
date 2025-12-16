@@ -10,6 +10,7 @@ import { Menu } from '@/types';
 import Button from '@/components/common/Button';
 import Input from '@/components/common/Input';
 import Loading from '@/components/common/Loading';
+import CardListSkeleton from '@/components/common/CardListSkeleton';
 import Modal from '@/components/common/Modal';
 import toast from 'react-hot-toast';
 
@@ -158,8 +159,16 @@ export default function MenuManagementPage({ params }: { params: Promise<{ id: s
 
   if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50/50">
-        <Loading size="lg" />
+      <div className="min-h-screen bg-gray-50/50 pb-20">
+        <div className="sticky top-0 z-30 bg-white/70 border-b border-white/50 shadow-sm h-16 flex items-center px-4">
+          <div className="max-w-6xl mx-auto w-full flex justify-between items-center">
+            <div className="h-8 w-32 bg-gray-200 rounded animate-pulse" />
+            <div className="h-9 w-24 bg-gray-200 rounded animate-pulse" />
+          </div>
+        </div>
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          <CardListSkeleton viewMode="grid" count={6} />
+        </div>
       </div>
     );
   }

@@ -11,9 +11,12 @@ import Loading from '@/components/common/Loading';
 import Link from 'next/link';
 import Image from 'next/image';
 
+import { useQuery } from '@tanstack/react-query';
+import MapSkeleton from '@/components/map/MapSkeleton';
+
 export default function MapPage() {
   return (
-    <Suspense fallback={<div className="h-[calc(100vh-64px)] flex items-center justify-center"><Loading size="lg" /></div>}>
+    <Suspense fallback={<MapSkeleton />}>
       <MapPageContent />
     </Suspense>
   );
@@ -68,31 +71,25 @@ function MapPageContent() {
     }
   }, [themeIdParam, map]);
 
-  // 테마 목록 로드
+  // React Query for Themes
+  const { data: myThemesData } = useQuery({
+    queryKey: ['myThemes'],
+    queryFn: () => themeApi.getMyAll(),
+    enabled: !!isAuthenticated,
+  });
+
+  const { data: publicThemesData } = useQuery({
+    queryKey: ['themes', { sort: 'createdAt', page: 0, size: 20 }],
+    queryFn: () => themeApi.getPublic(undefined, 'createdAt', 0, 20),
+  });
+
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchMyThemes();
-    }
-    fetchPublicThemes();
-  }, [isAuthenticated]);
+    if (myThemesData) setMyThemes(myThemesData);
+  }, [myThemesData]);
 
-  const fetchMyThemes = async () => {
-    try {
-      const themes = await themeApi.getMyAll();
-      setMyThemes(themes);
-    } catch (error) {
-      console.error('Failed to fetch my themes:', error);
-    }
-  };
-
-  const fetchPublicThemes = async () => {
-    try {
-      const response = await themeApi.getPublic(undefined, 'createdAt', 0, 20);
-      setPublicThemes(response.content);
-    } catch (error) {
-      console.error('Failed to fetch public themes:', error);
-    }
-  };
+  useEffect(() => {
+    if (publicThemesData) setPublicThemes(publicThemesData.content);
+  }, [publicThemesData]);
 
   const loadTheme = async (themeId: number) => {
     try {
@@ -494,10 +491,11 @@ function MapPageContent() {
       {/* Map Container */}
       <div ref={mapRef} className="w-full h-full z-0" />
 
-      {/* Loading Overlay */}
+      {/* Subtle Loading Indicator for Search/Refetch */}
       {isLoading && (
-        <div className="absolute inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-20">
-          <Loading size="lg" />
+        <div className="absolute top-24 left-1/2 -translate-x-1/2 z-30 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-lg flex items-center gap-2 border border-orange-100">
+          <div className="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-sm font-medium text-gray-600">지도를 불러오는 중...</span>
         </div>
       )}
 
@@ -623,8 +621,8 @@ function ThemeListItem({
     <button
       onClick={onClick}
       className={`w-full p-3 mb-2 rounded-xl text-left transition-all duration-200 border ${isSelected
-          ? 'bg-orange-50 border-orange-200 shadow-sm ring-1 ring-orange-200'
-          : 'bg-white border-transparent hover:bg-gray-50 hover:border-gray-200'
+        ? 'bg-orange-50 border-orange-200 shadow-sm ring-1 ring-orange-200'
+        : 'bg-white border-transparent hover:bg-gray-50 hover:border-gray-200'
         }`}
     >
       <div className="flex items-center gap-3">

@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { Mail, Phone, MapPin, Clock, Send, MessageSquare } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -12,98 +14,130 @@ export default function ContactPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    alert('문의가 접수되었습니다. 빠른 시일 내에 답변 드리겠습니다.');
-    setFormData({ name: '', email: '', subject: '', message: '' });
+    // Simulate API call
+    setTimeout(() => {
+      toast.success('문의가 성공적으로 접수되었습니다!');
+      setFormData({ name: '', email: '', subject: '', message: '' });
+    }, 1000);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-3xl font-bold mb-8">문의하기</h1>
+    <div className="min-h-screen bg-gray-50/50 relative overflow-hidden">
+      {/* Background Decor */}
+      <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-[600px] h-[600px] bg-orange-200/20 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-blue-200/20 rounded-full blur-3xl" />
 
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* 연락처 정보 */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">연락처 정보</h2>
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-medium text-gray-700">이메일</h3>
-                <p className="text-gray-600">support@linkisy.com</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
+        <div className="text-center mb-16">
+          <span className="text-orange-500 font-bold tracking-wider uppercase text-sm mb-2 block animate-fade-in-up">Contact Us</span>
+          <h1 className="text-4xl md:text-5xl font-bold font-display text-gray-900 mb-4 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+            궁금한 점이 있으신가요?
+          </h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+            저희 팀은 언제나 여러분의 목소리에 귀 기울이고 있습니다.<br />
+            불편 사항이나 제안하고 싶은 점을 자유롭게 남겨주세요.
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-8 items-start">
+          {/* Contact Info Cards */}
+          <div className="lg:col-span-1 space-y-6 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
+            <div className="bg-white/80 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 group">
+              <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Mail className="h-6 w-6 text-orange-600" />
               </div>
-              <div>
-                <h3 className="font-medium text-gray-700">전화</h3>
-                <p className="text-gray-600">02-1234-5678</p>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">Email</h3>
+              <p className="text-gray-500 text-sm mb-3">언제든 메일로 문의주세요</p>
+              <a href="mailto:support@linkisy.com" className="text-orange-600 font-medium hover:underline">support@linkisy.com</a>
+            </div>
+
+            <div className="bg-white/80 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 group">
+              <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Phone className="h-6 w-6 text-blue-600" />
               </div>
-              <div>
-                <h3 className="font-medium text-gray-700">운영시간</h3>
-                <p className="text-gray-600">평일 09:00 - 18:00</p>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">Phone</h3>
+              <p className="text-gray-500 text-sm mb-3">평일 09:00 - 18:00</p>
+              <a href="tel:02-1234-5678" className="text-blue-600 font-medium hover:underline">02-1234-5678</a>
+            </div>
+
+            <div className="bg-white/80 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 group">
+              <div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <MapPin className="h-6 w-6 text-green-600" />
               </div>
-              <div>
-                <h3 className="font-medium text-gray-700">주소</h3>
-                <p className="text-gray-600">서울시 강남구 테헤란로 123</p>
-              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">Office</h3>
+              <p className="text-gray-500 text-sm">서울 강남구 테헤란로 123</p>
             </div>
           </div>
 
-          {/* 문의 폼 */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">문의 양식</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  이름
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
-                  required
-                />
+          {/* Contact Form */}
+          <div className="lg:col-span-2 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+            <div className="bg-white/80 backdrop-blur-xl border border-white/20 rounded-[2rem] p-8 md:p-12 shadow-xl">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center text-white">
+                  <MessageSquare className="h-5 w-5" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900">1:1 문의 작성</h2>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  이메일
-                </label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  제목
-                </label>
-                <input
-                  type="text"
-                  value={formData.subject}
-                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  내용
-                </label>
-                <textarea
-                  value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  rows={4}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500"
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full bg-orange-500 text-white py-2 rounded-lg hover:bg-orange-600 transition"
-              >
-                문의하기
-              </button>
-            </form>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-700 ml-1">이름</label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full px-5 py-3 bg-gray-50/50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium"
+                      placeholder="홍길동"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-semibold text-gray-700 ml-1">이메일</label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full px-5 py-3 bg-gray-50/50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium"
+                      placeholder="example@linkisy.com"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700 ml-1">제목</label>
+                  <input
+                    type="text"
+                    value={formData.subject}
+                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                    className="w-full px-5 py-3 bg-gray-50/50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium"
+                    placeholder="문의 제목을 입력해주세요"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-gray-700 ml-1">문의 내용</label>
+                  <textarea
+                    value={formData.message}
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                    rows={6}
+                    className="w-full px-5 py-3 bg-gray-50/50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium resize-none"
+                    placeholder="문의하실 내용을 자세히 적어주세요."
+                    required
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-4 rounded-2xl hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 flex items-center justify-center gap-2 group"
+                >
+                  문의하기
+                  <Send className="h-5 w-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       </div>

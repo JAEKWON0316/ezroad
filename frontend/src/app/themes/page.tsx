@@ -9,42 +9,37 @@ import { themeApi } from '@/lib/api';
 import type { Theme, PageResponse } from '@/types';
 import { Search, Plus, Filter, Heart, Eye } from 'lucide-react';
 import Loading from '@/components/common/Loading';
+import { useThemes } from '@/hooks/useThemes';
+import ThemeCardSkeleton from '@/components/theme/ThemeCardSkeleton';
 
 function ThemeListContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated } = useAuth();
 
-  const [themes, setThemes] = useState<Theme[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [totalPages, setTotalPages] = useState(0);
   const [keyword, setKeyword] = useState(searchParams.get('keyword') || '');
   const [searchInput, setSearchInput] = useState(searchParams.get('keyword') || '');
   const [sort, setSort] = useState(searchParams.get('sort') || 'createdAt');
 
   const page = parseInt(searchParams.get('page') || '0');
 
-  useEffect(() => {
-    fetchThemes();
-  }, [page, keyword, sort]);
+  // React Query
+  const { data, isLoading } = useThemes({
+    keyword,
+    sort,
+    page,
+    size: 12,
+  });
 
-  const fetchThemes = async () => {
-    try {
-      setLoading(true);
-      const response: PageResponse<Theme> = await themeApi.getPublic(
-        keyword || undefined,
-        sort,
-        page,
-        12
-      );
-      setThemes(response.content);
-      setTotalPages(response.totalPages);
-    } catch (error) {
-      console.error('테마 목록 로딩 실패:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const themes = data?.content || [];
+  const totalPages = data?.totalPages || 0;
+
+  useEffect(() => {
+    // Update local state if URL params change (optional depending on how tight the coupling is)
+    setKeyword(searchParams.get('keyword') || '');
+    setSort(searchParams.get('sort') || 'createdAt');
+    setSearchInput(searchParams.get('keyword') || '');
+  }, [searchParams]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,8 +126,8 @@ function ThemeListContent() {
                 key={option.id}
                 onClick={() => handleSortChange(option.id)}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${sort === option.id
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-50'
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'text-gray-600 hover:bg-gray-50'
                   }`}
               >
                 {option.label}
@@ -152,9 +147,11 @@ function ThemeListContent() {
         </div>
 
         {/* Content Grid */}
-        {loading ? (
-          <div className="min-h-[400px] flex items-center justify-center">
-            <Loading />
+        {isLoading && !data ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, i) => (
+              <ThemeCardSkeleton key={i} />
+            ))}
           </div>
         ) : themes.length === 0 ? (
           <div className="text-center py-24 bg-white rounded-3xl border border-dashed border-gray-200">
@@ -190,8 +187,8 @@ function ThemeListContent() {
                   key={pageNum}
                   onClick={() => handlePageChange(pageNum)}
                   className={`w-10 h-10 rounded-lg font-medium transition-all ${page === pageNum
-                      ? 'bg-indigo-600 text-white shadow-md transform scale-105'
-                      : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
+                    ? 'bg-indigo-600 text-white shadow-md transform scale-105'
+                    : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
                     }`}
                 >
                   {pageNum + 1}

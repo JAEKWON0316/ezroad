@@ -1,4 +1,4 @@
-# EzenRoad - 지역 맛집 플랫폼
+# Linkisy - 지역 맛집 플랫폼
 
 Spring Boot + Next.js 기반의 현대적인 맛집 검색 및 예약 플랫폼
 
@@ -30,7 +30,7 @@ Spring Boot + Next.js 기반의 현대적인 맛집 검색 및 예약 플랫폼
 ## 📦 프로젝트 구조
 
 ```
-ezenroad/
+linkisy/
 ├── frontend/          # Next.js 프론트엔드
 └── backend/           # Spring Boot 백엔드
 ```

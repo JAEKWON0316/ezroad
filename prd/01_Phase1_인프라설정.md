@@ -1,7 +1,7 @@
 # Phase 1: 인프라 설정
 
 ## 🎯 목표
-EzenRoad 프로젝트의 기반 인프라를 구축하여 개발 환경을 완성한다.
+Linkisy프로젝트의 기반 인프라를 구축하여 개발 환경을 완성한다.
 
 ---
 
@@ -108,13 +108,13 @@ sudo apt install openjdk-17-jdk -y
 ### 4. AWS S3 + CloudFront 설정
 
 #### 4.1 S3 버킷 생성
-- Bucket 이름: `ezenroad-uploads`
+- Bucket 이름: `Linkisy-uploads`
 - Region: ap-northeast-2 (서울)
 - Public Access: 차단 (CloudFront 통해서만)
 - CORS 설정 필요
 
 #### 4.2 IAM 사용자 생성
-- 사용자 이름: `ezenroad-s3-user`
+- 사용자 이름: `Linkisy-s3-user`
 - 정책: S3 특정 버킷만 접근
 - Access Key 발급
 
@@ -134,7 +134,7 @@ sudo apt install openjdk-17-jdk -y
 
 #### 5.2 환경 변수 설정
 ```
-NEXT_PUBLIC_API_URL=https://api.ezenroad.com
+NEXT_PUBLIC_API_URL=https://api.Linkisy.com
 NEXT_PUBLIC_KAKAO_MAP_KEY=xxx
 ```
 

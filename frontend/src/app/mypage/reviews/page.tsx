@@ -10,6 +10,7 @@ import { reviewApi } from '@/lib/api';
 import { Review, PageResponse } from '@/types';
 import Button from '@/components/common/Button';
 import Loading from '@/components/common/Loading';
+import CardListSkeleton from '@/components/common/CardListSkeleton';
 import Pagination from '@/components/common/Pagination';
 import Modal from '@/components/common/Modal';
 import toast from 'react-hot-toast';
@@ -90,9 +91,7 @@ export default function MyReviewsPage() {
 
       <div className="max-w-6xl mx-auto px-4 py-8">
         {isLoading ? (
-          <div className="flex justify-center py-20">
-            <Loading size="lg" />
-          </div>
+          <CardListSkeleton viewMode="grid" count={6} />
         ) : reviews.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-gray-200 shadow-sm">
             <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mb-6">

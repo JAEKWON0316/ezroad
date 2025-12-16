@@ -10,6 +10,7 @@ import { followApi } from '@/lib/api';
 import { Member, PageResponse } from '@/types';
 import Button from '@/components/common/Button';
 import Loading from '@/components/common/Loading';
+import CardListSkeleton from '@/components/common/CardListSkeleton';
 import Pagination from '@/components/common/Pagination';
 import Modal from '@/components/common/Modal';
 import toast from 'react-hot-toast';
@@ -17,7 +18,7 @@ import toast from 'react-hot-toast';
 export default function FollowingPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-  
+
   const [following, setFollowing] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(0);
@@ -56,7 +57,7 @@ export default function FollowingPage() {
 
   const handleUnfollow = async () => {
     if (!unfollowModal.member) return;
-    
+
     setIsUnfollowing(true);
     try {
       await followApi.unfollowMember(unfollowModal.member.id);
@@ -92,7 +93,7 @@ export default function FollowingPage() {
               <p className="text-sm text-gray-500">{totalCount}명</p>
             </div>
           </div>
-          
+
           {/* Tabs */}
           <div className="flex mt-4 border-b -mx-4 px-4">
             <Link href="/mypage/followers" className="px-4 py-2 text-gray-500 hover:text-gray-700">
@@ -107,9 +108,7 @@ export default function FollowingPage() {
 
       <div className="max-w-2xl mx-auto px-4 py-6">
         {isLoading ? (
-          <div className="flex justify-center py-12">
-            <Loading size="lg" />
-          </div>
+          <CardListSkeleton viewMode="list" count={8} />
         ) : following.length === 0 ? (
           <div className="text-center py-12">
             <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
@@ -129,8 +128,8 @@ export default function FollowingPage() {
                   <div className="flex items-center gap-3">
                     <div className="relative w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center overflow-hidden">
                       {member.profileImage ? (
-                        <Image 
-                          src={member.profileImage} 
+                        <Image
+                          src={member.profileImage}
                           alt={member.nickname}
                           fill
                           sizes="48px"

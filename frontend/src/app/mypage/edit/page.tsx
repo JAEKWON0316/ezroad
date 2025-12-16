@@ -12,6 +12,7 @@ import { fileApi } from '@/lib/api';
 import Button from '@/components/common/Button';
 import Input from '@/components/common/Input';
 import Loading from '@/components/common/Loading';
+import FormSkeleton from '@/components/common/FormSkeleton';
 import toast from 'react-hot-toast';
 
 const profileSchema = z.object({
@@ -93,8 +94,8 @@ export default function EditProfilePage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Loading size="lg" />
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <FormSkeleton />
       </div>
     );
   }
