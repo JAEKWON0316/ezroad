@@ -79,7 +79,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-gray-50/50">
 
       {/* 3D Hero Section */}
-      <section className="relative h-[600px] flex items-center justify-center overflow-hidden">
+      <section className="relative h-[500px] md:h-[600px] flex items-center justify-center overflow-hidden">
         {/* 3D Background */}
         <Scene3D />
 

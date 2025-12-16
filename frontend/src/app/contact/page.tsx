@@ -8,17 +8,38 @@ export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     subject: '',
     message: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate API call
-    setTimeout(() => {
-      toast.success('문의가 성공적으로 접수되었습니다!');
-      setFormData({ name: '', email: '', subject: '', message: '' });
-    }, 1000);
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send message');
+      }
+
+      toast.success('문의가 성공적으로 접수되었습니다! 곧 답변 드리겠습니다.');
+      setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+    } catch (error) {
+      toast.error('문의 접수에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -48,7 +69,7 @@ export default function ContactPage() {
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-1">Email</h3>
               <p className="text-gray-500 text-sm mb-3">언제든 메일로 문의주세요</p>
-              <a href="mailto:support@linkisy.com" className="text-orange-600 font-medium hover:underline">support@linkisy.com</a>
+              <a href="mailto:dlwornjs0316@gmail.com" className="text-orange-600 font-medium hover:underline">dlwornjs0316@gmail.com</a>
             </div>
 
             <div className="bg-white/80 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 group">
@@ -57,7 +78,7 @@ export default function ContactPage() {
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-1">Phone</h3>
               <p className="text-gray-500 text-sm mb-3">평일 09:00 - 18:00</p>
-              <a href="tel:02-1234-5678" className="text-blue-600 font-medium hover:underline">02-1234-5678</a>
+              <a href="tel:010-2516-6621" className="text-blue-600 font-medium hover:underline">010-2516-6621</a>
             </div>
 
             <div className="bg-white/80 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 group">
@@ -65,7 +86,7 @@ export default function ContactPage() {
                 <MapPin className="h-6 w-6 text-green-600" />
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-1">Office</h3>
-              <p className="text-gray-500 text-sm">서울 강남구 테헤란로 123</p>
+              <p className="text-gray-500 text-sm">경기도 김포시 수기로 67-54</p>
             </div>
           </div>
 
@@ -103,6 +124,16 @@ export default function ContactPage() {
                       required
                     />
                   </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="text-sm font-semibold text-gray-700 ml-1">연락처</label>
+                    <input
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      className="w-full px-5 py-3 bg-gray-50/50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium"
+                      placeholder="010-1234-5678"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -131,16 +162,17 @@ export default function ContactPage() {
 
                 <button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-4 rounded-2xl hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 flex items-center justify-center gap-2 group"
+                  disabled={isSubmitting}
+                  className="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-4 rounded-2xl hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  문의하기
-                  <Send className="h-5 w-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                  {isSubmitting ? '전송 중...' : '문의하기'}
+                  {!isSubmitting && <Send className="h-5 w-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />}
                 </button>
               </form>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }

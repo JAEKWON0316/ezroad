@@ -62,10 +62,10 @@ const Scene3D = React.memo(function Scene3D() {
                 onCreated={({ gl }) => {
                     const handleContextLost = (event: Event) => {
                         event.preventDefault();
-                        console.warn('WebGL Context Lost - Attempting to restore');
+                        // console.warn('WebGL Context Lost - Attempting to restore'); // Suppressed per user request
                     };
                     const handleContextRestored = () => {
-                        console.log('WebGL Context Restored');
+                        // console.log('WebGL Context Restored');
                         // Force a redraw or state update if needed, but R3F usually handles this.
                     };
 

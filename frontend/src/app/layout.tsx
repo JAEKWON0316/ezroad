@@ -71,6 +71,13 @@ export const metadata: Metadata = {
     // Google Search Console 인증 시 추가
     // google: 'your-google-verification-code',
   },
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false, // Prevent input zooming issues, but consider accessibility if needed
+    viewportFit: 'cover',
+  },
 };
 
 export default function RootLayout({

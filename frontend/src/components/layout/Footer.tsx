@@ -40,15 +40,15 @@ export default function Footer() {
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
-                <span>서울특별시 강남구 테헤란로 123</span>
+                <span>경기도 김포시 수기로 67-54</span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4" />
-                <span>02-1234-5678</span>
+                <span>010-2516-6621</span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
-                <span>support@linkisy.com</span>
+                <span>dlwornjs0316@gmail.com</span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />

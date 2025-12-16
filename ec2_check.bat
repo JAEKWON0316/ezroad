@@ -1,2 +1,2 @@
 @echo off
-ssh -i "C:\EC2KEY\pdfchatbot-key.pem" -o StrictHostKeyChecking=no ubuntu@3.106.186.205 "docker --version && docker ps -a && df -h"
+ssh -i "C:\EC2KEY\ezroad-seoul-key.pem" -o StrictHostKeyChecking=no ubuntu@3.36.74.144 "docker --version && docker ps -a && df -h"

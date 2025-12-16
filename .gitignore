@@ -76,3 +76,6 @@ backend/.mvn/
 *.DS_Store
 Thumbs.db
 ehthumbs.db
+
+#EC2
+ec2_check.bat
