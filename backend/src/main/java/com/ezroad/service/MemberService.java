@@ -2,6 +2,7 @@ package com.ezroad.service;
 
 import com.ezroad.dto.request.MemberLoginRequest;
 import com.ezroad.dto.request.MemberRegisterRequest;
+import com.ezroad.dto.request.MemberUpdateRequest;
 import com.ezroad.dto.response.AuthResponse;
 import com.ezroad.dto.response.MemberResponse;
 import com.ezroad.entity.Member;
@@ -112,7 +113,7 @@ public class MemberService {
         }
 
         @Transactional
-        public MemberResponse updateMember(Long id, MemberRegisterRequest request) {
+        public MemberResponse updateMember(Long id, MemberUpdateRequest request) {
                 Member member = memberRepository.findById(id)
                                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 회원입니다"));
 

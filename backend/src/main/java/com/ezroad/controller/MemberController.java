@@ -29,7 +29,7 @@ public class MemberController {
     @PutMapping("/me")
     public ResponseEntity<MemberResponse> updateMyInfo(
             @AuthenticationPrincipal Long memberId,
-            @Valid @RequestBody MemberRegisterRequest request) {
+            @Valid @RequestBody com.ezroad.dto.request.MemberUpdateRequest request) {
         return ResponseEntity.ok(memberService.updateMember(memberId, request));
     }
 
