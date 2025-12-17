@@ -692,3 +692,61 @@ export const reportApi = {
     return response.data;
   },
 };
+
+// ========================================
+// 공공데이터 식당 API (지도용)
+// ========================================
+export interface PublicRestaurantMap {
+  id: number;
+  name: string;
+  latitude: number;
+  longitude: number;
+  category: string | null;
+}
+
+export interface PublicRestaurantDetail {
+  id: number;
+  externalId: string;
+  name: string;
+  branchName: string | null;
+  category: string | null;
+  subCategory: string | null;
+  sido: string | null;
+  sigungu: string | null;
+  dong: string | null;
+  address: string | null;
+  zipcode: string | null;
+  buildingName: string | null;
+  longitude: number;
+  latitude: number;
+  detailInfo: string | null;
+}
+
+export interface BboxParams {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+  category?: string;
+  limit?: number;
+}
+
+export const publicRestaurantApi = {
+  // bbox 영역 내 식당 조회 (지도용)
+  getByBbox: async (params: BboxParams): Promise<PublicRestaurantMap[]> => {
+    const response = await api.get<PublicRestaurantMap[]>('/public-restaurants/bbox', { params });
+    return response.data;
+  },
+
+  // 상세 정보 조회
+  getDetail: async (id: number): Promise<PublicRestaurantDetail> => {
+    const response = await api.get<PublicRestaurantDetail>(`/public-restaurants/${id}`);
+    return response.data;
+  },
+
+  // 카테고리 목록 조회
+  getCategories: async (): Promise<string[]> => {
+    const response = await api.get<string[]>('/public-restaurants/categories');
+    return response.data;
+  },
+};

@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Search, MapPin, Navigation, Star, Utensils, X, ChevronRight, Layers, Route } from 'lucide-react';
-import { restaurantApi, themeApi } from '@/lib/api';
+import { Search, MapPin, Navigation, Star, Utensils, X, ChevronRight, Layers, Route, Database } from 'lucide-react';
+import { restaurantApi, themeApi, publicRestaurantApi, PublicRestaurantMap, PublicRestaurantDetail } from '@/lib/api';
 import { Restaurant, Theme, ThemeDetail } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/common/Button';
@@ -44,10 +44,17 @@ function MapPageContent() {
   const [selectedTheme, setSelectedTheme] = useState<ThemeDetail | null>(null);
   const [themeTab, setThemeTab] = useState<'my' | 'public'>('my');
 
+  // 공공데이터 관련 상태
+  const [showPublicData, setShowPublicData] = useState(false);
+  const [publicDataMarkers, setPublicDataMarkers] = useState<PublicRestaurantMap[]>([]);
+  const [clusterer, setClusterer] = useState<any>(null);
+  const [selectedPublicRestaurant, setSelectedPublicRestaurant] = useState<PublicRestaurantDetail | null>(null);
+  const [isLoadingPublicData, setIsLoadingPublicData] = useState(false);
+
   // 카카오맵 스크립트 로드
   useEffect(() => {
     const script = document.createElement('script');
-    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_KEY}&autoload=false`;
+    script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${process.env.NEXT_PUBLIC_KAKAO_MAP_KEY}&autoload=false&libraries=clusterer`;
     script.async = true;
     document.head.appendChild(script);
 
@@ -147,6 +154,99 @@ function MapPageContent() {
     }
   };
 
+  // 공공데이터 bbox 로드
+  const fetchPublicDataByBbox = useCallback(async (mapInstance: any) => {
+    if (!mapInstance || !showPublicData) return;
+    
+    const kakao = (window as any).kakao;
+    const bounds = mapInstance.getBounds();
+    const sw = bounds.getSouthWest();
+    const ne = bounds.getNorthEast();
+
+    setIsLoadingPublicData(true);
+    try {
+      const data = await publicRestaurantApi.getByBbox({
+        minLat: sw.getLat(),
+        maxLat: ne.getLat(),
+        minLng: sw.getLng(),
+        maxLng: ne.getLng(),
+        limit: 1000,
+      });
+      setPublicDataMarkers(data);
+    } catch (error) {
+      console.error('Failed to fetch public data:', error);
+    } finally {
+      setIsLoadingPublicData(false);
+    }
+  }, [showPublicData]);
+
+  // 공공데이터 토글
+  const togglePublicData = () => {
+    setShowPublicData(prev => !prev);
+    if (showPublicData) {
+      // 끄면 클러스터러 클리어
+      if (clusterer) {
+        clusterer.clear();
+      }
+      setPublicDataMarkers([]);
+      setSelectedPublicRestaurant(null);
+    }
+  };
+
+  // 공공데이터 클러스터 업데이트
+  useEffect(() => {
+    if (!map || !clusterer || !showPublicData) return;
+    
+    const kakao = (window as any).kakao;
+    
+    // 기존 클러스터 클리어
+    clusterer.clear();
+
+    if (publicDataMarkers.length === 0) return;
+
+    // 마커 생성
+    const clusterMarkers = publicDataMarkers.map((item) => {
+      const marker = new kakao.maps.Marker({
+        position: new kakao.maps.LatLng(item.latitude, item.longitude),
+      });
+
+      // 마커 클릭 이벤트
+      kakao.maps.event.addListener(marker, 'click', async () => {
+        try {
+          const detail = await publicRestaurantApi.getDetail(item.id);
+          setSelectedPublicRestaurant(detail);
+          setSelectedRestaurant(null);
+        } catch (error) {
+          console.error('Failed to get public restaurant detail:', error);
+        }
+      });
+
+      return marker;
+    });
+
+    // 클러스터에 마커 추가
+    clusterer.addMarkers(clusterMarkers);
+  }, [map, clusterer, publicDataMarkers, showPublicData]);
+
+  // 지도 이동 시 공공데이터 로드
+  useEffect(() => {
+    if (!map || !showPublicData) return;
+
+    const kakao = (window as any).kakao;
+    
+    // 초기 로드
+    fetchPublicDataByBbox(map);
+
+    // idle 이벤트 (지도 이동/줌 완료 시)
+    const idleListener = kakao.maps.event.addListener(map, 'idle', () => {
+      fetchPublicDataByBbox(map);
+    });
+
+    return () => {
+      kakao.maps.event.removeListener(idleListener);
+    };
+  }, [map, showPublicData, fetchPublicDataByBbox]);
+
   const initializeMap = () => {
     if (!mapRef.current) return;
     const kakao = (window as any).kakao;
@@ -158,6 +258,46 @@ function MapPageContent() {
 
     const newMap = new kakao.maps.Map(mapRef.current, options);
     setMap(newMap);
+
+    // 클러스터러 초기화 (공공데이터용)
+    const newClusterer = new kakao.maps.MarkerClusterer({
+      map: newMap,
+      averageCenter: true,
+      minLevel: 5,
+      disableClickZoom: false,
+      styles: [{
+        width: '50px',
+        height: '50px',
+        background: 'rgba(34, 197, 94, 0.9)',
+        borderRadius: '50%',
+        color: '#fff',
+        textAlign: 'center',
+        fontWeight: 'bold',
+        lineHeight: '50px',
+        fontSize: '14px',
+      }, {
+        width: '60px',
+        height: '60px',
+        background: 'rgba(59, 130, 246, 0.9)',
+        borderRadius: '50%',
+        color: '#fff',
+        textAlign: 'center',
+        fontWeight: 'bold',
+        lineHeight: '60px',
+        fontSize: '15px',
+      }, {
+        width: '70px',
+        height: '70px',
+        background: 'rgba(239, 68, 68, 0.9)',
+        borderRadius: '50%',
+        color: '#fff',
+        textAlign: 'center',
+        fontWeight: 'bold',
+        lineHeight: '70px',
+        fontSize: '16px',
+      }],
+    });
+    setClusterer(newClusterer);
 
     // 현재 위치 가져오기
     if (navigator.geolocation) {
@@ -389,6 +529,33 @@ function MapPageContent() {
         <span className="text-sm font-medium text-gray-700 pr-1">테마 보기</span>
       </button>
 
+      {/* Public Data Toggle Button */}
+      <button
+        onClick={togglePublicData}
+        className={`absolute top-32 left-4 md:left-8 z-10 h-10 px-3 backdrop-blur-md rounded-full shadow-lg flex items-center gap-2 border transition-all ${
+          showPublicData 
+            ? 'bg-green-500 text-white border-green-400 hover:bg-green-600' 
+            : 'bg-white/90 border-white/50 hover:bg-white'
+        }`}
+      >
+        <div className={`p-1 rounded-full ${showPublicData ? 'bg-white/20' : 'bg-green-100'}`}>
+          <Database className={`h-4 w-4 ${showPublicData ? 'text-white' : 'text-green-600'}`} />
+        </div>
+        <span className={`text-sm font-medium pr-1 ${showPublicData ? 'text-white' : 'text-gray-700'}`}>
+          공공데이터 {showPublicData ? 'ON' : 'OFF'}
+        </span>
+        {isLoadingPublicData && (
+          <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        )}
+      </button>
+
+      {/* Public Data Count Badge */}
+      {showPublicData && publicDataMarkers.length > 0 && (
+        <div className="absolute top-32 left-48 md:left-52 z-10 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+          {publicDataMarkers.length.toLocaleString()}개 식당
+        </div>
+      )}
+
       {/* Selected Theme Badge */}
       {selectedTheme && (
         <div className="absolute top-20 left-40 md:left-44 z-10 flex items-center gap-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white px-4 py-2 rounded-full shadow-lg animate-fade-in-up">
@@ -496,6 +663,54 @@ function MapPageContent() {
         <div className="absolute top-24 left-1/2 -translate-x-1/2 z-30 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full shadow-lg flex items-center gap-2 border border-orange-100">
           <div className="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
           <span className="text-sm font-medium text-gray-600">지도를 불러오는 중...</span>
+        </div>
+      )}
+
+      {/* Selected Public Restaurant Card (공공데이터) */}
+      {selectedPublicRestaurant && !selectedRestaurant && (
+        <div className="absolute bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-96 z-10 animate-slide-up">
+          <div className="glass-card bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl p-4 border border-green-100">
+            <button
+              onClick={() => setSelectedPublicRestaurant(null)}
+              className="absolute top-2 right-2 p-1.5 hover:bg-gray-100/50 rounded-full transition-colors"
+            >
+              <X className="h-5 w-5 text-gray-400" />
+            </button>
+            <div className="flex gap-4">
+              <div className="w-24 h-24 rounded-xl bg-green-50 flex-shrink-0 overflow-hidden shadow-sm flex items-center justify-center">
+                <Database className="h-10 w-10 text-green-400" />
+              </div>
+              <div className="flex-1 min-w-0 py-1">
+                <div className="flex flex-wrap gap-1 mb-1">
+                  <span className="text-[10px] uppercase font-bold bg-green-100 text-green-600 px-1.5 py-0.5 rounded">
+                    공공데이터
+                  </span>
+                  {selectedPublicRestaurant.category && (
+                    <span className="text-[10px] font-bold bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                      {selectedPublicRestaurant.category}
+                    </span>
+                  )}
+                </div>
+                <h3 className="font-bold text-gray-900 text-lg leading-tight truncate mb-1">
+                  {selectedPublicRestaurant.name}
+                  {selectedPublicRestaurant.branchName && (
+                    <span className="text-gray-500 font-normal text-sm ml-1">
+                      {selectedPublicRestaurant.branchName}
+                    </span>
+                  )}
+                </h3>
+                <p className="text-sm text-gray-500 truncate flex items-center mb-1">
+                  <MapPin className="h-3.5 w-3.5 mr-1 flex-shrink-0" />
+                  {selectedPublicRestaurant.address || `${selectedPublicRestaurant.sido} ${selectedPublicRestaurant.sigungu}`}
+                </p>
+                {selectedPublicRestaurant.subCategory && (
+                  <p className="text-xs text-gray-400 truncate">
+                    {selectedPublicRestaurant.subCategory}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
