@@ -118,17 +118,17 @@ export default function MyReviewsPage() {
                     {/* Flex layout for image and basic info */}
                     <div className="flex gap-4 p-4 pb-0">
                       {/* Conditionally render thumbnail if images exist */}
-                      {review.images && review.images.length > 0 && (
+                      {review.imageUrls && review.imageUrls.length > 0 && (
                         <div className="relative w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 shadow-sm">
                           <Image
-                            src={review.images[0]}
+                            src={review.imageUrls[0]}
                             alt="Review thumbnail"
                             fill
                             className="object-cover"
                           />
-                          {review.images.length > 1 && (
+                          {review.imageUrls.length > 1 && (
                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-bold text-xs">
-                              +{review.images.length - 1}
+                              +{review.imageUrls.length - 1}
                             </div>
                           )}
                         </div>
