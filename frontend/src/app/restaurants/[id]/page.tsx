@@ -553,9 +553,9 @@ function ReviewCard({ review }: { review: Review }) {
       )}
       <p className="text-gray-600 text-sm leading-relaxed mb-4">{review.content}</p>
 
-      {review.images && review.images.length > 0 && (
+      {review.imageUrls && review.imageUrls.length > 0 && (
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-200">
-          {review.images.map((imageUrl, index) => (
+          {review.imageUrls.map((imageUrl: string, index: number) => (
             <div key={index} className="relative w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 cursor-pointer border border-gray-100">
               <Image
                 src={imageUrl}
