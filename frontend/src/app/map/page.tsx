@@ -307,7 +307,7 @@ function MapPageContent() {
     // 클러스터러 초기화 (공공데이터용)
     const newClusterer = new kakao.maps.MarkerClusterer({
       map: newMap,
-      averageCenter: true,
+      averageCenter: false,
       minLevel: 5,
       disableClickZoom: false,
       styles: [{
