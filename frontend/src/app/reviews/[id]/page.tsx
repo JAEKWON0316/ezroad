@@ -202,10 +202,10 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
           </div>
 
           {/* Images */}
-          {review.images && review.images.length > 0 && (
+          {review.imageUrls && review.imageUrls.length > 0 && (
             <div className="p-4 border-b">
               <div className="grid grid-cols-3 gap-2">
-                {review.images.map((image, index) => (
+                {review.imageUrls.map((image, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(image)}

@@ -94,6 +94,10 @@ public class ReviewService {
         }
 
         Review savedReview = reviewRepository.save(review);
+        
+        // 식당 리뷰 통계 업데이트
+        updateRestaurantStats(restaurant.getId());
+        
         return ReviewResponse.from(savedReview);
     }
 
@@ -108,6 +112,9 @@ public class ReviewService {
         }
 
         review.update(request.getTitle(), request.getContent(), request.getRating());
+        
+        // 평점이 변경되었을 수 있으므로 식당 통계 업데이트
+        updateRestaurantStats(review.getRestaurant().getId());
 
         return ReviewResponse.from(review);
     }
@@ -122,7 +129,11 @@ public class ReviewService {
             throw new UnauthorizedException("리뷰 삭제 권한이 없습니다");
         }
 
+        Long restaurantId = review.getRestaurant().getId();
         review.delete();
+        
+        // 식당 리뷰 통계 업데이트
+        updateRestaurantStats(restaurantId);
     }
 
     // 식당 평균 평점 계산
@@ -140,5 +151,29 @@ public class ReviewService {
             throw new ResourceNotFoundException("존재하지 않는 식당입니다");
         }
         return reviewRepository.countByRestaurantIdAndDeletedAtIsNull(restaurantId);
+    }
+    
+    // 식당 리뷰 통계 업데이트 (private 헬퍼 메서드)
+    private void updateRestaurantStats(Long restaurantId) {
+        Restaurant restaurant = restaurantRepository.findById(restaurantId)
+                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 식당입니다"));
+        
+        // 실제 리뷰 개수 계산 (deleted_at이 null인 것만)
+        Long reviewCount = reviewRepository.countByRestaurantIdAndDeletedAtIsNull(restaurantId);
+        
+        // 실제 평균 평점 계산
+        Double avgRating = reviewRepository.findAverageRatingByRestaurantId(restaurantId)
+                .orElse(0.0);
+        
+        // Restaurant 엔티티 업데이트
+        restaurant.updateRating(
+                java.math.BigDecimal.valueOf(avgRating),
+                reviewCount.intValue()
+        );
+        
+        restaurantRepository.save(restaurant);
+        
+        log.info("Restaurant #{} 통계 업데이트 완료 - 리뷰수: {}, 평균평점: {}", 
+                restaurantId, reviewCount, avgRating);
     }
 }

@@ -116,7 +116,7 @@ export interface Review {
   content: string;
   rating: number;
   viewCount: number;
-  images?: string[];
+  imageUrls?: string[];
   createdAt: string;
   updatedAt?: string;
 }

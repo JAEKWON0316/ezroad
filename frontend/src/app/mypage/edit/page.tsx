@@ -54,7 +54,6 @@ export default function EditProfilePage() {
       return;
     }
     if (user) {
-      console.log('EditProfilePage User:', user);
       reset({
         name: user.name,
         nickname: user.nickname,

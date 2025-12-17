@@ -92,9 +92,9 @@ function ReviewCard({ review, index }: { review: Review; index: number }) {
       >
         {/* Review Image Area */}
         <div className="relative h-56 overflow-hidden bg-gray-100">
-          {review.images && review.images.length > 0 ? (
+          {review.imageUrls && review.imageUrls.length > 0 ? (
             <Image
-              src={review.images[0]}
+              src={review.imageUrls[0]}
               alt="리뷰 이미지"
               fill
               className="object-cover group-hover:scale-110 transition-transform duration-700"
@@ -120,9 +120,9 @@ function ReviewCard({ review, index }: { review: Review; index: number }) {
             <span className="text-sm font-bold text-gray-900">{review.rating.toFixed(1)}</span>
           </div>
 
-          {review.images && review.images.length > 1 && (
+          {review.imageUrls && review.imageUrls.length > 1 && (
             <span className="absolute bottom-3 left-3 bg-black/50 backdrop-blur text-white text-[10px] px-2 py-1 rounded-full">
-              +{review.images.length - 1} more
+              +{review.imageUrls.length - 1} more
             </span>
           )}
         </div>

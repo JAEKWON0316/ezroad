@@ -103,9 +103,9 @@ export default function ReviewCard({
         <p className="text-gray-600 whitespace-pre-line">{review.content}</p>
 
         {/* 이미지 */}
-        {review.images && review.images.length > 0 && (
+        {review.imageUrls && review.imageUrls.length > 0 && (
           <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
-            {review.images.map((imageUrl, index) => (
+            {review.imageUrls.map((imageUrl, index) => (
               <div key={index} className="relative w-24 h-24 flex-shrink-0">
                 <Image
                   src={imageUrl}
