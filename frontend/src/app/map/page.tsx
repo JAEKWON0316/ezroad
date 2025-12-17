@@ -154,14 +154,24 @@ function MapPageContent() {
     }
   };
 
-  // 공공데이터 bbox 로드
+  // 공공데이터 bbox 로드 (줌 레벨에 따른 동적 limit)
   const fetchPublicDataByBbox = useCallback(async (mapInstance: any) => {
     if (!mapInstance || !showPublicData) return;
     
     const kakao = (window as any).kakao;
+    if (!kakao?.maps) return;
+    
     const bounds = mapInstance.getBounds();
     const sw = bounds.getSouthWest();
     const ne = bounds.getNorthEast();
+    
+    // 줌 레벨에 따른 limit 조절 (줌 작을수록 = 더 넓은 영역 = limit 줄임)
+    const zoomLevel = mapInstance.getLevel();
+    let limit = 1000;
+    if (zoomLevel >= 10) limit = 200;      // 매우 축소
+    else if (zoomLevel >= 8) limit = 400;  // 축소
+    else if (zoomLevel >= 6) limit = 600;  // 중간
+    else limit = 1000;                      // 확대
 
     setIsLoadingPublicData(true);
     try {
@@ -170,7 +180,7 @@ function MapPageContent() {
         maxLat: ne.getLat(),
         minLng: sw.getLng(),
         maxLng: ne.getLng(),
-        limit: 1000,
+        limit,
       });
       setPublicDataMarkers(data);
     } catch (error) {
@@ -182,25 +192,44 @@ function MapPageContent() {
 
   // 공공데이터 토글
   const togglePublicData = () => {
-    setShowPublicData(prev => !prev);
     if (showPublicData) {
-      // 끄면 클러스터러 클리어
+      // 끄는 경우: 먼저 클리어 후 상태 변경
       if (clusterer) {
-        clusterer.clear();
+        try {
+          clusterer.clear();
+        } catch (e) {
+          console.warn('Clusterer clear error:', e);
+        }
       }
       setPublicDataMarkers([]);
       setSelectedPublicRestaurant(null);
     }
+    setShowPublicData(prev => !prev);
   };
 
   // 공공데이터 클러스터 업데이트
   useEffect(() => {
-    if (!map || !clusterer || !showPublicData) return;
+    if (!map || !clusterer) return;
     
     const kakao = (window as any).kakao;
-    
+    if (!kakao?.maps) return;
+
+    // showPublicData가 false면 클러스터 클리어
+    if (!showPublicData) {
+      try {
+        clusterer.clear();
+      } catch (e) {
+        // 이미 클리어된 경우 무시
+      }
+      return;
+    }
+
     // 기존 클러스터 클리어
-    clusterer.clear();
+    try {
+      clusterer.clear();
+    } catch (e) {
+      console.warn('Clusterer clear error:', e);
+    }
 
     if (publicDataMarkers.length === 0) return;
 
@@ -226,6 +255,13 @@ function MapPageContent() {
 
     // 클러스터에 마커 추가
     clusterer.addMarkers(clusterMarkers);
+    
+    // 클러스터러 강제 리드로우 (위치 보정)
+    setTimeout(() => {
+      if (clusterer && typeof clusterer.redraw === 'function') {
+        clusterer.redraw();
+      }
+    }, 100);
   }, [map, clusterer, publicDataMarkers, showPublicData]);
 
   // 지도 이동 시 공공데이터 로드
@@ -233,6 +269,7 @@ function MapPageContent() {
     if (!map || !showPublicData) return;
 
     const kakao = (window as any).kakao;
+    if (!kakao?.maps?.event) return;
     
     // 초기 로드
     fetchPublicDataByBbox(map);
@@ -243,7 +280,15 @@ function MapPageContent() {
     });
 
     return () => {
-      kakao.maps.event.removeListener(idleListener);
+      // cleanup 시 kakao 객체 존재 확인
+      const kakaoCleanup = (window as any).kakao;
+      if (kakaoCleanup?.maps?.event && idleListener) {
+        try {
+          kakaoCleanup.maps.event.removeListener(idleListener);
+        } catch (e) {
+          // 이미 제거된 경우 무시
+        }
+      }
     };
   }, [map, showPublicData, fetchPublicDataByBbox]);
 
