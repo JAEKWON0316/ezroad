@@ -47,6 +47,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/reviews/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/themes/**").permitAll()
                 .requestMatchers("/api/search/**").permitAll()
+                .requestMatchers("/api/public-restaurants/**").permitAll()
     
                 // 나머지는 인증 필요
                 .anyRequest().authenticated()
