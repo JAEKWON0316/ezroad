@@ -143,18 +143,26 @@ export const menuApi = {
 
 // ==================== Review API ====================
 export const reviewApi = {
-  getAll: async (page = 0, size = 10): Promise<PageResponse<Review>> => {
-    const response = await api.get<PageResponse<Review>>('/reviews', { params: { page, size } });
+  getAll: async (page = 0, size = 10, photoOnly = false): Promise<PageResponse<Review>> => {
+    const response = await api.get<PageResponse<Review>>('/reviews', { 
+      params: { page, size, photoOnly } 
+    });
+    return response.data;
+  },
+  
+  getCounts: async (): Promise<{ total: number; photo: number }> => {
+    const response = await api.get<{ total: number; photo: number }>('/reviews/counts');
     return response.data;
   },
 
   getByRestaurant: async (
     restaurantId: number,
     page = 0,
-    size = 10
+    size = 10,
+    photoOnly = false
   ): Promise<PageResponse<Review>> => {
     const response = await api.get<PageResponse<Review>>(`/reviews/restaurant/${restaurantId}`, {
-      params: { page, size },
+      params: { page, size, photoOnly },
     });
     return response.data;
   },
@@ -181,6 +189,12 @@ export const reviewApi = {
 
   delete: async (id: number): Promise<void> => {
     await api.delete(`/reviews/${id}`);
+  },
+  
+  // 예약에 대한 리뷰 작성 가능 여부 확인
+  canWriteReview: async (reservationId: number): Promise<{ canWrite: boolean }> => {
+    const response = await api.get<{ canWrite: boolean }>(`/reviews/can-write/${reservationId}`);
+    return response.data;
   },
 };
 

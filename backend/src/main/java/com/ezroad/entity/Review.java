@@ -31,6 +31,11 @@ public class Review {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
+    
+    // 예약 기반 리뷰 (1:1 매핑, nullable)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reservation_id", unique = true)
+    private Reservation reservation;
 
     @Column(length = 200)
     private String title;
@@ -59,10 +64,11 @@ public class Review {
     private LocalDateTime deletedAt;
 
     @Builder
-    public Review(Restaurant restaurant, Member member, String title,
-            String content, Integer rating) {
+    public Review(Restaurant restaurant, Member member, Reservation reservation,
+            String title, String content, Integer rating) {
         this.restaurant = restaurant;
         this.member = member;
+        this.reservation = reservation;
         this.title = title;
         this.content = content;
         this.rating = rating;

@@ -15,9 +15,11 @@ public class ReviewResponse {
     private Long id;
     private Long restaurantId;
     private String restaurantName;
+    private String restaurantCategory;
     private Long memberId;
     private String memberNickname;
     private String memberProfileImage;
+    private Long reservationId;  // 예약 기반 리뷰인 경우
     private String title;
     private String content;
     private Integer rating;
@@ -31,9 +33,11 @@ public class ReviewResponse {
                 .id(review.getId())
                 .restaurantId(review.getRestaurant().getId())
                 .restaurantName(review.getRestaurant().getName())
+                .restaurantCategory(review.getRestaurant().getCategory())
                 .memberId(review.getMember().getId())
                 .memberNickname(review.getMember().getNickname())
                 .memberProfileImage(review.getMember().getProfileImage())
+                .reservationId(review.getReservation() != null ? review.getReservation().getId() : null)
                 .title(review.getTitle())
                 .content(review.getContent())
                 .rating(review.getRating())

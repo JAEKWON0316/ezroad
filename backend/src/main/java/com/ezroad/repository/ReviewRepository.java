@@ -22,9 +22,25 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     @EntityGraph(attributePaths = {"member", "restaurant"})
     Page<Review> findAllByDeletedAtIsNull(Pageable pageable);
     
+    // 사진이 있는 리뷰만 조회
+    @Query("SELECT DISTINCT r FROM Review r LEFT JOIN FETCH r.member LEFT JOIN FETCH r.restaurant " +
+           "WHERE r.deletedAt IS NULL AND EXISTS (SELECT 1 FROM ReviewImage ri WHERE ri.review = r)")
+    Page<Review> findAllWithImagesByDeletedAtIsNull(Pageable pageable);
+    
+    // 사진이 있는 리뷰 개수
+    @Query("SELECT COUNT(DISTINCT r) FROM Review r " +
+           "WHERE r.deletedAt IS NULL AND EXISTS (SELECT 1 FROM ReviewImage ri WHERE ri.review = r)")
+    Long countWithImages();
+    
     // 식당별 리뷰 조회 (member 함께 로딩)
     @EntityGraph(attributePaths = {"member"})
     Page<Review> findByRestaurantIdAndDeletedAtIsNull(Long restaurantId, Pageable pageable);
+    
+    // 식당별 사진리뷰 조회
+    @Query("SELECT DISTINCT r FROM Review r LEFT JOIN FETCH r.member " +
+           "WHERE r.restaurant.id = :restaurantId AND r.deletedAt IS NULL " +
+           "AND EXISTS (SELECT 1 FROM ReviewImage ri WHERE ri.review = r)")
+    Page<Review> findByRestaurantIdWithImagesByDeletedAtIsNull(@Param("restaurantId") Long restaurantId, Pageable pageable);
     
     // 회원별 리뷰 조회 (restaurant 함께 로딩)
     @EntityGraph(attributePaths = {"restaurant"})
@@ -60,4 +76,12 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     // 최근 리뷰 목록 (파트너 대시보드용)
     @EntityGraph(attributePaths = {"member"})
     List<Review> findTop5ByRestaurantIdAndDeletedAtIsNullOrderByCreatedAtDesc(Long restaurantId);
+    
+    // ==================== 예약 기반 리뷰 ====================
+    
+    // 예약 ID로 리뷰 조회 (1:1 매핑)
+    Optional<Review> findByReservationId(Long reservationId);
+    
+    // 해당 예약에 리뷰가 있는지 확인
+    boolean existsByReservationIdAndDeletedAtIsNull(Long reservationId);
 }

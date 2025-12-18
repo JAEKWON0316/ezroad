@@ -132,7 +132,8 @@ export interface ReviewImage {
 }
 
 export interface ReviewCreateRequest {
-  restaurantId: number;
+  restaurantId?: number;
+  reservationId?: number;  // 예약 기반 리뷰
   title?: string;
   content: string;
   rating: number;

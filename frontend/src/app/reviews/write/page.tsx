@@ -6,10 +6,10 @@ import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Star, Upload, X, ChevronLeft, ImagePlus } from 'lucide-react';
+import { Star, X, ChevronLeft, ImagePlus, Calendar, Users, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { restaurantApi, reviewApi, fileApi } from '@/lib/api';
-import { Restaurant } from '@/types';
+import { restaurantApi, reviewApi, fileApi, reservationApi } from '@/lib/api';
+import { Restaurant, Reservation } from '@/types';
 import Button from '@/components/common/Button';
 import Input from '@/components/common/Input';
 import Loading from '@/components/common/Loading';
@@ -37,8 +37,12 @@ function WriteReviewContent() {
   const searchParams = useSearchParams();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
 
+  // URL 파라미터
   const restaurantId = searchParams.get('restaurantId');
+  const reservationId = searchParams.get('reservationId');
+  
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+  const [reservation, setReservation] = useState<Reservation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rating, setRating] = useState(0);
@@ -65,18 +69,50 @@ function WriteReviewContent() {
       return;
     }
 
-    if (!restaurantId) {
-      toast.error('식당 정보가 없습니다');
+    if (!restaurantId && !reservationId) {
+      toast.error('식당 정보 또는 예약 정보가 필요합니다');
       router.push('/restaurants');
       return;
     }
 
-    const fetchRestaurant = async () => {
+    const fetchData = async () => {
       try {
-        const data = await restaurantApi.getById(Number(restaurantId));
-        setRestaurant(data);
+        // 예약 기반 리뷰인 경우
+        if (reservationId) {
+          // 1. 리뷰 작성 가능 여부 확인
+          const { canWrite } = await reviewApi.canWriteReview(Number(reservationId));
+          if (!canWrite) {
+            toast.error('해당 예약에 대해 리뷰를 작성할 수 없습니다');
+            router.push('/mypage/reservations');
+            return;
+          }
+
+          // 2. 예약 정보 조회 (API가 없으면 직접 만들어야 함)
+          // 임시로 예약 목록에서 찾기
+          const reservationsData = await reservationApi.getMyReservations(0, 100);
+          const foundReservation = reservationsData.content.find(
+            (r) => r.id === Number(reservationId)
+          );
+          
+          if (!foundReservation) {
+            toast.error('예약 정보를 찾을 수 없습니다');
+            router.push('/mypage/reservations');
+            return;
+          }
+          
+          setReservation(foundReservation);
+          
+          // 3. 식당 정보 조회
+          const restaurantData = await restaurantApi.getById(foundReservation.restaurantId);
+          setRestaurant(restaurantData);
+        } 
+        // 직접 리뷰 작성 (예약 없이)
+        else if (restaurantId) {
+          const data = await restaurantApi.getById(Number(restaurantId));
+          setRestaurant(data);
+        }
       } catch (error) {
-        toast.error('식당 정보를 불러오는데 실패했습니다');
+        toast.error('정보를 불러오는데 실패했습니다');
         router.push('/restaurants');
       } finally {
         setIsLoading(false);
@@ -84,9 +120,9 @@ function WriteReviewContent() {
     };
 
     if (isAuthenticated) {
-      fetchRestaurant();
+      fetchData();
     }
-  }, [authLoading, isAuthenticated, restaurantId, router]);
+  }, [authLoading, isAuthenticated, restaurantId, reservationId, router]);
 
   const handleRatingClick = (value: number) => {
     setRating(value);
@@ -105,7 +141,6 @@ function WriteReviewContent() {
 
     setImages((prev) => [...prev, ...newImages]);
 
-    // 미리보기 URL 생성
     newImages.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -121,7 +156,7 @@ function WriteReviewContent() {
   };
 
   const onSubmit = async (data: ReviewFormData) => {
-    if (!restaurantId) return;
+    if (!restaurant) return;
 
     setIsSubmitting(true);
     try {
@@ -134,7 +169,8 @@ function WriteReviewContent() {
 
       // 리뷰 생성
       await reviewApi.create({
-        restaurantId: Number(restaurantId),
+        reservationId: reservationId ? Number(reservationId) : undefined,
+        restaurantId: reservationId ? undefined : Number(restaurantId),
         title: data.title,
         content: data.content,
         rating: data.rating,
@@ -142,9 +178,16 @@ function WriteReviewContent() {
       });
 
       toast.success('리뷰가 등록되었습니다');
-      router.push(`/restaurants/${restaurantId}`);
-    } catch (error) {
-      toast.error('리뷰 등록에 실패했습니다');
+      
+      // 예약 기반이면 예약 내역으로, 아니면 식당 상세로
+      if (reservationId) {
+        router.push('/mypage/reservations');
+      } else {
+        router.push(`/restaurants/${restaurantId}`);
+      }
+    } catch (error: any) {
+      const message = error.response?.data?.message || '리뷰 등록에 실패했습니다';
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -178,6 +221,28 @@ function WriteReviewContent() {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-6">
+        {/* 예약 정보 표시 (예약 기반 리뷰인 경우) */}
+        {reservation && (
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 mb-6 border border-green-100">
+            <div className="flex items-center gap-2 mb-3">
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              <span className="font-medium text-green-800">방문 완료된 예약</span>
+            </div>
+            <div className="flex items-center gap-6 text-sm text-gray-600">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-gray-400" />
+                <span>
+                  {reservation.reservationDate} {reservation.reservationTime?.slice(0, 5)}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-gray-400" />
+                <span>{reservation.guestCount}명</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Rating */}
           <div className="bg-white rounded-xl p-6 shadow-sm">
@@ -203,6 +268,14 @@ function WriteReviewContent() {
                 </button>
               ))}
             </div>
+            <p className="text-center text-sm text-gray-500 mt-2">
+              {rating === 0 && '터치하여 별점을 선택하세요'}
+              {rating === 1 && '별로예요'}
+              {rating === 2 && '그저 그래요'}
+              {rating === 3 && '괜찮아요'}
+              {rating === 4 && '맛있어요'}
+              {rating === 5 && '최고예요!'}
+            </p>
             {errors.rating && (
               <p className="text-red-500 text-sm text-center mt-2">{errors.rating.message}</p>
             )}

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronLeft, Calendar, Clock, Users, MapPin, X, Ticket } from 'lucide-react';
+import { ChevronLeft, Calendar, Clock, Users, MapPin, X, Ticket, PenSquare } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { reservationApi } from '@/lib/api';
 import { Reservation, PageResponse } from '@/types';
@@ -215,6 +215,21 @@ export default function MyReservationsPage() {
                         >
                           예약 취소하기
                         </Button>
+                      </div>
+                    )}
+                    
+                    {/* 방문 완료 시 리뷰 작성 버튼 */}
+                    {reservation.status === 'COMPLETED' && (
+                      <div className="mt-6 flex justify-end pt-4 border-t border-gray-100">
+                        <Link href={`/reviews/write?reservationId=${reservation.id}`}>
+                          <Button
+                            size="sm"
+                            className="bg-orange-500 hover:bg-orange-600 shadow-md shadow-orange-200 flex items-center gap-2"
+                          >
+                            <PenSquare className="h-4 w-4" />
+                            리뷰 작성하기
+                          </Button>
+                        </Link>
                       </div>
                     )}
                   </div>

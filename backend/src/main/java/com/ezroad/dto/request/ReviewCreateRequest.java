@@ -8,10 +8,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ReviewCreateRequest {
 
-    @NotNull(message = "식당 ID는 필수입니다")
+    // 예약 기반 리뷰 작성 시 필수 (예약 ID로 식당 정보 추출)
+    private Long reservationId;
+    
+    // 예약 없이 직접 리뷰 작성 시 사용 (reservationId가 없을 때만 필수)
     private Long restaurantId;
 
-    @NotBlank(message = "제목은 필수입니다")
     @Size(max = 100, message = "제목은 100자 이내여야 합니다")
     private String title;
 
