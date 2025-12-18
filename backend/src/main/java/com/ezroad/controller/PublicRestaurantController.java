@@ -19,8 +19,9 @@ public class PublicRestaurantController {
 
     /**
      * bbox 영역 내 공공데이터 식당 조회 (지도용)
+     * ⭐ centerLat/centerLng로 중심점 기준 거리순 정렬 (클러스터 쏠림 방지)
      * 
-     * GET /api/public-restaurants/bbox?minLat=37.4&maxLat=37.6&minLng=126.8&maxLng=127.1&limit=500
+     * GET /api/public-restaurants/bbox?minLat=37.4&maxLat=37.6&minLng=126.8&maxLng=127.1&centerLat=37.5&centerLng=127.0&limit=500
      */
     @GetMapping("/bbox")
     public ResponseEntity<List<PublicRestaurantMapDto>> getByBbox(
@@ -28,6 +29,8 @@ public class PublicRestaurantController {
             @RequestParam BigDecimal maxLat,
             @RequestParam BigDecimal minLng,
             @RequestParam BigDecimal maxLng,
+            @RequestParam(required = false) BigDecimal centerLat,
+            @RequestParam(required = false) BigDecimal centerLng,
             @RequestParam(required = false) String category,
             @RequestParam(required = false, defaultValue = "500") Integer limit) {
 
@@ -35,10 +38,10 @@ public class PublicRestaurantController {
         
         if (category != null && !category.isEmpty()) {
             restaurants = publicRestaurantService.findByBboxAndCategory(
-                    minLat, maxLat, minLng, maxLng, category, limit);
+                    minLat, maxLat, minLng, maxLng, centerLat, centerLng, category, limit);
         } else {
             restaurants = publicRestaurantService.findByBbox(
-                    minLat, maxLat, minLng, maxLng, limit);
+                    minLat, maxLat, minLng, maxLng, centerLat, centerLng, limit);
         }
 
         return ResponseEntity.ok(restaurants);
@@ -46,8 +49,6 @@ public class PublicRestaurantController {
 
     /**
      * 공공데이터 식당 상세 정보
-     * 
-     * GET /api/public-restaurants/{id}
      */
     @GetMapping("/{id}")
     public ResponseEntity<PublicRestaurantDetailDto> getDetail(@PathVariable Long id) {
@@ -56,8 +57,6 @@ public class PublicRestaurantController {
 
     /**
      * 카테고리 목록 조회
-     * 
-     * GET /api/public-restaurants/categories
      */
     @GetMapping("/categories")
     public ResponseEntity<List<String>> getCategories() {

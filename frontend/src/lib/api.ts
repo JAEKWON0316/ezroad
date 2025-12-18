@@ -727,6 +727,8 @@ export interface BboxParams {
   maxLat: number;
   minLng: number;
   maxLng: number;
+  centerLat?: number;  // ⭐ 중심점 (클러스터 쏠림 방지)
+  centerLng?: number;  // ⭐ 중심점 (클러스터 쏠림 방지)
   category?: string;
   limit?: number;
 }

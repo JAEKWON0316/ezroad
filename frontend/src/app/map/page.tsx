@@ -154,7 +154,7 @@ function MapPageContent() {
     }
   };
 
-  // 공공데이터 bbox 로드 (줌 레벨에 따른 동적 limit)
+  // 공공데이터 bbox 로드 (줌 레벨에 따른 동적 limit + 중심점 정렬)
   const fetchPublicDataByBbox = useCallback(async (mapInstance: any) => {
     if (!mapInstance || !showPublicData) return;
     
@@ -164,6 +164,7 @@ function MapPageContent() {
     const bounds = mapInstance.getBounds();
     const sw = bounds.getSouthWest();
     const ne = bounds.getNorthEast();
+    const center = mapInstance.getCenter();  // ⭐ 지도 중심점
     
     // 줌 레벨에 따른 limit 조절 (줌 작을수록 = 더 넓은 영역 = limit 줄임)
     const zoomLevel = mapInstance.getLevel();
@@ -180,6 +181,8 @@ function MapPageContent() {
         maxLat: ne.getLat(),
         minLng: sw.getLng(),
         maxLng: ne.getLng(),
+        centerLat: center.getLat(),  // ⭐ 중심점 전달 (클러스터 쏠림 방지)
+        centerLng: center.getLng(),  // ⭐ 중심점 전달
         limit,
       });
       setPublicDataMarkers(data);
@@ -307,8 +310,8 @@ function MapPageContent() {
     // 클러스터러 초기화 (공공데이터용)
     const newClusterer = new kakao.maps.MarkerClusterer({
       map: newMap,
-      averageCenter: false,
-      minLevel: 5,
+      averageCenter: true,
+      minLevel: 7,  // ⭐ 5 → 7 (너무 이른 클러스터링 방지)
       disableClickZoom: false,
       styles: [{
         width: '50px',

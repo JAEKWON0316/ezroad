@@ -20,30 +20,36 @@ public interface PublicRestaurantRepository extends JpaRepository<PublicRestaura
         @Param("maxLng") BigDecimal maxLng
     );
 
-    // bbox + limit (줌 레벨 낮을 때 성능용)
+    // ⭐ bbox + limit + 중심점 거리 정렬 (핵심 수정!)
     @Query(value = "SELECT * FROM public_restaurants WHERE " +
            "latitude BETWEEN :minLat AND :maxLat AND " +
            "longitude BETWEEN :minLng AND :maxLng " +
+           "ORDER BY POWER(latitude - :centerLat, 2) + POWER(longitude - :centerLng, 2) " +
            "LIMIT :limit", nativeQuery = true)
     List<PublicRestaurant> findByBboxWithLimit(
         @Param("minLat") BigDecimal minLat,
         @Param("maxLat") BigDecimal maxLat,
         @Param("minLng") BigDecimal minLng,
         @Param("maxLng") BigDecimal maxLng,
+        @Param("centerLat") BigDecimal centerLat,
+        @Param("centerLng") BigDecimal centerLng,
         @Param("limit") int limit
     );
 
-    // bbox + 카테고리 필터
+    // ⭐ bbox + 카테고리 + 중심점 거리 정렬
     @Query(value = "SELECT * FROM public_restaurants WHERE " +
            "latitude BETWEEN :minLat AND :maxLat AND " +
            "longitude BETWEEN :minLng AND :maxLng AND " +
            "category = :category " +
+           "ORDER BY POWER(latitude - :centerLat, 2) + POWER(longitude - :centerLng, 2) " +
            "LIMIT :limit", nativeQuery = true)
     List<PublicRestaurant> findByBboxAndCategory(
         @Param("minLat") BigDecimal minLat,
         @Param("maxLat") BigDecimal maxLat,
         @Param("minLng") BigDecimal minLng,
         @Param("maxLng") BigDecimal maxLng,
+        @Param("centerLat") BigDecimal centerLat,
+        @Param("centerLng") BigDecimal centerLng,
         @Param("category") String category,
         @Param("limit") int limit
     );
