@@ -50,6 +50,7 @@ function MapPageContent() {
   const [clusterer, setClusterer] = useState<any>(null);
   const [selectedPublicRestaurant, setSelectedPublicRestaurant] = useState<PublicRestaurantDetail | null>(null);
   const [isLoadingPublicData, setIsLoadingPublicData] = useState(false);
+  const [currentZoomLevel, setCurrentZoomLevel] = useState(5);  // ⭐ 줌 레벨 상태
 
   // 카카오맵 스크립트 로드
   useEffect(() => {
@@ -307,13 +308,38 @@ function MapPageContent() {
     const newMap = new kakao.maps.Map(mapRef.current, options);
     setMap(newMap);
 
+    // ⭐ 줌 레벨 변경 이벤트 리스너
+    kakao.maps.event.addListener(newMap, 'zoom_changed', () => {
+      setCurrentZoomLevel(newMap.getLevel());
+    });
+
     // 클러스터러 초기화 (공공데이터용)
     const newClusterer = new kakao.maps.MarkerClusterer({
       map: newMap,
       averageCenter: true,
-      minLevel: 7,  // ⭐ 5 → 7 (너무 이른 클러스터링 방지)
+      minLevel: 7,
       disableClickZoom: false,
+      // ⭐ 클러스터 텍스트 포맷 (200+, 400+ 형식)
+      calculator: [50, 100, 200, 500, 1000],
+      texts: (count: number) => {
+        if (count >= 1000) return '1000+';
+        if (count >= 500) return '500+';
+        if (count >= 200) return '200+';
+        if (count >= 100) return '100+';
+        if (count >= 50) return '50+';
+        return String(count);
+      },
       styles: [{
+        width: '45px',
+        height: '45px',
+        background: 'rgba(34, 197, 94, 0.9)',
+        borderRadius: '50%',
+        color: '#fff',
+        textAlign: 'center',
+        fontWeight: 'bold',
+        lineHeight: '45px',
+        fontSize: '13px',
+      }, {
         width: '50px',
         height: '50px',
         background: 'rgba(34, 197, 94, 0.9)',
@@ -322,27 +348,37 @@ function MapPageContent() {
         textAlign: 'center',
         fontWeight: 'bold',
         lineHeight: '50px',
-        fontSize: '14px',
+        fontSize: '13px',
       }, {
-        width: '60px',
-        height: '60px',
+        width: '55px',
+        height: '55px',
         background: 'rgba(59, 130, 246, 0.9)',
         borderRadius: '50%',
         color: '#fff',
         textAlign: 'center',
         fontWeight: 'bold',
-        lineHeight: '60px',
-        fontSize: '15px',
+        lineHeight: '55px',
+        fontSize: '14px',
       }, {
-        width: '70px',
-        height: '70px',
+        width: '60px',
+        height: '60px',
         background: 'rgba(239, 68, 68, 0.9)',
         borderRadius: '50%',
         color: '#fff',
         textAlign: 'center',
         fontWeight: 'bold',
+        lineHeight: '60px',
+        fontSize: '14px',
+      }, {
+        width: '70px',
+        height: '70px',
+        background: 'rgba(220, 38, 38, 0.95)',
+        borderRadius: '50%',
+        color: '#fff',
+        textAlign: 'center',
+        fontWeight: 'bold',
         lineHeight: '70px',
-        fontSize: '16px',
+        fontSize: '15px',
       }],
     });
     setClusterer(newClusterer);
@@ -601,6 +637,22 @@ function MapPageContent() {
       {showPublicData && publicDataMarkers.length > 0 && (
         <div className="absolute top-32 left-48 md:left-52 z-10 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
           {publicDataMarkers.length.toLocaleString()}개 식당
+        </div>
+      )}
+
+      {/* ⭐ 줌 레벨 안내 문구 (축소 시 표시) */}
+      {showPublicData && currentZoomLevel >= 8 && (
+        <div className="absolute top-44 left-4 md:left-8 z-10 max-w-xs animate-fade-in">
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2 rounded-lg shadow-lg text-sm">
+            <div className="flex items-start gap-2">
+              <span className="text-amber-500 mt-0.5">💡</span>
+              <p>
+                현재 화면의 <strong>일부 가게만</strong> 표시 중입니다.
+                <br />
+                <span className="text-amber-600">확대하면 더 많은 가게를 볼 수 있어요!</span>
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
