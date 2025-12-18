@@ -5,9 +5,9 @@ import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface PaginationProps {
-  currentPage: number; // 0-based (API와 동일)
+  currentPage: number; // 0-based (Spring Data와 동일)
   totalPages: number;
-  onPageChange: (page: number) => void;
+  onPageChange: (page: number) => void; // 0-based page를 전달
   showPageNumbers?: number;
 }
 
@@ -17,49 +17,82 @@ export default function Pagination({
   onPageChange,
   showPageNumbers = 5,
 }: PaginationProps) {
+  // 페이지가 1개 이하면 페이지네이션 표시 안함
   if (totalPages <= 1) return null;
 
-  // 0-based currentPage를 1-based displayPage로 변환
-  const displayPage = currentPage + 1;
-
-  const getPageNumbers = () => {
-    const pages: (number | string)[] = [];
-    const half = Math.floor(showPageNumbers / 2);
-    let start = Math.max(1, displayPage - half);
-    const end = Math.min(totalPages, start + showPageNumbers - 1);
-
-    if (end - start + 1 < showPageNumbers) {
-      start = Math.max(1, end - showPageNumbers + 1);
+  // 표시할 페이지 번호 계산 (1-based로 표시)
+  const getVisiblePages = (): number[] => {
+    const pages: number[] = [];
+    
+    // 총 페이지가 showPageNumbers 이하면 모두 표시
+    if (totalPages <= showPageNumbers) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+      return pages;
     }
 
-    if (start > 1) {
-      pages.push(1);
-      if (start > 2) pages.push('...');
+    // 현재 페이지를 중심으로 표시 (1-based 기준)
+    const currentDisplay = currentPage + 1; // 0-based → 1-based
+    const half = Math.floor(showPageNumbers / 2);
+    
+    let start = currentDisplay - half;
+    let end = currentDisplay + half;
+
+    // 범위 조정
+    if (start < 1) {
+      start = 1;
+      end = showPageNumbers;
+    }
+    if (end > totalPages) {
+      end = totalPages;
+      start = Math.max(1, totalPages - showPageNumbers + 1);
     }
 
     for (let i = start; i <= end; i++) {
       pages.push(i);
     }
 
-    if (end < totalPages) {
-      if (end < totalPages - 1) pages.push('...');
-      pages.push(totalPages);
-    }
-
     return pages;
   };
 
-  const pages = getPageNumbers();
+  const visiblePages = getVisiblePages();
+
+  // 페이지 클릭 핸들러 (displayNum은 1-based, API는 0-based 필요)
+  const handlePageClick = (displayNum: number) => {
+    const apiPage = displayNum - 1; // 1-based → 0-based
+    if (apiPage !== currentPage && apiPage >= 0 && apiPage < totalPages) {
+      onPageChange(apiPage);
+    }
+  };
+
+  // 이전 페이지
+  const handlePrev = () => {
+    if (currentPage > 0) {
+      onPageChange(currentPage - 1);
+    }
+  };
+
+  // 다음 페이지
+  const handleNext = () => {
+    if (currentPage < totalPages - 1) {
+      onPageChange(currentPage + 1);
+    }
+  };
+
+  const isFirstPage = currentPage === 0;
+  const isLastPage = currentPage >= totalPages - 1;
+  const currentDisplay = currentPage + 1; // 표시용 (1-based)
 
   return (
     <nav className="flex items-center justify-center gap-1" aria-label="페이지네이션">
-      {/* Previous Button */}
+      {/* 이전 버튼 */}
       <button
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 0}
+        onClick={handlePrev}
+        disabled={isFirstPage}
         className={cn(
           'p-2 rounded-lg transition-colors',
-          currentPage === 0
+          isFirstPage
             ? 'text-gray-300 cursor-not-allowed'
             : 'text-gray-600 hover:bg-gray-100'
         )}
@@ -68,44 +101,64 @@ export default function Pagination({
         <ChevronLeft className="h-5 w-5" />
       </button>
 
-      {/* Page Numbers */}
-      {pages.map((page, index) => {
-        if (page === '...') {
-          return (
-            <span key={`ellipsis-${index}`} className="px-3 py-2 text-gray-400">
-              ...
-            </span>
-          );
-        }
+      {/* 첫 페이지 + ... (필요시) */}
+      {visiblePages[0] > 1 && (
+        <>
+          <button
+            onClick={() => handlePageClick(1)}
+            className="min-w-[40px] h-10 px-3 rounded-lg font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+          >
+            1
+          </button>
+          {visiblePages[0] > 2 && (
+            <span className="px-2 text-gray-400">...</span>
+          )}
+        </>
+      )}
 
-        const pageNumber = page as number; // 1-based display number
-        const isActive = pageNumber === displayPage;
-
+      {/* 페이지 번호들 */}
+      {visiblePages.map((pageNum) => {
+        const isActive = pageNum === currentDisplay;
         return (
           <button
-            key={pageNumber}
-            onClick={() => onPageChange(pageNumber - 1)} // Convert to 0-based for API
+            key={pageNum}
+            onClick={() => handlePageClick(pageNum)}
             className={cn(
               'min-w-[40px] h-10 px-3 rounded-lg font-medium transition-colors',
               isActive
                 ? 'bg-orange-500 text-white'
                 : 'text-gray-600 hover:bg-gray-100'
             )}
-            aria-label={`${pageNumber} 페이지`}
+            aria-label={`${pageNum} 페이지`}
             aria-current={isActive ? 'page' : undefined}
           >
-            {pageNumber}
+            {pageNum}
           </button>
         );
       })}
 
-      {/* Next Button */}
+      {/* ... + 마지막 페이지 (필요시) */}
+      {visiblePages[visiblePages.length - 1] < totalPages && (
+        <>
+          {visiblePages[visiblePages.length - 1] < totalPages - 1 && (
+            <span className="px-2 text-gray-400">...</span>
+          )}
+          <button
+            onClick={() => handlePageClick(totalPages)}
+            className="min-w-[40px] h-10 px-3 rounded-lg font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+          >
+            {totalPages}
+          </button>
+        </>
+      )}
+
+      {/* 다음 버튼 */}
       <button
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage >= totalPages - 1}
+        onClick={handleNext}
+        disabled={isLastPage}
         className={cn(
           'p-2 rounded-lg transition-colors',
-          currentPage >= totalPages - 1
+          isLastPage
             ? 'text-gray-300 cursor-not-allowed'
             : 'text-gray-600 hover:bg-gray-100'
         )}
