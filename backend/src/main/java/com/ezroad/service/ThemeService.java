@@ -6,17 +6,11 @@ import com.ezroad.dto.request.ThemeReorderRequest;
 import com.ezroad.dto.request.ThemeUpdateRequest;
 import com.ezroad.dto.response.ThemeDetailResponse;
 import com.ezroad.dto.response.ThemeResponse;
-import com.ezroad.entity.Member;
-import com.ezroad.entity.Restaurant;
-import com.ezroad.entity.Theme;
-import com.ezroad.entity.ThemeRestaurant;
+import com.ezroad.entity.*;
 import com.ezroad.exception.DuplicateResourceException;
 import com.ezroad.exception.ResourceNotFoundException;
 import com.ezroad.exception.UnauthorizedException;
-import com.ezroad.repository.MemberRepository;
-import com.ezroad.repository.RestaurantRepository;
-import com.ezroad.repository.ThemeRepository;
-import com.ezroad.repository.ThemeRestaurantRepository;
+import com.ezroad.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -26,6 +20,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -36,8 +31,12 @@ public class ThemeService {
 
     private final ThemeRepository themeRepository;
     private final ThemeRestaurantRepository themeRestaurantRepository;
+    private final ThemeViewRepository themeViewRepository;
     private final MemberRepository memberRepository;
     private final RestaurantRepository restaurantRepository;
+    
+    // 조회수 중복 방지 시간 (24시간)
+    private static final int VIEW_DEDUP_HOURS = 24;
 
     @Transactional
     public ThemeResponse createTheme(Long memberId, ThemeCreateRequest request) {
@@ -87,7 +86,6 @@ public class ThemeService {
      * @param sort: createdAt(최신순), viewCount(인기순), likeCount(좋아요순)
      */
     public Page<ThemeResponse> getPublicThemes(String keyword, String sort, Pageable pageable) {
-        // 정렬 필드 결정
         String sortField = switch (sort) {
             case "viewCount" -> "viewCount";
             case "likeCount" -> "likeCount";
@@ -115,6 +113,47 @@ public class ThemeService {
                 .toList();
     }
 
+    /**
+     * 테마 상세 조회 (24시간 조회수 중복 방지)
+     */
+    @Transactional
+    public ThemeDetailResponse getThemeDetail(Long themeId, Long memberId, String viewerIdentifier) {
+        Theme theme = themeRepository.findByIdWithRestaurants(themeId)
+                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 테마입니다"));
+
+        // 비공개 테마는 본인만 조회 가능
+        if (!theme.getIsPublic() && !theme.getMember().getId().equals(memberId)) {
+            throw new UnauthorizedException("비공개 테마입니다");
+        }
+
+        // 본인 테마가 아닌 경우에만 조회수 처리
+        if (memberId == null || !theme.getMember().getId().equals(memberId)) {
+            // 24시간 내 동일 사용자 조회 여부 확인
+            LocalDateTime since = LocalDateTime.now().minusHours(VIEW_DEDUP_HOURS);
+            boolean hasRecentView = themeViewRepository.existsRecentView(themeId, viewerIdentifier, since);
+            
+            if (!hasRecentView) {
+                // 새로운 조회 → 조회수 증가 + 기록 저장
+                theme.incrementViewCount();
+                
+                ThemeView themeView = ThemeView.builder()
+                        .theme(theme)
+                        .viewerIdentifier(viewerIdentifier)
+                        .build();
+                themeViewRepository.save(themeView);
+                
+                log.debug("테마 #{} 조회수 증가: {} (viewer: {})", themeId, theme.getViewCount(), viewerIdentifier);
+            } else {
+                log.debug("테마 #{} 중복 조회 차단 (viewer: {})", themeId, viewerIdentifier);
+            }
+        }
+
+        return ThemeDetailResponse.from(theme);
+    }
+    
+    /**
+     * 기존 호환성을 위한 오버로드 (viewerIdentifier 없이 호출 시)
+     */
     @Transactional
     public ThemeDetailResponse getThemeDetail(Long themeId, Long memberId) {
         Theme theme = themeRepository.findByIdWithRestaurants(themeId)
@@ -124,6 +163,7 @@ public class ThemeService {
             throw new UnauthorizedException("비공개 테마입니다");
         }
 
+        // viewerIdentifier 없이 호출되면 항상 조회수 증가 (레거시 동작)
         if (memberId == null || !theme.getMember().getId().equals(memberId)) {
             theme.incrementViewCount();
         }

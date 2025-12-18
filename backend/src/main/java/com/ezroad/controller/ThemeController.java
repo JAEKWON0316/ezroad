@@ -8,6 +8,7 @@ import com.ezroad.dto.response.ThemeDetailResponse;
 import com.ezroad.dto.response.ThemeResponse;
 import com.ezroad.service.ThemeLikeService;
 import com.ezroad.service.ThemeService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Map;
 
@@ -73,8 +77,10 @@ public class ThemeController {
     @GetMapping("/{id}")
     public ResponseEntity<ThemeDetailResponse> getThemeDetail(
             @PathVariable Long id,
-            @AuthenticationPrincipal Long memberId) {
-        ThemeDetailResponse response = themeService.getThemeDetail(id, memberId);
+            @AuthenticationPrincipal Long memberId,
+            HttpServletRequest request) {
+        String viewerIdentifier = createViewerIdentifier(memberId, request);
+        ThemeDetailResponse response = themeService.getThemeDetail(id, memberId, viewerIdentifier);
         return ResponseEntity.ok(response);
     }
 
@@ -167,5 +173,67 @@ public class ThemeController {
             @AuthenticationPrincipal Long memberId) {
         List<Long> likedThemeIds = themeLikeService.getMyLikedThemeIds(memberId);
         return ResponseEntity.ok(likedThemeIds);
+    }
+    
+    // ========== Helper Methods ==========
+    
+    /**
+     * 조회자 식별자 생성
+     * - 로그인 사용자: member:{memberId}
+     * - 비로그인 사용자: ip:{SHA256(IP+UserAgent)}
+     */
+    private String createViewerIdentifier(Long memberId, HttpServletRequest request) {
+        if (memberId != null) {
+            return "member:" + memberId;
+        }
+        
+        String ip = getClientIp(request);
+        String userAgent = request.getHeader("User-Agent");
+        String raw = ip + ":" + (userAgent != null ? userAgent : "unknown");
+        
+        return "ip:" + hashString(raw);
+    }
+    
+    private String getClientIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("HTTP_CLIENT_IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("HTTP_X_FORWARDED_FOR");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        
+        // X-Forwarded-For may contain multiple IPs, take the first one
+        if (ip != null && ip.contains(",")) {
+            ip = ip.split(",")[0].trim();
+        }
+        
+        return ip;
+    }
+    
+    private String hashString(String input) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString().substring(0, 32); // 32자로 제한
+        } catch (NoSuchAlgorithmException e) {
+            log.error("SHA-256 algorithm not found", e);
+            return input.hashCode() + "";
+        }
     }
 }
