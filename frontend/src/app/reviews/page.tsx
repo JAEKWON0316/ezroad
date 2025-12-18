@@ -172,9 +172,9 @@ function ReviewCard({ review, index }: { review: Review; index: number }) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
 
           {/* Top Badge: Restaurant Category */}
-          {review.restaurant && (
+          {review.restaurantCategory && (
             <span className="absolute top-3 left-3 bg-white/90 backdrop-blur text-gray-800 text-xs font-bold px-2 py-1 rounded-lg shadow-sm">
-              {review.restaurant.category}
+              {review.restaurantCategory}
             </span>
           )}
 
@@ -194,9 +194,9 @@ function ReviewCard({ review, index }: { review: Review; index: number }) {
         {/* Content Area */}
         <div className="p-5 flex-1 flex flex-col">
           {/* Restaurant Name */}
-          {review.restaurant && (
+          {review.restaurantName && (
             <h3 className="font-bold text-lg text-gray-900 mb-2 truncate group-hover:text-orange-600 transition-colors">
-              {review.restaurant.name}
+              {review.restaurantName}
             </h3>
           )}
 
@@ -215,10 +215,10 @@ function ReviewCard({ review, index }: { review: Review; index: number }) {
           <div className="flex items-center justify-between pt-4 border-t border-gray-50 mt-auto">
             <div className="flex items-center gap-2">
               <div className="relative w-8 h-8 rounded-full bg-gray-100 overflow-hidden ring-2 ring-white shadow-sm">
-                {review.member?.profileImage ? (
+                {review.memberProfileImage ? (
                   <Image
-                    src={review.member.profileImage}
-                    alt={review.member.nickname}
+                    src={review.memberProfileImage}
+                    alt={review.memberNickname || '사용자'}
                     fill
                     className="object-cover"
                   />
@@ -229,7 +229,7 @@ function ReviewCard({ review, index }: { review: Review; index: number }) {
                 )}
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-bold text-gray-700 line-clamp-1 max-w-[100px]">{review.member?.nickname}</span>
+                <span className="text-xs font-bold text-gray-700 line-clamp-1 max-w-[100px]">{review.memberNickname || '사용자'}</span>
                 <span className="text-[10px] text-gray-400">
                   {new Date(review.createdAt).toLocaleDateString()}
                 </span>

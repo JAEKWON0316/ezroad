@@ -524,22 +524,22 @@ function ReviewCard({ review }: { review: Review }) {
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
           <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-orange-100 to-yellow-100 flex items-center justify-center border-2 border-white shadow-sm ring-1 ring-gray-100 overflow-hidden">
-            {review.member?.profileImage ? (
+            {review.memberProfileImage ? (
               <Image
-                src={review.member.profileImage}
-                alt={review.member.nickname}
+                src={review.memberProfileImage}
+                alt={review.memberNickname || '사용자'}
                 fill
                 sizes="40px"
                 className="object-cover"
               />
             ) : (
               <span className="text-orange-600 font-bold text-sm">
-                {review.member?.nickname?.charAt(0)}
+                {review.memberNickname?.charAt(0) || 'U'}
               </span>
             )}
           </div>
           <div>
-            <p className="font-bold text-gray-900 text-sm">{review.member?.nickname}</p>
+            <p className="font-bold text-gray-900 text-sm">{review.memberNickname || '사용자'}</p>
             <span className="text-gray-400 text-xs">
               {new Date(review.createdAt).toLocaleDateString()}
             </span>

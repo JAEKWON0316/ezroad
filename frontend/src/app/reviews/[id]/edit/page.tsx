@@ -163,10 +163,10 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
         <div className="bg-white rounded-xl p-4 shadow-sm mb-6">
           <div className="flex items-center gap-3">
             <div className="relative w-14 h-14 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-              {review.restaurant?.thumbnail ? (
+              {review.restaurantThumbnail ? (
                 <Image
-                  src={review.restaurant.thumbnail}
-                  alt={review.restaurant.name}
+                  src={review.restaurantThumbnail}
+                  alt={review.restaurantName || '식당'}
                   fill
                   sizes="56px"
                   className="object-cover"
@@ -176,11 +176,11 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
               )}
             </div>
             <div>
-              <h2 className="font-semibold text-gray-900">{review.restaurant?.name}</h2>
-              {review.restaurant?.address && (
+              <h2 className="font-semibold text-gray-900">{review.restaurantName || '식당'}</h2>
+              {review.restaurantAddress && (
                 <p className="text-sm text-gray-500 flex items-center mt-0.5">
                   <MapPin className="h-3.5 w-3.5 mr-1" />
-                  {review.restaurant.address}
+                  {review.restaurantAddress}
                 </p>
               )}
             </div>

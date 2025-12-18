@@ -138,7 +138,7 @@ export default function MyReviewsPage() {
                         <div className="flex justify-between items-start">
                           <Link href={`/restaurants/${review.restaurantId}`}>
                             <h3 className="font-bold text-lg text-gray-900 hover:text-orange-600 truncate transition-colors">
-                              {review.restaurant?.name || '식당 정보 없음'}
+                              {review.restaurantName || '식당 정보 없음'}
                             </h3>
                           </Link>
                           <div className="flex gap-1 ml-2">
@@ -159,10 +159,10 @@ export default function MyReviewsPage() {
                           </div>
                         </div>
 
-                        {review.restaurant?.address && (
+                        {review.restaurantAddress && (
                           <p className="text-xs text-gray-500 flex items-center mt-1 mb-2">
                             <MapPin className="h-3 w-3 mr-1" />
-                            {review.restaurant.address}
+                            {review.restaurantAddress}
                           </p>
                         )}
 
@@ -187,7 +187,7 @@ export default function MyReviewsPage() {
                         </p>
                       </div>
                       <div className="mt-3 text-right text-xs text-gray-400">
-                        조회수 {review.viewCount || 0}회
+                        조회수 {review.hit || review.viewCount || 0}회
                       </div>
                     </div>
                   </div>
