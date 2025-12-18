@@ -32,22 +32,22 @@ export default function ReviewCard({
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
             <div className="relative w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center overflow-hidden">
-              {review.member?.profileImage ? (
+              {review.memberProfileImage ? (
                 <Image
-                  src={review.member.profileImage}
-                  alt={review.member.nickname}
+                  src={review.memberProfileImage}
+                  alt={review.memberNickname || '사용자'}
                   fill
                   sizes="40px"
                   className="object-cover"
                 />
               ) : (
                 <span className="text-orange-500 font-medium">
-                  {review.member?.nickname?.charAt(0) || '?'}
+                  {review.memberNickname?.charAt(0) || '?'}
                 </span>
               )}
             </div>
             <div>
-              <p className="font-medium text-gray-900">{review.member?.nickname || '익명'}</p>
+              <p className="font-medium text-gray-900">{review.memberNickname || '익명'}</p>
               <div className="flex items-center gap-2 text-sm">
                 <RatingStars rating={review.rating} size="sm" />
                 <span className="text-gray-400">{formatRelativeTime(review.createdAt)}</span>
@@ -89,10 +89,10 @@ export default function ReviewCard({
         </div>
 
         {/* 식당 정보 (선택적) */}
-        {showRestaurant && review.restaurant && (
+        {showRestaurant && review.restaurantName && (
           <div className="mb-3 p-3 bg-gray-50 rounded-lg">
-            <p className="font-medium text-gray-900">{review.restaurant.name}</p>
-            <p className="text-sm text-gray-500">{review.restaurant.category}</p>
+            <p className="font-medium text-gray-900">{review.restaurantName}</p>
+            <p className="text-sm text-gray-500">{review.restaurantCategory}</p>
           </div>
         )}
 

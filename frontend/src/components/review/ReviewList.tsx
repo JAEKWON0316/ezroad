@@ -53,7 +53,7 @@ export default function ReviewList({
           key={review.id}
           review={review}
           showRestaurant={showRestaurant}
-          isOwner={currentUserId === review.member?.id}
+          isOwner={currentUserId === review.memberId}
           onEdit={onEdit}
           onDelete={onDelete}
         />
