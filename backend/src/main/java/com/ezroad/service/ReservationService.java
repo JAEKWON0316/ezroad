@@ -95,17 +95,26 @@ public class ReservationService {
         return ReservationResponse.from(reservation);
     }
 
-    // 예약 취소
+    // 예약 취소 (예약자 또는 식당 주인)
     @Transactional
     public void cancelReservation(Long reservationId, Long memberId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 예약입니다"));
 
-        if (!reservation.getMember().getId().equals(memberId)) {
+        // 예약자 본인이거나 식당 주인인 경우 취소 가능
+        boolean isReservationOwner = reservation.getMember().getId().equals(memberId);
+        boolean isRestaurantOwner = reservation.getRestaurant().getOwner().getId().equals(memberId);
+        
+        if (!isReservationOwner && !isRestaurantOwner) {
             throw new UnauthorizedException("예약 취소 권한이 없습니다");
         }
 
         reservation.updateStatus(ReservationStatus.CANCELLED);
+        log.info("예약 #{} 취소됨 - 취소자: {}, 예약자: {}, 식당주인: {}", 
+                reservationId, 
+                isRestaurantOwner ? "식당주인" : "예약자",
+                reservation.getMember().getId(),
+                reservation.getRestaurant().getOwner().getId());
     }
 
     // 예약 완료 처리
