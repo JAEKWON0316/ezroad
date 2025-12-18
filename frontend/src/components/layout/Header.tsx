@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
@@ -31,9 +31,39 @@ export default function Header() {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
+  // Body scroll lock when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.top = `-${window.scrollY}px`;
+    } else {
+      const scrollY = document.body.style.top;
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      }
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+    };
+  }, [isMobileMenuOpen]);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
   const navLinks = [
     { href: '/restaurants', label: '맛집 찾기', icon: Store },
-    { href: '/themes', label: '테마', icon: Utensils }, // Added Themes link
+    { href: '/themes', label: '테마', icon: Utensils },
     { href: '/reviews', label: '리뷰', icon: Star },
     { href: '/map', label: '지도', icon: MapPin },
   ];
@@ -70,6 +100,14 @@ export default function Header() {
 
   const handleLogoutCancel = () => {
     setIsLogoutModalOpen(false);
+  };
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(prev => !prev);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
   };
 
   return (
@@ -145,7 +183,6 @@ export default function Header() {
 
             <div className="hidden md:flex items-center gap-4">
               {isLoading ? (
-                // 로딩 중 스켈레톤
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
                   <div className="w-16 h-4 bg-gray-200 rounded animate-pulse" />
@@ -191,9 +228,15 @@ export default function Header() {
               )}
             </div>
 
+            {/* Mobile Menu Button - Enhanced for touch */}
             <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 text-gray-600"
+              type="button"
+              onClick={toggleMobileMenu}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                toggleMobileMenu();
+              }}
+              className="md:hidden p-2 text-gray-600 touch-manipulation select-none active:bg-gray-100 rounded-lg transition-colors"
               aria-label={isMobileMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
               aria-expanded={isMobileMenuOpen}
             >
@@ -201,118 +244,163 @@ export default function Header() {
             </button>
           </div>
         </div>
+      </header>
 
-        {/* Fullscreen Mobile Menu Overlay */}
-        {isMobileMenuOpen && (
-          <div className="fixed inset-0 z-[60] bg-white overflow-y-auto md:hidden animate-fade-in-up">
-            <div className="flex flex-col min-h-screen">
-              {/* Mobile Header */}
-              <div className="flex items-center justify-between px-4 h-16 border-b border-gray-100">
-                <Link href="/" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Image src="/logo3.png" alt="Linkisy" width={140} height={40} className="h-8 w-auto" />
-                </Link>
-                <button
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 text-gray-500 hover:bg-gray-100 rounded-full"
+      {/* Fullscreen Mobile Menu Overlay - Portal-like behavior */}
+      <div
+        className={cn(
+          'fixed inset-0 z-[9999] bg-white md:hidden transition-all duration-300 ease-in-out',
+          isMobileMenuOpen 
+            ? 'opacity-100 visible translate-x-0' 
+            : 'opacity-0 invisible translate-x-full'
+        )}
+        style={{ 
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          touchAction: 'pan-y',
+        }}
+      >
+        <div className="flex flex-col h-full overflow-y-auto overscroll-contain">
+          {/* Mobile Header */}
+          <div className="flex items-center justify-between px-4 h-16 border-b border-gray-100 flex-shrink-0 bg-white sticky top-0 z-10">
+            <Link href="/" onClick={closeMobileMenu}>
+              <Image src="/logo3.png" alt="Linkisy" width={140} height={40} className="h-8 w-auto" />
+            </Link>
+            <button
+              type="button"
+              onClick={closeMobileMenu}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                closeMobileMenu();
+              }}
+              className="p-2 text-gray-500 hover:bg-gray-100 active:bg-gray-200 rounded-full touch-manipulation select-none transition-colors"
+              aria-label="메뉴 닫기"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+
+          <div className="p-4 flex-1 overflow-y-auto">
+            {/* Auth Status & Actions */}
+            {isAuthenticated ? (
+              <div className="bg-orange-50 rounded-2xl p-4 mb-6 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="relative w-12 h-12 rounded-full bg-white flex items-center justify-center overflow-hidden border border-orange-100">
+                    {user?.profileImage ? (
+                      <Image src={user.profileImage} alt={user.nickname || ''} fill className="object-cover" />
+                    ) : (
+                      <User className="h-6 w-6 text-orange-400" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900">{user?.nickname}님</p>
+                    <p className="text-xs text-orange-600">환영합니다!</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={handleLogoutClick}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    handleLogoutClick();
+                  }}
+                  className="text-xs font-medium text-gray-500 bg-white px-3 py-1.5 rounded-full border border-gray-200 touch-manipulation select-none active:bg-gray-100"
                 >
-                  <X className="h-6 w-6" />
+                  로그아웃
                 </button>
               </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                <Link 
+                  href="/login" 
+                  className="flex justify-center items-center py-3 text-sm font-bold text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 active:bg-gray-300 transition-colors touch-manipulation select-none" 
+                  onClick={closeMobileMenu}
+                >
+                  로그인
+                </Link>
+                <Link 
+                  href="/register" 
+                  className="flex justify-center items-center py-3 text-sm font-bold text-white bg-orange-500 rounded-xl hover:bg-orange-600 active:bg-orange-700 transition-colors touch-manipulation select-none" 
+                  onClick={closeMobileMenu}
+                >
+                  회원가입
+                </Link>
+              </div>
+            )}
 
-              <div className="p-4 flex-1">
-                {/* Auth Status & Actions */}
-                {isAuthenticated ? (
-                  <div className="bg-orange-50 rounded-2xl p-4 mb-6 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="relative w-12 h-12 rounded-full bg-white flex items-center justify-center overflow-hidden border border-orange-100">
-                        {user?.profileImage ? (
-                          <Image src={user.profileImage} alt={user.nickname || ''} fill className="object-cover" />
-                        ) : (
-                          <User className="h-6 w-6 text-orange-400" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-bold text-gray-900">{user?.nickname}님</p>
-                        <p className="text-xs text-orange-600">환영합니다!</p>
-                      </div>
-                    </div>
-                    <button onClick={handleLogoutClick} className="text-xs font-medium text-gray-500 bg-white px-3 py-1.5 rounded-full border border-gray-200">
-                      로그아웃
-                    </button>
+            {/* Main Navigation - Grid Layout */}
+            <h3 className="text-xs font-bold text-gray-400 mb-3 uppercase px-1">메뉴</h3>
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    'flex flex-col items-center justify-center p-4 rounded-2xl border transition-all duration-200 touch-manipulation select-none active:scale-95',
+                    pathname === link.href
+                      ? 'bg-orange-50 border-orange-200 text-orange-600'
+                      : 'bg-white border-gray-100 text-gray-600 hover:border-orange-100 active:bg-gray-50'
+                  )}
+                  onClick={closeMobileMenu}
+                >
+                  <div className={`p-3 rounded-full mb-2 ${pathname === link.href ? 'bg-orange-100 text-orange-600' : 'bg-gray-50 text-gray-500'}`}>
+                    <link.icon className="h-6 w-6" />
                   </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-3 mb-6">
-                    <Link href="/login" className="flex justify-center items-center py-3 text-sm font-bold text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
-                      로그인
-                    </Link>
-                    <Link href="/register" className="flex justify-center items-center py-3 text-sm font-bold text-white bg-orange-500 rounded-xl hover:bg-orange-600 transition-colors" onClick={() => setIsMobileMenuOpen(false)}>
-                      회원가입
-                    </Link>
-                  </div>
-                )}
+                  <span className="font-bold text-sm">{link.label}</span>
+                </Link>
+              ))}
+            </div>
 
-                {/* Main Navigation - Grid Layout */}
-                <h3 className="text-xs font-bold text-gray-400 mb-3 uppercase px-1">메뉴</h3>
-                <div className="grid grid-cols-2 gap-3 mb-6">
-                  {navLinks.map((link) => (
+            {/* User Links (if authenticated) */}
+            {isAuthenticated && (
+              <>
+                <h3 className="text-xs font-bold text-gray-400 mb-3 uppercase px-1">마이페이지</h3>
+                <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden mb-6">
+                  {userMenuLinks.map((link, idx) => (
                     <Link
                       key={link.href}
                       href={link.href}
-                      className={cn(
-                        'flex flex-col items-center justify-center p-4 rounded-2xl border transition-all duration-200',
-                        pathname === link.href
-                          ? 'bg-orange-50 border-orange-200 text-orange-600'
-                          : 'bg-white border-gray-100 text-gray-600 hover:border-orange-100 hover:shadow-md'
-                      )}
-                      onClick={() => setIsMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-5 py-4 hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation select-none ${idx !== userMenuLinks.length - 1 ? 'border-b border-gray-50' : ''}`}
+                      onClick={closeMobileMenu}
                     >
-                      <div className={`p-3 rounded-full mb-2 ${pathname === link.href ? 'bg-orange-100 text-orange-600' : 'bg-gray-50 text-gray-500'}`}>
-                        <link.icon className="h-6 w-6" />
-                      </div>
-                      <span className="font-bold text-sm">{link.label}</span>
+                      <link.icon className="h-5 w-5 text-gray-400" />
+                      <span className="text-sm font-medium text-gray-700">{link.label}</span>
+                      <ChevronDown className="h-4 w-4 text-gray-300 ml-auto -rotate-90" />
                     </Link>
                   ))}
                 </div>
+              </>
+            )}
 
-                {/* User Links (if authenticated) */}
-                {isAuthenticated && (
-                  <>
-                    <h3 className="text-xs font-bold text-gray-400 mb-3 uppercase px-1">마이페이지</h3>
-                    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden mb-6">
-                      {userMenuLinks.map((link, idx) => (
-                        <Link
-                          key={link.href}
-                          href={link.href}
-                          className={`flex items-center gap-3 px-5 py-4 hover:bg-gray-50 transition-colors ${idx !== userMenuLinks.length - 1 ? 'border-b border-gray-50' : ''}`}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          <link.icon className="h-5 w-5 text-gray-400" />
-                          <span className="text-sm font-medium text-gray-700">{link.label}</span>
-                          <ChevronDown className="h-4 w-4 text-gray-300 ml-auto -rotate-90" />
-                        </Link>
-                      ))}
-                    </div>
-                  </>
-                )}
-
-                {/* Support Links - Horizontal Scroll or Grid */}
-                <h3 className="text-xs font-bold text-gray-400 mb-3 uppercase px-1">고객지원</h3>
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                  <Link href="/notice" className="flex-none flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-xl text-sm font-medium text-gray-600" onClick={() => setIsMobileMenuOpen(false)}>
-                    <span>📢 공지사항</span>
-                  </Link>
-                  <Link href="/faq" className="flex-none flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-xl text-sm font-medium text-gray-600" onClick={() => setIsMobileMenuOpen(false)}>
-                    <span>❓ FAQ</span>
-                  </Link>
-                  <Link href="/contact" className="flex-none flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-xl text-sm font-medium text-gray-600" onClick={() => setIsMobileMenuOpen(false)}>
-                    <span>📞 1:1 문의</span>
-                  </Link>
-                </div>
-              </div>
+            {/* Support Links */}
+            <h3 className="text-xs font-bold text-gray-400 mb-3 uppercase px-1">고객지원</h3>
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              <Link 
+                href="/notice" 
+                className="flex-none flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-xl text-sm font-medium text-gray-600 active:bg-gray-100 touch-manipulation select-none" 
+                onClick={closeMobileMenu}
+              >
+                <span>📢 공지사항</span>
+              </Link>
+              <Link 
+                href="/faq" 
+                className="flex-none flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-xl text-sm font-medium text-gray-600 active:bg-gray-100 touch-manipulation select-none" 
+                onClick={closeMobileMenu}
+              >
+                <span>❓ FAQ</span>
+              </Link>
+              <Link 
+                href="/contact" 
+                className="flex-none flex items-center gap-2 px-4 py-3 bg-gray-50 rounded-xl text-sm font-medium text-gray-600 active:bg-gray-100 touch-manipulation select-none" 
+                onClick={closeMobileMenu}
+              >
+                <span>📞 1:1 문의</span>
+              </Link>
             </div>
           </div>
-        )}
-      </header>
+        </div>
+      </div>
 
       <Modal isOpen={isLogoutModalOpen} onClose={handleLogoutCancel} title="로그아웃" size="sm">
         <div className="space-y-6">
