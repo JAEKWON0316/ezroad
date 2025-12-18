@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface PaginationProps {
-  currentPage: number;
+  currentPage: number; // 0-based (API와 동일)
   totalPages: number;
   onPageChange: (page: number) => void;
   showPageNumbers?: number;
@@ -19,10 +19,13 @@ export default function Pagination({
 }: PaginationProps) {
   if (totalPages <= 1) return null;
 
+  // 0-based currentPage를 1-based displayPage로 변환
+  const displayPage = currentPage + 1;
+
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
     const half = Math.floor(showPageNumbers / 2);
-    let start = Math.max(1, currentPage - half);
+    let start = Math.max(1, displayPage - half);
     const end = Math.min(totalPages, start + showPageNumbers - 1);
 
     if (end - start + 1 < showPageNumbers) {
@@ -53,10 +56,10 @@ export default function Pagination({
       {/* Previous Button */}
       <button
         onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
+        disabled={currentPage === 0}
         className={cn(
           'p-2 rounded-lg transition-colors',
-          currentPage === 1
+          currentPage === 0
             ? 'text-gray-300 cursor-not-allowed'
             : 'text-gray-600 hover:bg-gray-100'
         )}
@@ -75,13 +78,13 @@ export default function Pagination({
           );
         }
 
-        const pageNumber = page as number;
-        const isActive = pageNumber === currentPage;
+        const pageNumber = page as number; // 1-based display number
+        const isActive = pageNumber === displayPage;
 
         return (
           <button
             key={pageNumber}
-            onClick={() => onPageChange(pageNumber)}
+            onClick={() => onPageChange(pageNumber - 1)} // Convert to 0-based for API
             className={cn(
               'min-w-[40px] h-10 px-3 rounded-lg font-medium transition-colors',
               isActive
@@ -99,10 +102,10 @@ export default function Pagination({
       {/* Next Button */}
       <button
         onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
+        disabled={currentPage >= totalPages - 1}
         className={cn(
           'p-2 rounded-lg transition-colors',
-          currentPage === totalPages
+          currentPage >= totalPages - 1
             ? 'text-gray-300 cursor-not-allowed'
             : 'text-gray-600 hover:bg-gray-100'
         )}
