@@ -416,16 +416,12 @@ export default function RestaurantDetailPage() {
             {/* Reviews Tab */}
             {activeTab === 'reviews' && (
               <div className="space-y-6 animate-fade-in">
-                {/* Header with Write Button */}
+                {/* Header */}
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-bold text-gray-900 text-lg">리뷰 <span className="text-orange-500">{restaurant.reviewCount}</span></h3>
-                  {isAuthenticated && (
-                    <Link href={`/reviews/write?restaurantId=${restaurantId}`}>
-                      <Button size="sm" leftIcon={<MessageSquare className="h-4 w-4" />}>
-                        리뷰 쓰기
-                      </Button>
-                    </Link>
-                  )}
+                  <p className="text-xs text-gray-400">
+                    방문완료 후 예약 내역에서 작성 가능
+                  </p>
                 </div>
 
                 {reviews.length === 0 ? (
