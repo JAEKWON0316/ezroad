@@ -21,6 +21,7 @@ import {
   Star,
   ChevronDown,
   Utensils,
+  Shield,
 } from 'lucide-react';
 
 export default function Header() {
@@ -76,6 +77,9 @@ export default function Header() {
       { href: '/mypage/reservations', label: '예약 내역', icon: Calendar },
       ...(user?.role === 'BUSINESS'
         ? [{ href: '/partner', label: '사업자 페이지', icon: Store }]
+        : []),
+      ...(user?.role === 'ADMIN'
+        ? [{ href: '/admin', label: '관리자', icon: Shield }]
         : []),
     ]
     : [];
