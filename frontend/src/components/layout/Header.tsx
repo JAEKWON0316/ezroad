@@ -282,13 +282,7 @@ export default function Header() {
             {isAuthenticated ? (
               <div className="bg-orange-50 rounded-2xl p-4 mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="relative w-12 h-12 rounded-full bg-white flex items-center justify-center overflow-hidden border border-orange-100">
-                    {user?.profileImage ? (
-                      <Image src={user.profileImage} alt={user.nickname || ''} fill className="object-cover" />
-                    ) : (
-                      <User className="h-6 w-6 text-orange-400" />
-                    )}
-                  </div>
+                  <Avatar src={user?.profileImage} alt={user?.nickname || ''} size="lg" />
                   <div>
                     <p className="font-bold text-gray-900">{user?.nickname}님</p>
                     <p className="text-xs text-orange-600">환영합니다!</p>

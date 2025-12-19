@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { useState } from 'react';
 import { User } from 'lucide-react';
 
 interface AvatarProps {
@@ -40,6 +41,11 @@ export default function Avatar({
   size = 'md',
   className = ''
 }: AvatarProps) {
+  const [hasError, setHasError] = useState(false);
+  
+  // src가 유효한지 체크 (null, undefined, 빈 문자열 제외)
+  const hasValidSrc = src && src.trim() !== '' && !hasError;
+
   return (
     <div 
       className={`
@@ -48,13 +54,14 @@ export default function Avatar({
         ${sizeClasses[size]} ${className}
       `}
     >
-      {src ? (
+      {hasValidSrc ? (
         <Image
           src={src}
           alt={alt}
           fill
           sizes={imageSizes[size]}
           className="object-cover"
+          onError={() => setHasError(true)}
         />
       ) : (
         <User className={`${iconSizes[size]} text-orange-500`} />
