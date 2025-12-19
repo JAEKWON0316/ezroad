@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Star, MessageSquare, User, Quote, Camera, FileText } from 'lucide-react';
+import { Star, MessageSquare, Quote, Camera, FileText } from 'lucide-react';
 import { Review, PageResponse } from '@/types';
 import Pagination from '@/components/common/Pagination';
+import Avatar from '@/components/common/Avatar';
 import { useReviews, useReviewCounts } from '@/hooks/useReviews';
 import ReviewCardSkeleton from '@/components/review/ReviewCardSkeleton';
 import { cn } from '@/lib/utils';
@@ -214,20 +215,12 @@ function ReviewCard({ review, index }: { review: Review; index: number }) {
           {/* Footer: User & Date */}
           <div className="flex items-center justify-between pt-4 border-t border-gray-50 mt-auto">
             <div className="flex items-center gap-2">
-              <div className="relative w-8 h-8 rounded-full bg-gray-100 overflow-hidden ring-2 ring-white shadow-sm">
-                {review.memberProfileImage ? (
-                  <Image
-                    src={review.memberProfileImage}
-                    alt={review.memberNickname || '사용자'}
-                    fill
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                    <User className="h-4 w-4 text-gray-400" />
-                  </div>
-                )}
-              </div>
+              <Avatar 
+                src={review.memberProfileImage} 
+                alt={review.memberNickname || '사용자'} 
+                size="sm"
+                className="ring-2 ring-white shadow-sm"
+              />
               <div className="flex flex-col">
                 <span className="text-xs font-bold text-gray-700 line-clamp-1 max-w-[100px]">{review.memberNickname || '사용자'}</span>
                 <span className="text-[10px] text-gray-400">

@@ -22,6 +22,7 @@ import { MemberStats, Review, Reservation, Restaurant } from '@/types';
 import Loading from '@/components/common/Loading';
 import Button from '@/components/common/Button';
 import RatingStars from '@/components/common/RatingStars';
+import Avatar from '@/components/common/Avatar';
 import toast from 'react-hot-toast';
 import MyPageSkeleton from '@/components/mypage/MyPageSkeleton';
 
@@ -91,18 +92,8 @@ export default function MyPage() {
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full opacity-75 blur transition duration-500 group-hover:opacity-100" />
               <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-full bg-white p-1 shadow-xl">
-                <div className="relative w-full h-full rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
-                  {user.profileImage ? (
-                    <Image
-                      src={user.profileImage}
-                      alt={user.nickname}
-                      fill
-                      sizes="128px"
-                      className="object-cover"
-                    />
-                  ) : (
-                    <User className="h-12 w-12 text-gray-400" />
-                  )}
+                <div className="relative w-full h-full rounded-full bg-gray-100 overflow-hidden">
+                  <Avatar src={user.profileImage} alt={user.nickname} size="xl" className="w-full h-full" />
                 </div>
               </div>
               <Link href="/mypage/edit" className="absolute bottom-0 right-0 p-2 bg-white rounded-full text-orange-600 shadow-lg hover:bg-gray-50 transition-colors">

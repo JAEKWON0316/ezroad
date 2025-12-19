@@ -6,6 +6,7 @@ import { Flag } from 'lucide-react';
 import { Review } from '@/types';
 import RatingStars from '@/components/common/RatingStars';
 import ReportModal from '@/components/common/ReportModal';
+import Avatar from '@/components/common/Avatar';
 import { formatRelativeTime } from '@/lib/utils';
 
 interface ReviewCardProps {
@@ -31,21 +32,11 @@ export default function ReviewCard({
         {/* 헤더 */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
-            <div className="relative w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center overflow-hidden">
-              {review.memberProfileImage ? (
-                <Image
-                  src={review.memberProfileImage}
-                  alt={review.memberNickname || '사용자'}
-                  fill
-                  sizes="40px"
-                  className="object-cover"
-                />
-              ) : (
-                <span className="text-orange-500 font-medium">
-                  {review.memberNickname?.charAt(0) || '?'}
-                </span>
-              )}
-            </div>
+            <Avatar 
+              src={review.memberProfileImage} 
+              alt={review.memberNickname || '사용자'} 
+              size="md"
+            />
             <div>
               <p className="font-medium text-gray-900">{review.memberNickname || '익명'}</p>
               <div className="flex items-center gap-2 text-sm">

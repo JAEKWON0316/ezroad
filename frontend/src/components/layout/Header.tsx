@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
 import Modal from '@/components/common/Modal';
 import Button from '@/components/common/Button';
+import Avatar from '@/components/common/Avatar';
 import {
   Menu,
   X,
@@ -193,13 +194,7 @@ export default function Header() {
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                     className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-orange-500"
                   >
-                    <div className="relative w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center overflow-hidden">
-                      {user?.profileImage ? (
-                        <Image src={user.profileImage} alt={user.nickname || ''} fill sizes="32px" className="object-cover" />
-                      ) : (
-                        <User className="h-4 w-4 text-orange-500" />
-                      )}
-                    </div>
+                    <Avatar src={user?.profileImage} alt={user?.nickname || ''} size="sm" />
                     <span>{user?.nickname}</span>
                     <ChevronDown className="h-4 w-4" />
                   </button>
