@@ -115,8 +115,16 @@ interface NotificationItemProps {
 
 // referenceType과 referenceId를 기반으로 URL 생성
 function getNotificationUrl(notification: Notification): string | null {
-  // linkUrl이 있으면 우선 사용
+  // linkUrl이 있으면 검증 후 사용
   if (notification.linkUrl) {
+    // 잘못된 URL 수정
+    if (notification.linkUrl === '/partner/reservations') {
+      // 파트너 대시보드로 이동 (특정 레스토랑 ID가 없으므로)
+      return '/partner';
+    }
+    if (notification.linkUrl === '/partner/waitings') {
+      return '/partner';
+    }
     return notification.linkUrl;
   }
 
