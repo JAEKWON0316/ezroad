@@ -95,7 +95,7 @@ public class ReservationService {
                         request.getGuestCount()),
                 savedReservation.getId(),
                 "RESERVATION",
-                "/partner/reservations"
+                "/partner/restaurants/" + restaurant.getId() + "/reservations"
         );
         
         return ReservationResponse.from(savedReservation);
@@ -175,7 +175,7 @@ public class ReservationService {
                             reservation.getReservationTime().toString()),
                     reservation.getId(),
                     "RESERVATION",
-                    "/partner/reservations"
+                    "/partner/restaurants/" + reservation.getRestaurant().getId() + "/reservations"
             );
         }
         

@@ -90,7 +90,7 @@ public class WaitingService {
                         waitingNumber),
                 savedWaiting.getId(),
                 "WAITING",
-                "/partner/waitings"
+                "/partner/restaurants/" + restaurant.getId() + "/waitings"
         );
         
         // 🔔 대기 인원 변경 브로드캐스트 (해당 식당 구독자에게)

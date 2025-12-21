@@ -141,7 +141,7 @@ public class ReviewService {
                             request.getContent().substring(0, Math.min(30, request.getContent().length()))),
                 savedReview.getId(),
                 "REVIEW",
-                "/partner/reviews"
+                "/reviews/" + savedReview.getId()
         );
         
         return ReviewResponse.from(savedReview);
