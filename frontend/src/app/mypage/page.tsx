@@ -266,14 +266,14 @@ export default function MyPage() {
                           <div className="flex justify-between items-start mb-2">
                             <div className="flex items-center gap-3">
                               <div className="relative w-10 h-10 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
-                                {review.restaurantThumbnail ? (
-                                  <Image src={review.restaurantThumbnail} alt={review.restaurantName || '식당'} fill sizes="40px" className="object-cover" />
+                                {review.restaurant?.thumbnail ? (
+                                  <Image src={review.restaurant.thumbnail} alt={review.restaurant?.name || '식당'} fill sizes="40px" className="object-cover" />
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center text-gray-400"><Utensils className="w-5 h-5" /></div>
                                 )}
                               </div>
                               <div>
-                                <h3 className="font-bold text-gray-900 group-hover:text-orange-600 transition-colors">{review.restaurantName || '식당'}</h3>
+                                <h3 className="font-bold text-gray-900 group-hover:text-orange-600 transition-colors">{review.restaurant?.name || '식당'}</h3>
                                 <span className="text-xs text-gray-500">{new Date(review.createdAt).toLocaleDateString()}</span>
                               </div>
                             </div>

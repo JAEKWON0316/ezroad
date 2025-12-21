@@ -3,6 +3,8 @@ package com.ezroad.service;
 import com.ezroad.dto.request.ReservationCreateRequest;
 import com.ezroad.dto.response.ReservationResponse;
 import com.ezroad.entity.Member;
+import com.ezroad.entity.Notification;
+import com.ezroad.entity.NotificationType;
 import com.ezroad.entity.Reservation;
 import com.ezroad.entity.ReservationStatus;
 import com.ezroad.entity.Restaurant;
@@ -27,6 +29,7 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final MemberRepository memberRepository;
     private final RestaurantRepository restaurantRepository;
+    private final NotificationService notificationService;
 
     // 예약 목록 조회 (회원별)
     public Page<ReservationResponse> getReservationsByMember(Long memberId, Pageable pageable) {
@@ -78,6 +81,23 @@ public class ReservationService {
                 .build();
 
         Reservation savedReservation = reservationRepository.save(reservation);
+        
+        // 🔔 사업자에게 새 예약 알림 발송
+        notificationService.sendNotification(
+                restaurant.getOwner().getId(),  // 수신자: 사업자
+                memberId,                        // 발신자: 고객
+                NotificationType.RESERVATION_NEW,
+                "새 예약이 들어왔습니다",
+                String.format("%s님이 %s %s에 %d명 예약을 요청했습니다.",
+                        member.getNickname(),
+                        request.getReservationDate().toString(),
+                        request.getReservationTime().toString(),
+                        request.getGuestCount()),
+                savedReservation.getId(),
+                "RESERVATION",
+                "/partner/reservations"
+        );
+        
         return ReservationResponse.from(savedReservation);
     }
 
@@ -92,6 +112,23 @@ public class ReservationService {
         }
 
         reservation.updateStatus(ReservationStatus.CONFIRMED);
+        
+        // 🔔 고객에게 예약 확정 알림 발송
+        notificationService.sendNotification(
+                reservation.getMember().getId(),  // 수신자: 고객
+                ownerId,                          // 발신자: 사업자
+                NotificationType.RESERVATION_CONFIRMED,
+                "예약이 확정되었습니다",
+                String.format("%s 예약이 확정되었습니다. %s %s, %d명",
+                        reservation.getRestaurant().getName(),
+                        reservation.getReservationDate().toString(),
+                        reservation.getReservationTime().toString(),
+                        reservation.getGuestCount()),
+                reservation.getId(),
+                "RESERVATION",
+                "/mypage/reservations"
+        );
+        
         return ReservationResponse.from(reservation);
     }
 
@@ -110,6 +147,38 @@ public class ReservationService {
         }
 
         reservation.updateStatus(ReservationStatus.CANCELLED);
+        
+        // 🔔 상대방에게 예약 취소 알림 발송
+        if (isRestaurantOwner) {
+            // 사업자가 취소 → 고객에게 알림
+            notificationService.sendNotification(
+                    reservation.getMember().getId(),
+                    memberId,
+                    NotificationType.RESERVATION_CANCELLED,
+                    "예약이 취소되었습니다",
+                    String.format("%s 예약이 식당에 의해 취소되었습니다.",
+                            reservation.getRestaurant().getName()),
+                    reservation.getId(),
+                    "RESERVATION",
+                    "/mypage/reservations"
+            );
+        } else {
+            // 고객이 취소 → 사업자에게 알림
+            notificationService.sendNotification(
+                    reservation.getRestaurant().getOwner().getId(),
+                    memberId,
+                    NotificationType.RESERVATION_CANCELLED,
+                    "예약이 취소되었습니다",
+                    String.format("%s님이 %s %s 예약을 취소했습니다.",
+                            reservation.getMember().getNickname(),
+                            reservation.getReservationDate().toString(),
+                            reservation.getReservationTime().toString()),
+                    reservation.getId(),
+                    "RESERVATION",
+                    "/partner/reservations"
+            );
+        }
+        
         log.info("예약 #{} 취소됨 - 취소자: {}, 예약자: {}, 식당주인: {}", 
                 reservationId, 
                 isRestaurantOwner ? "식당주인" : "예약자",
@@ -128,6 +197,20 @@ public class ReservationService {
         }
 
         reservation.updateStatus(ReservationStatus.COMPLETED);
+        
+        // 🔔 고객에게 방문 완료 + 리뷰 요청 알림 발송
+        notificationService.sendNotification(
+                reservation.getMember().getId(),  // 수신자: 고객
+                ownerId,                          // 발신자: 사업자
+                NotificationType.RESERVATION_COMPLETED,
+                "방문이 완료되었습니다",
+                String.format("%s 방문이 완료되었습니다. 리뷰를 작성해주세요!",
+                        reservation.getRestaurant().getName()),
+                reservation.getId(),
+                "RESERVATION",
+                "/mypage/reservations"
+        );
+        
         return ReservationResponse.from(reservation);
     }
 }

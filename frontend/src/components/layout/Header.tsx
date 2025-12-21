@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import Modal from '@/components/common/Modal';
 import Button from '@/components/common/Button';
 import Avatar from '@/components/common/Avatar';
+import { NotificationBell } from '@/components/common/NotificationBell';
 import {
   Menu,
   X,
@@ -193,8 +194,12 @@ export default function Header() {
                   <div className="w-16 h-4 bg-gray-200 rounded animate-pulse" />
                 </div>
               ) : isAuthenticated ? (
-                <div className="relative">
-                  <button
+                <div className="flex items-center gap-3">
+                  {/* 알림 벨 */}
+                  <NotificationBell />
+                  
+                  <div className="relative">
+                    <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                     className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-orange-500"
                   >
@@ -218,6 +223,7 @@ export default function Header() {
                       </button>
                     </div>
                   )}
+                </div>
                 </div>
               ) : (
                 <>

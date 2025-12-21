@@ -520,22 +520,22 @@ function ReviewCard({ review }: { review: Review }) {
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
           <div className="relative w-10 h-10 rounded-full bg-gradient-to-br from-orange-100 to-yellow-100 flex items-center justify-center border-2 border-white shadow-sm ring-1 ring-gray-100 overflow-hidden">
-            {review.memberProfileImage ? (
+            {review.member?.profileImage ? (
               <Image
-                src={review.memberProfileImage}
-                alt={review.memberNickname || '사용자'}
+                src={review.member.profileImage}
+                alt={review.member?.nickname || '사용자'}
                 fill
                 sizes="40px"
                 className="object-cover"
               />
             ) : (
               <span className="text-orange-600 font-bold text-sm">
-                {review.memberNickname?.charAt(0) || 'U'}
+                {review.member?.nickname?.charAt(0) || 'U'}
               </span>
             )}
           </div>
           <div>
-            <p className="font-bold text-gray-900 text-sm">{review.memberNickname || '사용자'}</p>
+            <p className="font-bold text-gray-900 text-sm">{review.member?.nickname || '사용자'}</p>
             <span className="text-gray-400 text-xs">
               {new Date(review.createdAt).toLocaleDateString()}
             </span>
@@ -549,9 +549,9 @@ function ReviewCard({ review }: { review: Review }) {
       )}
       <p className="text-gray-600 text-sm leading-relaxed mb-4">{review.content}</p>
 
-      {review.imageUrls && review.imageUrls.length > 0 && (
+      {review.images && review.images.length > 0 && (
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-200">
-          {review.imageUrls.map((imageUrl: string, index: number) => (
+          {review.images.map((imageUrl: string, index: number) => (
             <div key={index} className="relative w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 cursor-pointer border border-gray-100">
               <Image
                 src={imageUrl}

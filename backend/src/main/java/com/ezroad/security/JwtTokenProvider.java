@@ -60,6 +60,20 @@ public class JwtTokenProvider {
                 .get("memberId", Long.class);
     }
 
+    // WebSocket용 alias 메서드
+    public Long getUserIdFromToken(String token) {
+        return getMemberId(token);
+    }
+
+    public String getRoleFromToken(String token) {
+        return Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("role", String.class);
+    }
+
     public String getEmail(String token) {
         return Jwts.parser()
                 .verifyWith(secretKey)

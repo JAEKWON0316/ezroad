@@ -6,7 +6,6 @@ import { Flag } from 'lucide-react';
 import { Review } from '@/types';
 import RatingStars from '@/components/common/RatingStars';
 import ReportModal from '@/components/common/ReportModal';
-import Avatar from '@/components/common/Avatar';
 import { formatRelativeTime } from '@/lib/utils';
 
 interface ReviewCardProps {
@@ -32,13 +31,23 @@ export default function ReviewCard({
         {/* 헤더 */}
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-3">
-            <Avatar 
-              src={review.memberProfileImage} 
-              alt={review.memberNickname || '사용자'} 
-              size="md"
-            />
+            <div className="relative w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center overflow-hidden">
+              {review.member?.profileImage ? (
+                <Image
+                  src={review.member.profileImage}
+                  alt={review.member.nickname}
+                  fill
+                  sizes="40px"
+                  className="object-cover"
+                />
+              ) : (
+                <span className="text-orange-500 font-medium">
+                  {review.member?.nickname?.charAt(0) || '?'}
+                </span>
+              )}
+            </div>
             <div>
-              <p className="font-medium text-gray-900">{review.memberNickname || '익명'}</p>
+              <p className="font-medium text-gray-900">{review.member?.nickname || '익명'}</p>
               <div className="flex items-center gap-2 text-sm">
                 <RatingStars rating={review.rating} size="sm" />
                 <span className="text-gray-400">{formatRelativeTime(review.createdAt)}</span>
@@ -80,10 +89,10 @@ export default function ReviewCard({
         </div>
 
         {/* 식당 정보 (선택적) */}
-        {showRestaurant && review.restaurantName && (
+        {showRestaurant && review.restaurant && (
           <div className="mb-3 p-3 bg-gray-50 rounded-lg">
-            <p className="font-medium text-gray-900">{review.restaurantName}</p>
-            <p className="text-sm text-gray-500">{review.restaurantCategory}</p>
+            <p className="font-medium text-gray-900">{review.restaurant.name}</p>
+            <p className="text-sm text-gray-500">{review.restaurant.category}</p>
           </div>
         )}
 
@@ -94,9 +103,9 @@ export default function ReviewCard({
         <p className="text-gray-600 whitespace-pre-line">{review.content}</p>
 
         {/* 이미지 */}
-        {review.imageUrls && review.imageUrls.length > 0 && (
+        {review.images && review.images.length > 0 && (
           <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
-            {review.imageUrls.map((imageUrl, index) => (
+            {review.images.map((imageUrl, index) => (
               <div key={index} className="relative w-24 h-24 flex-shrink-0">
                 <Image
                   src={imageUrl}

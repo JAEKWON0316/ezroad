@@ -5,6 +5,7 @@ import com.ezroad.dto.response.MemberResponse;
 import com.ezroad.dto.response.RestaurantResponse;
 import com.ezroad.entity.Follow;
 import com.ezroad.entity.Member;
+import com.ezroad.entity.NotificationType;
 import com.ezroad.entity.Restaurant;
 import com.ezroad.exception.DuplicateResourceException;
 import com.ezroad.exception.ResourceNotFoundException;
@@ -29,6 +30,7 @@ public class FollowService {
     private final FollowRepository followRepository;
     private final MemberRepository memberRepository;
     private final RestaurantRepository restaurantRepository;
+    private final NotificationService notificationService;
 
     // ==================== 식당 팔로우 ====================
 
@@ -101,6 +103,19 @@ public class FollowService {
                 .build();
 
         followRepository.save(follow);
+        
+        // 🔔 팔로우 당한 사람에게 알림 발송
+        notificationService.sendNotification(
+                followingId,                    // 수신자: 팔로우 당한 사람
+                followerId,                     // 발신자: 팔로우 한 사람
+                NotificationType.NEW_FOLLOWER,
+                "새로운 팔로워가 생겼습니다",
+                String.format("%s님이 회원님을 팔로우하기 시작했습니다.",
+                        follower.getNickname()),
+                followerId,
+                "MEMBER",
+                "/mypage/followers"
+        );
     }
 
     @Transactional

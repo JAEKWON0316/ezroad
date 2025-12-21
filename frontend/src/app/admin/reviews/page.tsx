@@ -121,14 +121,14 @@ export default function AdminReviewsPage() {
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
                         <span className="text-orange-500 font-medium text-sm">
-                          {review.memberNickname?.charAt(0) || '?'}
+                          {review.member?.nickname?.charAt(0) || '?'}
                         </span>
                       </div>
-                      <span className="font-medium text-gray-900">{review.memberNickname || '탈퇴한 사용자'}</span>
+                      <span className="font-medium text-gray-900">{review.member?.nickname || '탈퇴한 사용자'}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-gray-500">
-                    {review.restaurantName || '-'}
+                    {review.restaurant?.name || '-'}
                   </td>
                   <td className="px-6 py-4 text-gray-500 max-w-xs truncate">
                     {review.content}

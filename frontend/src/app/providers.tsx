@@ -1,6 +1,7 @@
 'use client';
 
 import { AuthProvider } from '@/context/AuthContext';
+import { NotificationProvider } from '@/context/NotificationContext';
 import { Toaster } from 'react-hot-toast';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
@@ -20,8 +21,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
     return (
         <QueryClientProvider client={queryClient}>
             <AuthProvider>
-                {children}
-                <Toaster
+                <NotificationProvider>
+                    {children}
+                    <Toaster
                     position="top-center"
                     toastOptions={{
                         className: '',
@@ -56,6 +58,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
                         },
                     }}
                 />
+                </NotificationProvider>
             </AuthProvider>
             <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>

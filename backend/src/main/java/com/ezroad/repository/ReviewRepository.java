@@ -59,6 +59,9 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     // 식당별 리뷰 개수
     Long countByRestaurantIdAndDeletedAtIsNull(Long restaurantId);
     
+    // 전체 리뷰 개수
+    Long countByDeletedAtIsNull();
+    
     // 회원별 리뷰 개수
     Long countByMemberIdAndDeletedAtIsNull(Long memberId);
     

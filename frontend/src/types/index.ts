@@ -109,20 +109,14 @@ export interface MenuCreateRequest {
 export interface Review {
   id: number;
   restaurantId: number;
-  restaurantName?: string;
-  restaurantCategory?: string;
-  restaurantThumbnail?: string;
-  restaurantAddress?: string;
   memberId: number;
-  memberNickname?: string;
-  memberProfileImage?: string;
-  reservationId?: number;
+  restaurant?: Restaurant;
+  member?: User;
   title?: string;
   content: string;
   rating: number;
-  hit?: number;
-  viewCount?: number;  // 호환성 (hit과 동일)
-  imageUrls?: string[];
+  viewCount: number;
+  images?: string[];
   createdAt: string;
   updatedAt?: string;
 }
@@ -139,7 +133,7 @@ export interface ReviewImage {
 
 export interface ReviewCreateRequest {
   restaurantId?: number;
-  reservationId?: number;  // 예약 기반 리뷰
+  reservationId?: number;
   title?: string;
   content: string;
   rating: number;

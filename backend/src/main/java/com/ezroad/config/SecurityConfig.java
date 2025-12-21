@@ -36,6 +36,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // 🔥 Docker / ALB Health Check
                 .requestMatchers("/actuator/health").permitAll()
+                
+                // WebSocket
+                .requestMatchers("/ws/**").permitAll()
     
                 // Auth
                 .requestMatchers("/api/auth/**").permitAll()

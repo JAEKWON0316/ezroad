@@ -3,6 +3,7 @@ package com.ezroad.service;
 import com.ezroad.dto.request.WaitingCreateRequest;
 import com.ezroad.dto.response.WaitingResponse;
 import com.ezroad.entity.Member;
+import com.ezroad.entity.NotificationType;
 import com.ezroad.entity.Restaurant;
 import com.ezroad.entity.Waiting;
 import com.ezroad.entity.WaitingStatus;
@@ -31,6 +32,7 @@ public class WaitingService {
     private final WaitingRepository waitingRepository;
     private final MemberRepository memberRepository;
     private final RestaurantRepository restaurantRepository;
+    private final NotificationService notificationService;
     
     // 한국 시간대
     private static final ZoneId KOREA_ZONE = ZoneId.of("Asia/Seoul");
@@ -75,6 +77,25 @@ public class WaitingService {
         Waiting savedWaiting = waitingRepository.save(waiting);
         log.info("대기 등록 완료 - 식당: {}, 대기번호: {}, 예상시간: {}분", 
                 restaurant.getName(), waitingNumber, estimatedWaitTime);
+        
+        // 🔔 사업자에게 새 대기 알림 발송
+        notificationService.sendNotification(
+                restaurant.getOwner().getId(),  // 수신자: 사업자
+                memberId,                        // 발신자: 고객
+                NotificationType.WAITING_NEW,
+                "새 대기가 등록되었습니다",
+                String.format("%s님이 %d명으로 대기 등록했습니다. (대기번호: %d)",
+                        member.getNickname(),
+                        request.getGuestCount(),
+                        waitingNumber),
+                savedWaiting.getId(),
+                "WAITING",
+                "/partner/waitings"
+        );
+        
+        // 🔔 대기 인원 변경 브로드캐스트 (해당 식당 구독자에게)
+        broadcastWaitingCountUpdate(restaurant.getId());
+        
         return WaitingResponse.from(savedWaiting);
     }
 
@@ -116,6 +137,20 @@ public class WaitingService {
         }
         
         waiting.call();
+        
+        // 🔔 고객에게 호출 알림 발송
+        notificationService.sendNotification(
+                waiting.getMember().getId(),  // 수신자: 고객
+                ownerId,                       // 발신자: 사업자
+                NotificationType.WAITING_CALLED,
+                "입장해주세요!",
+                String.format("%s에서 입장을 요청합니다. 지금 바로 매장으로 와주세요!",
+                        waiting.getRestaurant().getName()),
+                waiting.getId(),
+                "WAITING",
+                "/mypage/waitings"
+        );
+        
         return WaitingResponse.from(waiting);
     }
 
@@ -131,6 +166,10 @@ public class WaitingService {
         }
         
         waiting.seat();
+        
+        // 🔔 대기 인원 변경 브로드캐스트
+        broadcastWaitingCountUpdate(waiting.getRestaurant().getId());
+        
         return WaitingResponse.from(waiting);
     }
 
@@ -146,6 +185,9 @@ public class WaitingService {
         }
         
         waiting.cancel();
+        
+        // 🔔 대기 인원 변경 브로드캐스트
+        broadcastWaitingCountUpdate(waiting.getRestaurant().getId());
     }
 
     // No-Show 처리 (사업자용)
@@ -160,6 +202,35 @@ public class WaitingService {
         }
         
         waiting.noShow();
+        
+        // 🔔 대기 인원 변경 브로드캐스트
+        broadcastWaitingCountUpdate(waiting.getRestaurant().getId());
+        
         return WaitingResponse.from(waiting);
+    }
+    
+    /**
+     * 대기 인원 변경 시 해당 식당 구독자에게 브로드캐스트
+     */
+    private void broadcastWaitingCountUpdate(Long restaurantId) {
+        // 한국 시간 기준 오늘 00:00:00
+        LocalDateTime startOfToday = LocalDate.now(KOREA_ZONE).atStartOfDay();
+        
+        // 현재 대기 중인 인원 수
+        Integer count = waitingRepository.countTodayWaitingsByRestaurantAndStatus(
+                restaurantId, WaitingStatus.WAITING, startOfToday);
+        int waitingCount = count != null ? count : 0;
+        
+        // 토픽으로 브로드캐스트
+        notificationService.broadcastToTopic(
+                "restaurant/" + restaurantId + "/waiting-count",
+                java.util.Map.of(
+                        "restaurantId", restaurantId,
+                        "waitingCount", waitingCount,
+                        "timestamp", LocalDateTime.now(KOREA_ZONE).toString()
+                )
+        );
+        
+        log.info("대기 인원 브로드캐스트 - 식당: {}, 대기수: {}", restaurantId, waitingCount);
     }
 }

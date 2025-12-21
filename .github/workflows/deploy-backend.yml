@@ -40,21 +40,39 @@ jobs:
             echo "=== 1. 디스크 상태 확인 ==="
             df -h /
 
-            echo "=== 2. 기존 컨테이너 중지 및 삭제 ==="
+            echo "=== 2. Docker 네트워크 생성 (없으면) ==="
+            docker network inspect ezroad-network >/dev/null 2>&1 || docker network create ezroad-network
+
+            echo "=== 3. Redis 컨테이너 확인 및 네트워크 연결 ==="
+            if ! docker ps -q --filter "name=redis" | grep -q .; then
+              echo "Redis 컨테이너가 없습니다. 생성합니다..."
+              docker run -d \
+                --name redis \
+                --network ezroad-network \
+                --restart always \
+                -p 6379:6379 \
+                redis:7-alpine
+            else
+              echo "Redis 컨테이너를 네트워크에 연결합니다..."
+              docker network connect ezroad-network redis 2>/dev/null || true
+            fi
+
+            echo "=== 4. 기존 백엔드 컨테이너 중지 및 삭제 ==="
             docker ps -q --filter "name=ezroad-backend" | xargs -r docker stop
             docker ps -aq --filter "name=ezroad-backend" | xargs -r docker rm
 
-            echo "=== 3. 기존 이미지 정리 ==="
+            echo "=== 5. 기존 이미지 정리 ==="
             docker images -q ezroad-backend:latest | xargs -r docker rmi
             docker image prune -f
 
-            echo "=== 4. 이미지 빌드 ==="
+            echo "=== 6. 이미지 빌드 ==="
             cd /opt/ezroad/temp
             docker build -t ezroad-backend:latest .
 
-            echo "=== 5. 컨테이너 실행 ==="
+            echo "=== 7. 컨테이너 실행 ==="
             docker run -d \
               --name ezroad-backend \
+              --network ezroad-network \
               --restart unless-stopped \
               -p 8080:8080 \
               -e SPRING_PROFILES_ACTIVE=prod \
@@ -77,10 +95,16 @@ jobs:
               -e GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
               -e GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }} \
               -e GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }} \
+              -e REDIS_HOST=redis \
+              -e REDIS_PORT=6379 \
               ezroad-backend:latest
 
-            echo "=== 6. 컨테이너 상태 확인 ==="
+            echo "=== 8. 컨테이너 상태 확인 ==="
             docker ps | grep ezroad-backend
+            docker ps | grep redis
 
-            echo "=== 7. 임시 파일 정리 ==="
+            echo "=== 9. 네트워크 확인 ==="
+            docker network inspect ezroad-network | grep -A 5 "Containers"
+
+            echo "=== 10. 임시 파일 정리 ==="
             rm -rf /opt/ezroad/temp

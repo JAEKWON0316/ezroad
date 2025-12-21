@@ -26,6 +26,12 @@ spring:
         default_batch_fetch_size: 100
     open-in-view: false
     
+  # Redis
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+    
   servlet:
     multipart:
       enabled: true
