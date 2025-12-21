@@ -233,20 +233,23 @@ export default function Header() {
               )}
             </div>
 
-            {/* Mobile Menu Button - Enhanced for touch */}
-            <button
-              type="button"
-              onClick={toggleMobileMenu}
-              onTouchEnd={(e) => {
-                e.preventDefault();
-                toggleMobileMenu();
-              }}
-              className="md:hidden p-2 text-gray-600 touch-manipulation select-none active:bg-gray-100 rounded-lg transition-colors"
-              aria-label={isMobileMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
-              aria-expanded={isMobileMenuOpen}
-            >
-              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
+            {/* Mobile: 알림 벨 + 메뉴 버튼 */}
+            <div className="md:hidden flex items-center gap-2">
+              {isAuthenticated && <NotificationBell />}
+              <button
+                type="button"
+                onClick={toggleMobileMenu}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  toggleMobileMenu();
+                }}
+                className="p-2 text-gray-600 touch-manipulation select-none active:bg-gray-100 rounded-lg transition-colors"
+                aria-label={isMobileMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
+                aria-expanded={isMobileMenuOpen}
+              >
+                {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </button>
+            </div>
           </div>
         </div>
       </header>

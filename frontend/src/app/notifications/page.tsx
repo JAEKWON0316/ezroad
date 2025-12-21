@@ -113,6 +113,36 @@ interface NotificationItemProps {
   onDelete: () => void;
 }
 
+// referenceType과 referenceId를 기반으로 URL 생성
+function getNotificationUrl(notification: Notification): string | null {
+  // linkUrl이 있으면 우선 사용
+  if (notification.linkUrl) {
+    return notification.linkUrl;
+  }
+
+  // referenceType과 referenceId로 URL 생성
+  if (!notification.referenceType || !notification.referenceId) {
+    return null;
+  }
+
+  switch (notification.referenceType) {
+    case 'RESERVATION':
+      return '/mypage/reservations';
+    case 'WAITING':
+      return '/mypage/waitings';
+    case 'REVIEW':
+      return `/reviews/${notification.referenceId}`;
+    case 'RESTAURANT':
+      return `/restaurants/${notification.referenceId}`;
+    case 'MEMBER':
+      return `/mypage/followers`;
+    case 'THEME':
+      return `/themes/${notification.referenceId}`;
+    default:
+      return null;
+  }
+}
+
 function NotificationItem({ notification, onMarkAsRead, onDelete }: NotificationItemProps) {
   const router = useRouter();
 
@@ -120,8 +150,10 @@ function NotificationItem({ notification, onMarkAsRead, onDelete }: Notification
     if (!notification.isRead) {
       onMarkAsRead();
     }
-    if (notification.linkUrl) {
-      router.push(notification.linkUrl);
+    
+    const url = getNotificationUrl(notification);
+    if (url) {
+      router.push(url);
     }
   };
 
