@@ -10,6 +10,7 @@ const INACTIVITY_TIMEOUT = 30 * 60 * 1000;
 
 interface AuthContextType {
   user: User | null;
+  accessToken: string | null;  // 토큰 상태 추가
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (data: LoginRequest, rememberMe?: boolean) => Promise<void>;
@@ -24,10 +25,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);  // 토큰 상태
   const [isLoading, setIsLoading] = useState(true);
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const isAuthenticated = !!user;
+  const isAuthenticated = !!user && !!accessToken;
 
   // 로그아웃 함수
   const logout = useCallback(async () => {
@@ -38,10 +40,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       Cookies.remove('accessToken');
       Cookies.remove('refreshToken');
-      localStorage.removeItem('rememberMe'); // 상태 초기화
+      localStorage.removeItem('rememberMe');
       setUser(null);
+      setAccessToken(null);  // 토큰 상태 초기화
 
-      // 타이머 정리
       if (inactivityTimerRef.current) {
         clearTimeout(inactivityTimerRef.current);
         inactivityTimerRef.current = null;
@@ -55,11 +57,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearTimeout(inactivityTimerRef.current);
     }
 
-    // 로그인 유지 상태 확인
     const isRemembered = typeof window !== 'undefined' && localStorage.getItem('rememberMe') === 'true';
-    if (isRemembered) return; // 로그인 유지 시 타이머 동작 안 함
+    if (isRemembered) return;
 
-    // 로그인된 상태에서만 타이머 설정
     if (user) {
       inactivityTimerRef.current = setTimeout(() => {
         console.log('비활동으로 인한 자동 로그아웃');
@@ -73,25 +73,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
 
     const activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
+    const handleActivity = () => resetInactivityTimer();
 
-    const handleActivity = () => {
-      resetInactivityTimer();
-    };
-
-    // 이벤트 리스너 등록
     activityEvents.forEach(event => {
       window.addEventListener(event, handleActivity);
     });
 
-    // 초기 타이머 설정
     resetInactivityTimer();
 
     return () => {
-      // 이벤트 리스너 정리
       activityEvents.forEach(event => {
         window.removeEventListener(event, handleActivity);
       });
-
       if (inactivityTimerRef.current) {
         clearTimeout(inactivityTimerRef.current);
       }
@@ -101,20 +94,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // 토큰으로 사용자 정보 가져오기
   const fetchUser = useCallback(async () => {
     try {
-      const accessToken = Cookies.get('accessToken');
-      if (!accessToken) {
+      const token = Cookies.get('accessToken');
+      if (!token) {
         setUser(null);
+        setAccessToken(null);
         return;
       }
 
+      setAccessToken(token);  // 토큰 상태 동기화
       const userData = await memberApi.getMe();
       setUser(userData);
     } catch (error) {
       console.error('Failed to fetch user:', error);
-      // 토큰이 유효하지 않으면 삭제
       Cookies.remove('accessToken');
       Cookies.remove('refreshToken');
       setUser(null);
+      setAccessToken(null);
     }
   }, []);
 
@@ -125,34 +120,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await fetchUser();
       setIsLoading(false);
     };
-
     initAuth();
   }, [fetchUser]);
 
   // 로그인
   const login = async (data: LoginRequest, rememberMe: boolean = false) => {
     const response: AuthResponse = await authApi.login(data);
+    const { accessToken: token, refreshToken } = response;
 
     if (rememberMe) {
-      // "로그인 유지" 체크 시: 7일간 유지 및 localStorage에 상태 저장
-      Cookies.set('accessToken', response.accessToken, { expires: 7 });
-      Cookies.set('refreshToken', response.refreshToken, { expires: 7 });
+      Cookies.set('accessToken', token, { expires: 7 });
+      Cookies.set('refreshToken', refreshToken, { expires: 7 });
       localStorage.setItem('rememberMe', 'true');
     } else {
-      // 기본: 세션 쿠키 (브라우저 닫으면 삭제)
-      Cookies.set('accessToken', response.accessToken);
-      Cookies.set('refreshToken', response.refreshToken);
+      Cookies.set('accessToken', token);
+      Cookies.set('refreshToken', refreshToken);
       localStorage.removeItem('rememberMe');
     }
 
-    // 사용자 정보 가져오기
+    setAccessToken(token);  // 토큰 상태 즉시 업데이트
     await fetchUser();
   };
 
   // 회원가입
   const register = async (data: RegisterRequest) => {
     await authApi.register(data);
-    // 회원가입 후 자동 로그인 (세션 쿠키로)
     await login({ email: data.email, password: data.password }, false);
   };
 
@@ -168,17 +160,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   // 소셜 로그인용 토큰 직접 설정
-  const setTokens = async (accessToken: string, refreshToken: string) => {
-    // 7일간 유지
-    Cookies.set('accessToken', accessToken, { expires: 7 });
+  const setTokens = async (token: string, refreshToken: string) => {
+    Cookies.set('accessToken', token, { expires: 7 });
     Cookies.set('refreshToken', refreshToken, { expires: 7 });
-
-    // 사용자 정보 가져오기
+    setAccessToken(token);  // 토큰 상태 즉시 업데이트
     await fetchUser();
   };
 
   const value = {
     user,
+    accessToken,  // 토큰 노출
     isLoading,
     isAuthenticated,
     login,
