@@ -143,10 +143,10 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
           <div className="bg-white rounded-xl p-4 shadow-sm mb-4 hover:shadow-md transition-shadow">
             <div className="flex items-center gap-3">
               <div className="relative w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                {review.restaurant?.thumbnail ? (
+                {(review as any).restaurantThumbnail ? (
                   <Image 
-                    src={review.restaurant.thumbnail} 
-                    alt={review.restaurant.name}
+                    src={(review as any).restaurantThumbnail} 
+                    alt={(review as any).restaurantName || '식당'}
                     fill
                     sizes="64px"
                     className="object-cover"
@@ -156,11 +156,11 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
                 )}
               </div>
               <div>
-                <h2 className="font-semibold text-gray-900">{review.restaurant?.name || '식당 정보 없음'}</h2>
-                {review.restaurant?.address && (
+                <h2 className="font-semibold text-gray-900">{(review as any).restaurantName || '식당 정보 없음'}</h2>
+                {(review as any).restaurantAddress && (
                   <p className="text-sm text-gray-500 flex items-center mt-1">
                     <MapPin className="h-3.5 w-3.5 mr-1" />
-                    {review.restaurant.address}
+                    {(review as any).restaurantAddress}
                   </p>
                 )}
               </div>
@@ -175,22 +175,22 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="relative w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center overflow-hidden">
-                  {review.member?.profileImage ? (
+                  {(review as any).memberProfileImage ? (
                     <Image 
-                      src={review.member.profileImage} 
-                      alt={review.member.nickname}
+                      src={(review as any).memberProfileImage} 
+                      alt={(review as any).memberNickname || '사용자'}
                       fill
                       sizes="40px"
                       className="object-cover"
                     />
                   ) : (
                     <span className="text-orange-500 font-medium">
-                      {review.member?.nickname?.charAt(0) || 'U'}
+                      {(review as any).memberNickname?.charAt(0) || 'U'}
                     </span>
                   )}
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">{review.member?.nickname || '사용자'}</p>
+                  <p className="font-medium text-gray-900">{(review as any).memberNickname || '사용자'}</p>
                   <p className="text-xs text-gray-500 flex items-center gap-2">
                     <Calendar className="h-3 w-3" />
                     {new Date(review.createdAt).toLocaleDateString()}
@@ -202,10 +202,10 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
           </div>
 
           {/* Images */}
-          {review.images && review.images.length > 0 && (
+          {(review as any).imageUrls && (review as any).imageUrls.length > 0 && (
             <div className="p-4 border-b">
               <div className="grid grid-cols-3 gap-2">
-                {review.images.map((image, index) => (
+                {(review as any).imageUrls.map((image: string, index: number) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(image)}
@@ -237,7 +237,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1">
                 <Eye className="h-4 w-4" />
-                조회 {review.viewCount || 0}
+                조회 {(review as any).hit || 0}
               </span>
             </div>
             <button className="flex items-center gap-1 text-gray-500 hover:text-orange-500 transition-colors">

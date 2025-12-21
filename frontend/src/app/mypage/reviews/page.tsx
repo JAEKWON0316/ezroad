@@ -108,7 +108,7 @@ export default function MyReviewsPage() {
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {reviews.map((review, index) => (
+              {reviews.map((review: any, index: number) => (
                 <div
                   key={review.id}
                   className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col"
@@ -118,17 +118,17 @@ export default function MyReviewsPage() {
                     {/* Flex layout for image and basic info */}
                     <div className="flex gap-4 p-4 pb-0">
                       {/* Conditionally render thumbnail if images exist */}
-                      {review.images && review.images.length > 0 && (
+                      {review.imageUrls && review.imageUrls.length > 0 && (
                         <div className="relative w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 shadow-sm">
                           <Image
-                            src={review.images[0]}
+                            src={review.imageUrls[0]}
                             alt="Review thumbnail"
                             fill
                             className="object-cover"
                           />
-                          {review.images.length > 1 && (
+                          {review.imageUrls.length > 1 && (
                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-bold text-xs">
-                              +{review.images.length - 1}
+                              +{review.imageUrls.length - 1}
                             </div>
                           )}
                         </div>
@@ -138,7 +138,7 @@ export default function MyReviewsPage() {
                         <div className="flex justify-between items-start">
                           <Link href={`/restaurants/${review.restaurantId}`}>
                             <h3 className="font-bold text-lg text-gray-900 hover:text-orange-600 truncate transition-colors">
-                              {review.restaurant?.name || '식당 정보 없음'}
+                              {review.restaurantName || '식당 정보 없음'}
                             </h3>
                           </Link>
                           <div className="flex gap-1 ml-2">
@@ -159,10 +159,10 @@ export default function MyReviewsPage() {
                           </div>
                         </div>
 
-                        {review.restaurant?.address && (
+                        {review.restaurantAddress && (
                           <p className="text-xs text-gray-500 flex items-center mt-1 mb-2">
                             <MapPin className="h-3 w-3 mr-1" />
-                            {review.restaurant.address}
+                            {review.restaurantAddress}
                           </p>
                         )}
 
@@ -187,7 +187,7 @@ export default function MyReviewsPage() {
                         </p>
                       </div>
                       <div className="mt-3 text-right text-xs text-gray-400">
-                        조회수 {review.viewCount || 0}회
+                        조회수 {(review as any).hit || 0}회
                       </div>
                     </div>
                   </div>
