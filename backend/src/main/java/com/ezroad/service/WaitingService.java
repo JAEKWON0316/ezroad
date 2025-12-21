@@ -1,6 +1,7 @@
 package com.ezroad.service;
 
 import com.ezroad.dto.request.WaitingCreateRequest;
+import com.ezroad.dto.response.WaitingQueueUpdateResponse;
 import com.ezroad.dto.response.WaitingResponse;
 import com.ezroad.entity.Member;
 import com.ezroad.entity.NotificationType;
@@ -22,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -33,9 +36,12 @@ public class WaitingService {
     private final MemberRepository memberRepository;
     private final RestaurantRepository restaurantRepository;
     private final NotificationService notificationService;
+    private final WaitingRedisService waitingRedisService;
     
     // 한국 시간대
     private static final ZoneId KOREA_ZONE = ZoneId.of("Asia/Seoul");
+    // 팀당 평균 대기시간 (분)
+    private static final int MINUTES_PER_TEAM = 15;
 
     // 대기 등록
     @Transactional
@@ -62,8 +68,8 @@ public class WaitingService {
                 request.getRestaurantId(), WaitingStatus.WAITING, startOfToday);
         int activeCount = currentWaitingCount != null ? currentWaitingCount : 0;
         
-        // 예상 대기 시간 (대기중인 팀 수 기준, 팀당 평균 15분)
-        Integer estimatedWaitTime = (activeCount + 1) * 15;
+        // 예상 대기 시간 (대기중인 팀 수 기준)
+        Integer estimatedWaitTime = (activeCount + 1) * MINUTES_PER_TEAM;
 
         Waiting waiting = Waiting.builder()
                 .member(member)
@@ -78,10 +84,18 @@ public class WaitingService {
         log.info("대기 등록 완료 - 식당: {}, 대기번호: {}, 예상시간: {}분", 
                 restaurant.getName(), waitingNumber, estimatedWaitTime);
         
+        // 🔴 Redis에 대기 추가
+        waitingRedisService.addToQueue(
+                restaurant.getId(), 
+                savedWaiting.getId(), 
+                waitingNumber, 
+                memberId
+        );
+        
         // 🔔 사업자에게 새 대기 알림 발송
         notificationService.sendNotification(
-                restaurant.getOwner().getId(),  // 수신자: 사업자
-                memberId,                        // 발신자: 고객
+                restaurant.getOwner().getId(),
+                memberId,
                 NotificationType.WAITING_NEW,
                 "새 대기가 등록되었습니다",
                 String.format("%s님이 %d명으로 대기 등록했습니다. (대기번호: %d)",
@@ -93,8 +107,8 @@ public class WaitingService {
                 "/partner/restaurants/" + restaurant.getId() + "/waitings"
         );
         
-        // 🔔 대기 인원 변경 브로드캐스트 (해당 식당 구독자에게)
-        broadcastWaitingCountUpdate(restaurant.getId());
+        // 🔔 대기 인원 변경 브로드캐스트 + 기존 대기자들에게 순번 업데이트
+        broadcastWaitingUpdate(restaurant.getId(), restaurant.getName());
         
         return WaitingResponse.from(savedWaiting);
     }
@@ -124,6 +138,38 @@ public class WaitingService {
         
         return WaitingResponse.from(waiting);
     }
+    
+    // 내 대기 순번 정보 조회 (Redis 기반)
+    public WaitingQueueUpdateResponse getMyQueuePosition(Long memberId) {
+        Map<Object, Object> info = waitingRedisService.getMemberWaitingInfo(memberId);
+        
+        if (info.isEmpty()) {
+            return null; // 현재 대기 없음
+        }
+        
+        Long restaurantId = Long.parseLong(info.get("restaurantId").toString());
+        Long waitingId = Long.parseLong(info.get("waitingId").toString());
+        Integer waitingNumber = Integer.parseInt(info.get("waitingNumber").toString());
+        
+        Restaurant restaurant = restaurantRepository.findById(restaurantId)
+                .orElse(null);
+        
+        int position = waitingRedisService.getPositionInQueue(restaurantId, waitingId);
+        int totalCount = waitingRedisService.getWaitingCount(restaurantId);
+        int estimatedTime = (position + 1) * MINUTES_PER_TEAM;
+        
+        return WaitingQueueUpdateResponse.builder()
+                .waitingId(waitingId)
+                .restaurantId(restaurantId)
+                .restaurantName(restaurant != null ? restaurant.getName() : "")
+                .waitingNumber(waitingNumber)
+                .positionInQueue(position)
+                .estimatedWaitTime(estimatedTime)
+                .totalWaitingCount(totalCount)
+                .status("WAITING")
+                .timestamp(LocalDateTime.now(KOREA_ZONE).toString())
+                .build();
+    }
 
     // 대기 호출 (사업자용)
     @Transactional
@@ -138,10 +184,17 @@ public class WaitingService {
         
         waiting.call();
         
+        // 🔴 Redis에서 대기 제거 (호출됨 = 대기열에서 나감)
+        waitingRedisService.removeFromQueue(
+                waiting.getRestaurant().getId(),
+                waiting.getId(),
+                waiting.getMember().getId()
+        );
+        
         // 🔔 고객에게 호출 알림 발송
         notificationService.sendNotification(
-                waiting.getMember().getId(),  // 수신자: 고객
-                ownerId,                       // 발신자: 사업자
+                waiting.getMember().getId(),
+                ownerId,
                 NotificationType.WAITING_CALLED,
                 "입장해주세요!",
                 String.format("%s에서 입장을 요청합니다. 지금 바로 매장으로 와주세요!",
@@ -149,6 +202,12 @@ public class WaitingService {
                 waiting.getId(),
                 "WAITING",
                 "/mypage/waitings"
+        );
+        
+        // 🔔 대기 인원 변경 브로드캐스트 + 순번 업데이트
+        broadcastWaitingUpdate(
+                waiting.getRestaurant().getId(), 
+                waiting.getRestaurant().getName()
         );
         
         return WaitingResponse.from(waiting);
@@ -167,8 +226,7 @@ public class WaitingService {
         
         waiting.seat();
         
-        // 🔔 대기 인원 변경 브로드캐스트
-        broadcastWaitingCountUpdate(waiting.getRestaurant().getId());
+        // Redis에서 이미 제거됨 (call 시점에)
         
         return WaitingResponse.from(waiting);
     }
@@ -184,10 +242,16 @@ public class WaitingService {
             throw new UnauthorizedException("취소 권한이 없습니다");
         }
         
+        Long restaurantId = waiting.getRestaurant().getId();
+        String restaurantName = waiting.getRestaurant().getName();
+        
         waiting.cancel();
         
-        // 🔔 대기 인원 변경 브로드캐스트
-        broadcastWaitingCountUpdate(waiting.getRestaurant().getId());
+        // 🔴 Redis에서 대기 제거
+        waitingRedisService.removeFromQueue(restaurantId, waiting.getId(), memberId);
+        
+        // 🔔 대기 인원 변경 브로드캐스트 + 순번 업데이트
+        broadcastWaitingUpdate(restaurantId, restaurantName);
     }
 
     // No-Show 처리 (사업자용)
@@ -201,36 +265,74 @@ public class WaitingService {
             throw new UnauthorizedException("권한이 없습니다");
         }
         
+        Long restaurantId = waiting.getRestaurant().getId();
+        String restaurantName = waiting.getRestaurant().getName();
+        
         waiting.noShow();
         
-        // 🔔 대기 인원 변경 브로드캐스트
-        broadcastWaitingCountUpdate(waiting.getRestaurant().getId());
+        // Redis에서 이미 제거됨 (call 시점에)
+        
+        // 🔔 대기 인원 브로드캐스트
+        broadcastWaitingUpdate(restaurantId, restaurantName);
         
         return WaitingResponse.from(waiting);
     }
     
     /**
-     * 대기 인원 변경 시 해당 식당 구독자에게 브로드캐스트
+     * 대기 인원 변경 시 브로드캐스트
+     * 1. 토픽으로 전체 대기 수 브로드캐스트 (식당 상세 페이지용)
+     * 2. 해당 식당의 모든 WAITING 고객에게 개인 순번 업데이트
      */
-    private void broadcastWaitingCountUpdate(Long restaurantId) {
+    private void broadcastWaitingUpdate(Long restaurantId, String restaurantName) {
         // 한국 시간 기준 오늘 00:00:00
         LocalDateTime startOfToday = LocalDate.now(KOREA_ZONE).atStartOfDay();
         
-        // 현재 대기 중인 인원 수
-        Integer count = waitingRepository.countTodayWaitingsByRestaurantAndStatus(
+        // DB에서 현재 대기 중인 목록 조회
+        List<Waiting> activeWaitings = waitingRepository.findActiveWaitingsByRestaurant(
                 restaurantId, WaitingStatus.WAITING, startOfToday);
-        int waitingCount = count != null ? count : 0;
         
-        // 토픽으로 브로드캐스트
+        int waitingCount = activeWaitings.size();
+        
+        // Redis 동기화
+        waitingRedisService.setWaitingCount(restaurantId, waitingCount);
+        
+        // 1. 토픽으로 대기 수 브로드캐스트 (식당 상세, 파트너 대시보드용)
         notificationService.broadcastToTopic(
                 "restaurant/" + restaurantId + "/waiting-count",
-                java.util.Map.of(
+                Map.of(
                         "restaurantId", restaurantId,
                         "waitingCount", waitingCount,
                         "timestamp", LocalDateTime.now(KOREA_ZONE).toString()
                 )
         );
         
-        log.info("대기 인원 브로드캐스트 - 식당: {}, 대기수: {}", restaurantId, waitingCount);
+        // 2. 각 대기자에게 개인 순번 업데이트 전송
+        for (int i = 0; i < activeWaitings.size(); i++) {
+            Waiting waiting = activeWaitings.get(i);
+            int position = i; // 0 = 맨 앞
+            int estimatedTime = (position + 1) * MINUTES_PER_TEAM;
+            
+            WaitingQueueUpdateResponse update = WaitingQueueUpdateResponse.builder()
+                    .waitingId(waiting.getId())
+                    .restaurantId(restaurantId)
+                    .restaurantName(restaurantName)
+                    .waitingNumber(waiting.getWaitingNumber())
+                    .positionInQueue(position)
+                    .estimatedWaitTime(estimatedTime)
+                    .totalWaitingCount(waitingCount)
+                    .status(waiting.getStatus().name())
+                    .timestamp(LocalDateTime.now(KOREA_ZONE).toString())
+                    .build();
+            
+            // 개인에게 순번 업데이트 전송
+            notificationService.sendVolatileNotification(
+                    waiting.getMember().getId(),
+                    NotificationType.WAITING_QUEUE_UPDATE,
+                    update
+            );
+        }
+        
+        log.info("대기열 브로드캐스트 - 식당: {}, 대기수: {}, 개인알림: {}명", 
+                restaurantId, waitingCount, activeWaitings.size());
     }
 }

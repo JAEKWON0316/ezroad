@@ -21,6 +21,8 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useWebSocket } from '@/hooks/useWebSocket';
+import { useNotifications } from '@/context/NotificationContext';
 import { restaurantApi, reservationApi, waitingApi, partnerApi, PartnerStats } from '@/lib/api';
 import { Restaurant, Reservation, Waiting } from '@/types';
 import Loading from '@/components/common/Loading';
@@ -31,6 +33,8 @@ import toast from 'react-hot-toast';
 export default function PartnerPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isConnected, subscribeToWaitingCount } = useWebSocket();
+  const { lastNotification } = useNotifications();
 
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
@@ -38,6 +42,9 @@ export default function PartnerPage() {
   const [activeWaitings, setActiveWaitings] = useState<Waiting[]>([]);
   const [partnerStats, setPartnerStats] = useState<PartnerStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // 🔴 실시간 대기 인원 (WebSocket)
+  const [realtimeWaitingCount, setRealtimeWaitingCount] = useState<number | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -71,6 +78,47 @@ export default function PartnerPage() {
       setIsLoading(false);
     }
   }, []);
+
+  // 🔴 WebSocket으로 선택된 식당의 대기 인원 구독
+  useEffect(() => {
+    if (!isConnected || !selectedRestaurant) {
+      setRealtimeWaitingCount(null);
+      return;
+    }
+    
+    const unsubscribe = subscribeToWaitingCount(selectedRestaurant.id, (data) => {
+      console.log('[Partner] Waiting count update:', data);
+      setRealtimeWaitingCount(data.waitingCount);
+    });
+    
+    return () => {
+      unsubscribe?.();
+    };
+  }, [isConnected, selectedRestaurant?.id, subscribeToWaitingCount]);
+  
+  // 🔴 알림 수신 시 대기/예약 목록 자동 새로고침
+  useEffect(() => {
+    if (!lastNotification || !selectedRestaurant) return;
+    
+    const { type } = lastNotification;
+    
+    // 새 대기, 예약, 취소 알림이면 목록 새로고침
+    if (['WAITING_NEW', 'RESERVATION_NEW', 'RESERVATION_CANCELLED', 'WAITING_CANCELLED'].includes(type)) {
+      console.log('[Partner] 알림 수신, 목록 새로고침:', type);
+      
+      Promise.all([
+        reservationApi.getByRestaurant(selectedRestaurant.id, 0, 5),
+        waitingApi.getByRestaurant(selectedRestaurant.id, 0, 10),
+      ]).then(([reservationsData, waitingsData]) => {
+        setPendingReservations(
+          reservationsData.content.filter(r => r.status === 'PENDING')
+        );
+        setActiveWaitings(
+          waitingsData.content.filter(w => w.status === 'WAITING' || w.status === 'CALLED')
+        );
+      });
+    }
+  }, [lastNotification, selectedRestaurant]);
 
   useEffect(() => {
     if (!authLoading) {
@@ -438,9 +486,14 @@ export default function PartnerPage() {
                           <Users className="h-4 w-4" />
                         </div>
                         현장 대기
-                        {activeWaitings.length > 0 && (
-                          <span className="bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
-                            {activeWaitings.length}
+                        {/* 🔴 실시간 대기 인원 수 (WebSocket 우선) */}
+                        <span className="bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                          {realtimeWaitingCount ?? activeWaitings.length}
+                        </span>
+                        {realtimeWaitingCount !== null && (
+                          <span className="flex items-center gap-1 text-xs text-green-600">
+                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                            실시간
                           </span>
                         )}
                       </h3>

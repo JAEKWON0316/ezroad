@@ -15,6 +15,7 @@ interface UseWebSocketOptions {
 export function useWebSocket(options: UseWebSocketOptions = {}) {
   const { user, accessToken } = useAuth();
   const clientRef = useRef<Client | null>(null);
+  const subscriptionsRef = useRef<Map<string, StompSubscription>>(new Map());
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   
@@ -64,28 +65,28 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
       setConnectionError(null);
       isConnectingRef.current = false;
 
-      // ✅ 실무 패턴: /user/queue/notifications로 구독 (Spring이 자동으로 사용자 매핑)
-      // Spring의 convertAndSendToUser()는 세션 기반으로 작동하므로
-      // /user/{userId}/queue/... 가 아닌 /user/queue/... 로 구독해야 함
+      // ✅ 개인 알림 구독 (/user/queue/notifications)
       const destination = '/user/queue/notifications';
       console.log('[WebSocket] Subscribing to:', destination);
       
-      client.subscribe(destination, (message: IMessage) => {
+      const subscription = client.subscribe(destination, (message: IMessage) => {
         console.log('[WebSocket] 📩 Notification received:', message.body);
         try {
           const notification = JSON.parse(message.body);
-          // ✅ ref를 통해 최신 콜백 호출
           optionsRef.current.onNotification?.(notification);
         } catch (e) {
           console.error('[WebSocket] Failed to parse notification:', e);
         }
       });
+      
+      subscriptionsRef.current.set('user-notifications', subscription);
     };
 
     client.onDisconnect = () => {
       console.log('[WebSocket] Disconnected');
       setIsConnected(false);
       isConnectingRef.current = false;
+      subscriptionsRef.current.clear();
     };
 
     client.onStompError = (frame) => {
@@ -106,6 +107,9 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   const disconnect = useCallback(() => {
     if (clientRef.current) {
       console.log('[WebSocket] Disconnecting...');
+      // 모든 구독 해제
+      subscriptionsRef.current.forEach((sub) => sub.unsubscribe());
+      subscriptionsRef.current.clear();
       clientRef.current.deactivate();
       clientRef.current = null;
       setIsConnected(false);
@@ -113,35 +117,64 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     }
   }, []);
 
-  // 특정 식당의 대기열 구독
-  const subscribeToWaitingQueue = useCallback((
-    restaurantId: number, 
+  /**
+   * 토픽 구독 (범용)
+   * @param topic - 토픽 경로 (예: 'restaurant/1/waiting-count')
+   * @param callback - 메시지 수신 콜백
+   * @returns 구독 해제 함수
+   */
+  const subscribeToTopic = useCallback((
+    topic: string,
     callback: (data: any) => void
-  ): StompSubscription | null => {
+  ): (() => void) | null => {
     if (!clientRef.current?.active) {
       console.log('[WebSocket] Cannot subscribe - not connected');
       return null;
     }
 
-    const destination = `/topic/restaurant/${restaurantId}/waiting`;
-    console.log('[WebSocket] Subscribing to waiting queue:', destination);
+    const destination = `/topic/${topic}`;
+    
+    // 이미 같은 토픽에 구독 중이면 해제 후 재구독
+    if (subscriptionsRef.current.has(topic)) {
+      subscriptionsRef.current.get(topic)?.unsubscribe();
+    }
+    
+    console.log('[WebSocket] Subscribing to topic:', destination);
     
     const subscription = clientRef.current.subscribe(destination, (message: IMessage) => {
       try {
         const data = JSON.parse(message.body);
         callback(data);
       } catch (e) {
-        console.error('[WebSocket] Failed to parse waiting update:', e);
+        console.error('[WebSocket] Failed to parse topic message:', e);
       }
     });
 
-    return subscription;
+    subscriptionsRef.current.set(topic, subscription);
+
+    // 구독 해제 함수 반환
+    return () => {
+      console.log('[WebSocket] Unsubscribing from topic:', destination);
+      subscription.unsubscribe();
+      subscriptionsRef.current.delete(topic);
+    };
   }, []);
 
-  // ✅ 실무 패턴: user/token 변경 시 재연결
+  /**
+   * 식당 대기 인원 구독
+   * @param restaurantId - 식당 ID
+   * @param callback - 대기 인원 변경 시 콜백
+   */
+  const subscribeToWaitingCount = useCallback((
+    restaurantId: number,
+    callback: (data: { restaurantId: number; waitingCount: number; timestamp: string }) => void
+  ): (() => void) | null => {
+    return subscribeToTopic(`restaurant/${restaurantId}/waiting-count`, callback);
+  }, [subscribeToTopic]);
+
+  // ✅ user/token 변경 시 재연결
   useEffect(() => {
     if (user && accessToken) {
-      // 약간의 딜레이로 안정적 연결 (로그인 직후 토큰이 설정되는 시간)
       const timer = setTimeout(() => {
         connect();
       }, 100);
@@ -177,7 +210,8 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
     connectionError,
     connect,
     disconnect,
-    subscribeToWaitingQueue,
+    subscribeToTopic,
+    subscribeToWaitingCount,
     client: clientRef.current,
   };
 }

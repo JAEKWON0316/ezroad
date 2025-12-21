@@ -19,9 +19,10 @@ import {
   MessageSquare,
   Flag,
 } from 'lucide-react';
-import { restaurantApi, menuApi, reviewApi, followApi, themeApi } from '@/lib/api';
+import { restaurantApi, menuApi, reviewApi, followApi, themeApi, waitingApi } from '@/lib/api';
 import { Restaurant, Menu, Review, PageResponse, Theme } from '@/types';
 import { useAuth } from '@/context/AuthContext';
+import { useWebSocket } from '@/hooks/useWebSocket';
 import Button from '@/components/common/Button';
 import Loading from '@/components/common/Loading';
 import { useRestaurantDetail } from '@/hooks/useRestaurantDetail';
@@ -56,6 +57,12 @@ export default function RestaurantDetailPage() {
   const [myThemes, setMyThemes] = useState<Theme[]>([]);
   const [reviewPage, setReviewPage] = useState(0);
   const [hasMoreReviews, setHasMoreReviews] = useState(true);
+  
+  // 🔴 실시간 대기 인원
+  const [waitingCount, setWaitingCount] = useState<number>(0);
+  
+  // 🔴 WebSocket 연결
+  const { isConnected, subscribeToWaitingCount } = useWebSocket();
 
   // Sync React Query data to local state for updates (like load more reviews)
   useEffect(() => {
@@ -68,6 +75,37 @@ export default function RestaurantDetailPage() {
   useEffect(() => {
     setIsFollowed(initialIsFollowed);
   }, [initialIsFollowed]);
+  
+  // 🔴 초기 대기 인원 조회 + WebSocket 구독
+  useEffect(() => {
+    // 초기 대기 인원 조회 (API)
+    const fetchWaitingCount = async () => {
+      try {
+        const response = await waitingApi.getWaitingCount(restaurantId);
+        setWaitingCount(response.waitingCount || 0);
+      } catch (error) {
+        console.error('Failed to fetch waiting count:', error);
+      }
+    };
+    
+    if (restaurantId) {
+      fetchWaitingCount();
+    }
+  }, [restaurantId]);
+  
+  // 🔴 WebSocket 구독 (연결 후)
+  useEffect(() => {
+    if (!isConnected || !restaurantId) return;
+    
+    const unsubscribe = subscribeToWaitingCount(restaurantId, (data) => {
+      console.log('[Restaurant] Waiting count update:', data);
+      setWaitingCount(data.waitingCount);
+    });
+    
+    return () => {
+      unsubscribe?.();
+    };
+  }, [isConnected, restaurantId, subscribeToWaitingCount]);
 
   const fetchReviews = useCallback(async (page: number) => {
     try {
@@ -456,7 +494,21 @@ export default function RestaurantDetailPage() {
 
       {/* Floating Bottom Bar (Mobile/Info Tab only or always?) - Let's keep it sticky at bottom for Reservation */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-xl border-t border-gray-200 z-50 md:hidden">
+        {/* 🔴 모바일 대기 인원 표시 */}
+        {waitingCount > 0 && (
+          <div className="flex items-center justify-center gap-2 mb-3 py-2 bg-purple-50 border border-purple-200 rounded-xl">
+            <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" />
+            <span className="text-purple-700 font-medium text-sm">
+              현재 <span className="font-bold">{waitingCount}팀</span> 대기중
+            </span>
+          </div>
+        )}
         <div className="flex gap-3">
+          <Link href={`/waitings/new?restaurantId=${restaurantId}`} className="flex-1">
+            <Button variant="outline" className="w-full rounded-xl" size="lg">
+              대기
+            </Button>
+          </Link>
           <Button
             className="flex-1 rounded-xl shadow-lg shadow-orange-500/30"
             size="lg"
@@ -469,7 +521,16 @@ export default function RestaurantDetailPage() {
 
       {/* Desktop Floating Action Buttons (Sticky on side or bottom right) - Keeping original simple buttons in Info Tab for now, or move to sidebar? The updated design puts them in Info tab content, but maybe we need a dedicated CTA area for Desktop */}
       {activeTab === 'info' && (
-        <div className="hidden md:flex justify-end gap-3 mt-8 max-w-5xl mx-auto px-6 pb-10">
+        <div className="hidden md:flex justify-end items-center gap-3 mt-8 max-w-5xl mx-auto px-6 pb-10">
+          {/* 🔴 실시간 대기 인원 표시 */}
+          {waitingCount > 0 && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 border border-purple-200 rounded-xl mr-auto">
+              <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" />
+              <span className="text-purple-700 font-medium">
+                현재 <span className="font-bold">{waitingCount}팀</span> 대기중
+              </span>
+            </div>
+          )}
           <Link href={`/waitings/new?restaurantId=${restaurantId}`} className="flex-1 max-w-[200px]">
             <Button variant="outline" className="w-full h-14 text-lg rounded-2xl border-2" leftIcon={<Users className="h-5 w-5" />}>
               대기 등록

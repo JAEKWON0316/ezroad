@@ -1,8 +1,10 @@
 package com.ezroad.controller;
 
 import com.ezroad.dto.request.WaitingCreateRequest;
+import com.ezroad.dto.response.WaitingQueueUpdateResponse;
 import com.ezroad.dto.response.WaitingResponse;
 import com.ezroad.service.WaitingService;
+import com.ezroad.service.WaitingRedisService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -13,12 +15,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/waitings")
 @RequiredArgsConstructor
 public class WaitingController {
 
     private final WaitingService waitingService;
+    private final WaitingRedisService waitingRedisService;
 
     // 대기 등록
     @PostMapping
@@ -83,5 +88,27 @@ public class WaitingController {
             @PathVariable Long id,
             @AuthenticationPrincipal Long memberId) {
         return ResponseEntity.ok(waitingService.noShowWaiting(id, memberId));
+    }
+
+    // 내 대기 순번 조회 (Redis 기반 실시간)
+    @GetMapping("/my/position")
+    public ResponseEntity<WaitingQueueUpdateResponse> getMyQueuePosition(
+            @AuthenticationPrincipal Long memberId) {
+        WaitingQueueUpdateResponse response = waitingService.getMyQueuePosition(memberId);
+        if (response == null) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(response);
+    }
+
+    // 식당 대기 인원 수 조회 (Redis 기반 실시간)
+    @GetMapping("/restaurant/{restaurantId}/count")
+    public ResponseEntity<Map<String, Object>> getWaitingCount(
+            @PathVariable Long restaurantId) {
+        int count = waitingRedisService.getWaitingCount(restaurantId);
+        return ResponseEntity.ok(Map.of(
+                "restaurantId", restaurantId,
+                "waitingCount", count
+        ));
     }
 }

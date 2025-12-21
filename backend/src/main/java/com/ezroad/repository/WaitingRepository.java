@@ -45,4 +45,9 @@ public interface WaitingRepository extends JpaRepository<Waiting, Long> {
     // 당일 WAITING 상태인 대기 수 (예상 대기 시간 계산용)
     @Query("SELECT COUNT(w) FROM Waiting w WHERE w.restaurant.id = :restaurantId AND w.status = :status AND w.createdAt >= :startOfDay")
     Integer countTodayWaitingsByRestaurantAndStatus(@Param("restaurantId") Long restaurantId, @Param("status") WaitingStatus status, @Param("startOfDay") LocalDateTime startOfDay);
+    
+    // 당일 특정 상태의 대기 목록 (순번 순 정렬)
+    @EntityGraph(attributePaths = {"member"})
+    @Query("SELECT w FROM Waiting w WHERE w.restaurant.id = :restaurantId AND w.status = :status AND w.createdAt >= :startOfDay ORDER BY w.waitingNumber ASC")
+    List<Waiting> findActiveWaitingsByRestaurant(@Param("restaurantId") Long restaurantId, @Param("status") WaitingStatus status, @Param("startOfDay") LocalDateTime startOfDay);
 }

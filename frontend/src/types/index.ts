@@ -300,3 +300,23 @@ export interface ThemeAddRestaurantRequest {
 export interface ThemeReorderRequest {
   restaurantIds: number[];
 }
+
+// 실시간 대기열 업데이트
+export interface WaitingQueueUpdate {
+  waitingId: number;
+  restaurantId: number;
+  restaurantName: string;
+  waitingNumber: number;
+  positionInQueue: number;  // 내 앞에 몇 팀 (0이면 맨 앞)
+  estimatedWaitTime: number;
+  totalWaitingCount: number;
+  status: string;
+  timestamp: string;
+}
+
+// 실시간 대기 인원 업데이트
+export interface WaitingCountUpdate {
+  restaurantId: number;
+  waitingCount: number;
+  timestamp: string;
+}

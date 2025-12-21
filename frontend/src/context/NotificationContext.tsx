@@ -1,6 +1,13 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  ReactNode,
+} from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import api from '@/lib/axios';
@@ -22,6 +29,7 @@ export interface Notification {
 
 interface NotificationContextType {
   notifications: Notification[];
+  lastNotification: Notification | null; // ✅ 추가
   unreadCount: number;
   isConnected: boolean;
   isLoading: boolean;
@@ -31,27 +39,34 @@ interface NotificationContextType {
   deleteNotification: (id: number) => Promise<void>;
 }
 
-const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+const NotificationContext =
+  createContext<NotificationContextType | undefined>(undefined);
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
+
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [lastNotification, setLastNotification] =
+    useState<Notification | null>(null); // ✅ 추가
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
-  // 새 알림 수신 처리
+  // 🔔 새 알림 수신 처리 (WebSocket)
   const handleNotification = useCallback((notification: Notification) => {
     console.log('[Notification] Received:', notification);
-    
-    // 알림 목록 앞에 추가
+
+    // ✅ Waiting 페이지에서 사용하는 핵심
+    setLastNotification(notification);
+
+    // 알림 목록 업데이트
     setNotifications(prev => [notification, ...prev]);
-    
+
     // 읽지 않은 알림 수 증가
     if (!notification.isRead) {
       setUnreadCount(prev => prev + 1);
     }
 
-    // 토스트 알림 표시
+    // 토스트 표시
     toast(notification.message, {
       icon: getNotificationIcon(notification.type),
       duration: 4000,
@@ -65,7 +80,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   // 알림 목록 조회
   const fetchNotifications = useCallback(async () => {
     if (!isAuthenticated) return;
-    
+
     setIsLoading(true);
     try {
       const response = await api.get('/notifications?size=20');
@@ -80,7 +95,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   // 읽지 않은 알림 수 조회
   const fetchUnreadCount = useCallback(async () => {
     if (!isAuthenticated) return;
-    
+
     try {
       const response = await api.get('/notifications/unread-count');
       setUnreadCount(response.data.count || 0);
@@ -123,7 +138,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // 로그인 시 알림 로드
+  // 로그인 / 로그아웃 시 처리
   useEffect(() => {
     if (isAuthenticated) {
       fetchNotifications();
@@ -131,6 +146,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     } else {
       setNotifications([]);
       setUnreadCount(0);
+      setLastNotification(null);
     }
   }, [isAuthenticated, fetchNotifications, fetchUnreadCount]);
 
@@ -138,6 +154,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     <NotificationContext.Provider
       value={{
         notifications,
+        lastNotification, // ✅ 제공
         unreadCount,
         isConnected,
         isLoading,
@@ -155,7 +172,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 export function useNotifications() {
   const context = useContext(NotificationContext);
   if (!context) {
-    throw new Error('useNotifications must be used within NotificationProvider');
+    throw new Error(
+      'useNotifications must be used within NotificationProvider'
+    );
   }
   return context;
 }

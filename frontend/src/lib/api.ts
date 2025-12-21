@@ -284,6 +284,34 @@ export const waitingApi = {
     const response = await api.patch<Waiting>(`/waitings/${id}/no-show`);
     return response.data;
   },
+
+  // 내 대기 순번 조회 (Redis 기반 실시간)
+  getMyPosition: async (): Promise<{
+    waitingId: number;
+    restaurantId: number;
+    restaurantName: string;
+    waitingNumber: number;
+    positionInQueue: number;
+    estimatedWaitTime: number;
+    totalWaitingCount: number;
+    status: string;
+    timestamp: string;
+  } | null> => {
+    try {
+      const response = await api.get('/waitings/my/position');
+      return response.data;
+    } catch {
+      return null;
+    }
+  },
+
+  // 식당 대기 인원 수 조회
+  getWaitingCount: async (restaurantId: number): Promise<{ restaurantId: number; waitingCount: number }> => {
+    const response = await api.get<{ restaurantId: number; waitingCount: number }>(
+      `/waitings/restaurant/${restaurantId}/count`
+    );
+    return response.data;
+  },
 };
 
 // ==================== Follow API ====================
