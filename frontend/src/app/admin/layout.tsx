@@ -58,7 +58,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="bg-orange-500 p-2 rounded-xl shadow-lg shadow-orange-200">
             <Shield className="h-6 w-6 text-white" />
           </div>
-          <span className="text-xl font-black tracking-tight text-gradient">EzRoad Admin</span>
+          <span className="text-xl font-black tracking-tight text-gradient">Linkisy Admin</span>
         </div>
 
         <nav className="flex-1 space-y-2">
@@ -75,8 +75,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Link
                   href={item.href}
                   className={`group relative flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 font-medium ${isActive
-                      ? 'bg-orange-500 text-white shadow-lg shadow-orange-100'
-                      : 'text-gray-500 hover:bg-orange-50 hover:text-orange-600'
+                    ? 'bg-orange-500 text-white shadow-lg shadow-orange-100'
+                    : 'text-gray-500 hover:bg-orange-50 hover:text-orange-600'
                     }`}
                 >
                   <item.icon className={`h-5 w-5 ${isActive ? 'text-white' : 'group-hover:text-orange-500 transition-colors'}`} />

@@ -469,9 +469,9 @@ export const adminApi = {
   },
 
   // 식당 관리
-  getRestaurants: async (page = 0, size = 20, keyword?: string): Promise<PageResponse<Restaurant>> => {
+  getRestaurants: async (page = 0, size = 20, keyword?: string, status?: string): Promise<PageResponse<Restaurant>> => {
     const response = await api.get<PageResponse<Restaurant>>('/admin/restaurants', {
-      params: { page, size, keyword },
+      params: { page, size, keyword, status },
     });
     return response.data;
   },
@@ -486,9 +486,9 @@ export const adminApi = {
   },
 
   // 리뷰 관리
-  getReviews: async (page = 0, size = 20): Promise<PageResponse<Review>> => {
+  getReviews: async (page = 0, size = 20, keyword?: string): Promise<PageResponse<Review>> => {
     const response = await api.get<PageResponse<Review>>('/admin/reviews', {
-      params: { page, size },
+      params: { page, size, keyword },
     });
     return response.data;
   },

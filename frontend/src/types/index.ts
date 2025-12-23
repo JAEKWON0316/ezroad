@@ -110,15 +110,23 @@ export interface Review {
   id: number;
   restaurantId: number;
   memberId: number;
-  restaurant?: Restaurant;
-  member?: User;
+  restaurantName?: string;
+  restaurantCategory?: string;
+  restaurantThumbnail?: string;
+  restaurantAddress?: string;
+  memberNickname?: string;
+  memberProfileImage?: string;
+  reservationId?: number;
   title?: string;
   content: string;
   rating: number;
-  viewCount: number;
-  images?: string[];
+  hit?: number; // Backend uses hit instead of viewCount in DTO
+  imageUrls?: string[];
   createdAt: string;
   updatedAt?: string;
+  // Legacy fields for compatibility if needed elsewhere
+  restaurant?: Restaurant;
+  member?: User;
 }
 
 // Member Type (alias for User in follow context)
