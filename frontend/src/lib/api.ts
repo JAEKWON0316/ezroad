@@ -50,9 +50,18 @@ export const authApi = {
   },
 
   // OAuth2 소셜 로그인 URL
-  getKakaoLoginUrl: (): string => `${API_BASE_URL}/auth/oauth2/kakao`,
-  getNaverLoginUrl: (): string => `${API_BASE_URL}/auth/oauth2/naver`,
-  getGoogleLoginUrl: (): string => `${API_BASE_URL}/auth/oauth2/google`,
+  getNaverLoginUrl(): string {
+    return `${API_BASE_URL}/auth/oauth2/authorize/naver?redirect_uri=${window.location.origin}/oauth2/callback/naver`;
+  },
+  getGoogleLoginUrl(): string {
+    return `${API_BASE_URL}/auth/oauth2/authorize/google?redirect_uri=${window.location.origin}/oauth2/callback/google`;
+  },
+  findPassword(email: string): Promise<void> {
+    return api.post('/auth/find-password', { email }).then((res) => res.data);
+  },
+  resetPassword(token: string, newPassword: string): Promise<void> {
+    return api.post('/auth/reset-password', { token, newPassword }).then((res) => res.data);
+  },
 };
 
 // ==================== Member API ====================
@@ -144,12 +153,12 @@ export const menuApi = {
 // ==================== Review API ====================
 export const reviewApi = {
   getAll: async (page = 0, size = 10, photoOnly = false): Promise<PageResponse<Review>> => {
-    const response = await api.get<PageResponse<Review>>('/reviews', { 
-      params: { page, size, photoOnly } 
+    const response = await api.get<PageResponse<Review>>('/reviews', {
+      params: { page, size, photoOnly }
     });
     return response.data;
   },
-  
+
   getCounts: async (): Promise<{ total: number; photo: number }> => {
     const response = await api.get<{ total: number; photo: number }>('/reviews/counts');
     return response.data;
@@ -190,7 +199,7 @@ export const reviewApi = {
   delete: async (id: number): Promise<void> => {
     await api.delete(`/reviews/${id}`);
   },
-  
+
   // 예약에 대한 리뷰 작성 가능 여부 확인
   canWriteReview: async (reservationId: number): Promise<{ canWrite: boolean }> => {
     const response = await api.get<{ canWrite: boolean }>(`/reviews/can-write/${reservationId}`);
@@ -643,7 +652,7 @@ export const themeApi = {
   },
 
   // ========== 좋아요 API ==========
-  
+
   // 테마 좋아요
   like: async (themeId: number): Promise<{ message: string; likeCount: number; isLiked: boolean }> => {
     const response = await api.post<{ message: string; likeCount: number; isLiked: boolean }>(`/themes/${themeId}/like`);

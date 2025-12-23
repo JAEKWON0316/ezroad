@@ -2,6 +2,8 @@ package com.ezroad.controller;
 
 import com.ezroad.dto.request.MemberLoginRequest;
 import com.ezroad.dto.request.MemberRegisterRequest;
+import com.ezroad.dto.request.PasswordResetConfirmRequest;
+import com.ezroad.dto.request.PasswordResetRequest;
 import com.ezroad.dto.request.RefreshTokenRequest;
 import com.ezroad.dto.response.AuthResponse;
 import com.ezroad.service.MemberService;
@@ -42,5 +44,19 @@ public class AuthController {
     public ResponseEntity<Map<String, String>> logout() {
         // JWT는 Stateless이므로 서버에서 별도 처리 없이 클라이언트에서 토큰을 삭제하면 됨
         return ResponseEntity.ok(Map.of("message", "로그아웃되었습니다. 토큰을 삭제해주세요."));
+    }
+
+    // 비밀번호 찾기 (이메일 발송 요청)
+    @PostMapping("/find-password")
+    public ResponseEntity<Map<String, String>> findPassword(@Valid @RequestBody PasswordResetRequest request) {
+        memberService.requestPasswordReset(request.getEmail());
+        return ResponseEntity.ok(Map.of("message", "비밀번호 재설정 이메일이 발송되었습니다. (콘솔 로그 확인)"));
+    }
+
+    // 비밀번호 재설정
+    @PostMapping("/reset-password")
+    public ResponseEntity<Map<String, String>> resetPassword(@Valid @RequestBody PasswordResetConfirmRequest request) {
+        memberService.resetPassword(request.getToken(), request.getNewPassword());
+        return ResponseEntity.ok(Map.of("message", "비밀번호가 성공적으로 변경되었습니다."));
     }
 }

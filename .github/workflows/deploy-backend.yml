@@ -97,6 +97,7 @@ jobs:
               -e GOOGLE_REDIRECT_URI=${{ secrets.GOOGLE_REDIRECT_URI }} \
               -e REDIS_HOST=redis \
               -e REDIS_PORT=6379 \
+              -e MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }} \
               ezroad-backend:latest
 
             echo "=== 8. 컨테이너 상태 확인 ==="

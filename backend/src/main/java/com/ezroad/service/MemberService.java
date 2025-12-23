@@ -7,11 +7,13 @@ import com.ezroad.dto.response.AuthResponse;
 import com.ezroad.dto.response.MemberResponse;
 import com.ezroad.entity.Member;
 import com.ezroad.entity.MemberRole;
+import com.ezroad.entity.PasswordResetToken;
 import com.ezroad.exception.DuplicateResourceException;
 import com.ezroad.exception.ResourceNotFoundException;
 import com.ezroad.exception.UnauthorizedException;
 import com.ezroad.repository.FollowRepository;
 import com.ezroad.repository.MemberRepository;
+import com.ezroad.repository.PasswordResetTokenRepository;
 import com.ezroad.repository.ReviewRepository;
 import com.ezroad.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -29,6 +34,8 @@ public class MemberService {
         private final MemberRepository memberRepository;
         private final FollowRepository followRepository;
         private final ReviewRepository reviewRepository;
+        private final PasswordResetTokenRepository passwordResetTokenRepository;
+        private final EmailService emailService;
         private final PasswordEncoder passwordEncoder;
         private final JwtTokenProvider jwtTokenProvider;
 
@@ -182,5 +189,45 @@ public class MemberService {
 
         public Long getReviewCount(Long memberId) {
                 return reviewRepository.countByMemberIdAndDeletedAtIsNull(memberId);
+        }
+
+        @Transactional
+        public void requestPasswordReset(String email) {
+                Member member = memberRepository.findByEmail(email)
+                                .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 사용자입니다"));
+
+                // 기존 토큰 삭제
+                passwordResetTokenRepository.deleteByMember(member);
+
+                // 새 토큰 생성
+                String token = UUID.randomUUID().toString();
+                PasswordResetToken resetToken = new PasswordResetToken(
+                                member,
+                                token,
+                                LocalDateTime.now().plusHours(1));
+
+                passwordResetTokenRepository.save(resetToken);
+
+                // 실제 이메일 발송
+                emailService.sendPasswordResetEmail(email, token);
+
+                log.info("Password reset email request processed for: {}", email);
+        }
+
+        @Transactional
+        public void resetPassword(String token, String newPassword) {
+                PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
+                                .orElseThrow(() -> new UnauthorizedException("유효하지 않거나 만료된 토큰입니다"));
+
+                if (resetToken.isExpired()) {
+                        passwordResetTokenRepository.delete(resetToken);
+                        throw new UnauthorizedException("만료된 토큰입니다");
+                }
+
+                Member member = resetToken.getMember();
+                member.updatePassword(passwordEncoder.encode(newPassword));
+
+                // 토큰 사용 후 삭제
+                passwordResetTokenRepository.delete(resetToken);
         }
 }

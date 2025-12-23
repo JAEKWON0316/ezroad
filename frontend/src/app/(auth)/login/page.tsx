@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/context/AuthContext';
 import Button from '@/components/common/Button';
@@ -43,13 +44,13 @@ export default function LoginPage() {
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       toast.error(err.response?.data?.message || '로그인에 실패했습니다');
-    } finally {
       setIsLoading(false);
     }
+    // Success redirect happens in router.push, but keep isLoading true for smooth transition
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-orange-100 via-orange-50 to-white">
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-orange-100 via-orange-50 to-white overflow-hidden">
       {/* Decorative Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
         <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-orange-200/30 rounded-full blur-3xl animate-[float_8s_ease-in-out_infinite]" />
@@ -72,9 +73,44 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Login Form */}
-        <div className="glass-card rounded-3xl p-8 animate-[fadeInUp_0.7s_ease-out_0.1s_forwards] opacity-0 translate-y-4">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {/* Login Form Container */}
+        <div className="relative overflow-hidden glass-card rounded-[2.5rem] p-8 animate-[fadeInUp_0.7s_ease-out_0.1s_forwards] opacity-0 translate-y-4">
+          <AnimatePresence>
+            {isLoading && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 z-50 bg-white/60 backdrop-blur-md flex flex-col items-center justify-center"
+              >
+                <div className="relative">
+                  <motion.div
+                    animate={{
+                      scale: [1, 1.2, 1],
+                      opacity: [0.3, 0.6, 0.3]
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                    className="absolute inset-0 bg-orange-500/20 rounded-full blur-xl"
+                  />
+                  <Loader2 className="h-10 w-10 text-orange-500 animate-[spin_1.5s_linear_infinite] relative z-10" />
+                </div>
+                <motion.p
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="mt-4 text-orange-600 font-black tracking-tight"
+                >
+                  맛있는 정보를 불러오는 중...
+                </motion.p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <form onSubmit={handleSubmit(onSubmit)} className={`space-y-6 transition-all duration-500 ${isLoading ? 'blur-sm scale-[0.98] opacity-50' : ''}`}>
             <Input
               label="이메일"
               type="email"
@@ -122,9 +158,8 @@ export default function LoginPage() {
 
             <Button
               type="submit"
-              className="w-full rounded-xl shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:-translate-y-0.5 transition-all duration-300"
+              className="w-full rounded-2xl h-14 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 hover:-translate-y-0.5 transition-all duration-300 font-black text-lg"
               size="lg"
-              isLoading={isLoading}
             >
               로그인
             </Button>
@@ -136,7 +171,7 @@ export default function LoginPage() {
               <div className="w-full border-t border-gray-200" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="bg-white/80 backdrop-blur px-4 text-gray-500 rounded-full">간편 로그인</span>
+              <span className="bg-white/80 backdrop-blur px-4 text-gray-400 font-bold uppercase tracking-widest text-[10px]">간편 로그인</span>
             </div>
           </div>
 
@@ -144,7 +179,7 @@ export default function LoginPage() {
           <div className="space-y-3">
             <button
               type="button"
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#FEE500] hover:bg-[#FDD835] text-[#3C1E1E] rounded-xl hover:-translate-y-0.5 transition-all shadow-sm font-medium"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#FEE500] hover:bg-[#FDD835] text-[#3C1E1E] rounded-xl hover:-translate-y-0.5 transition-all shadow-sm font-bold h-12"
               onClick={() => {
                 window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/oauth2/kakao`;
               }}
@@ -160,7 +195,7 @@ export default function LoginPage() {
 
             <button
               type="button"
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#03C75A] hover:bg-[#02b351] text-white rounded-xl hover:-translate-y-0.5 transition-all shadow-sm font-medium"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#03C75A] hover:bg-[#02b351] text-white rounded-xl hover:-translate-y-0.5 transition-all shadow-sm font-bold h-12"
               onClick={() => {
                 window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/oauth2/naver`;
               }}
@@ -171,7 +206,7 @@ export default function LoginPage() {
 
             <button
               type="button"
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-xl hover:-translate-y-0.5 transition-all shadow-sm font-medium"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-xl hover:-translate-y-0.5 transition-all shadow-sm font-bold h-12"
               onClick={() => {
                 window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/oauth2/google`;
               }}
