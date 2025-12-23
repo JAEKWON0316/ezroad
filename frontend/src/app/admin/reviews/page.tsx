@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Star, Trash2, MessageSquare, Calendar, Store, Eye } from 'lucide-react';
 import { adminApi } from '@/lib/api';
@@ -36,12 +37,12 @@ const itemVariants = {
 };
 
 export default function AdminReviewsPage() {
+  const router = useRouter();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [keyword, setKeyword] = useState('');
-  const [restaurantFilter, setRestaurantFilter] = useState<number | null>(null);
   const [deleteModal, setDeleteModal] = useState<Review | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -51,8 +52,7 @@ export default function AdminReviewsPage() {
       const response: PageResponse<Review> = await adminApi.getReviews(
         page,
         10,
-        keyword || undefined,
-        restaurantFilter || undefined
+        keyword || undefined
       );
       setReviews(response.content);
       setTotalPages(response.totalPages);
@@ -62,7 +62,7 @@ export default function AdminReviewsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, keyword, restaurantFilter]);
+  }, [page, keyword]);
 
   useEffect(() => {
     fetchReviews();
@@ -138,16 +138,6 @@ export default function AdminReviewsPage() {
           <Button type="submit" className="h-12 px-8 rounded-2xl font-black shadow-lg shadow-orange-200">
             검색
           </Button>
-          {restaurantFilter && (
-            <Button
-              type="button"
-              variant="outline"
-              className="h-12 px-6 rounded-2xl font-bold border-rose-100 text-rose-500 hover:bg-rose-50"
-              onClick={() => { setRestaurantFilter(null); setPage(0); }}
-            >
-              필터 초기화
-            </Button>
-          )}
         </form>
       </motion.div>
 
@@ -208,7 +198,7 @@ export default function AdminReviewsPage() {
 
                     <div className="space-y-2">
                       <button
-                        onClick={() => { setRestaurantFilter(Number(review.restaurantId)); setPage(0); }}
+                        onClick={() => router.push(`/restaurants/${review.restaurantId}?tab=reviews`)}
                         className="w-full flex items-center gap-2 text-xs font-bold text-gray-500 bg-gray-50 px-3 py-2 rounded-xl hover:bg-orange-50 hover:text-orange-600 transition-colors group/link"
                       >
                         <Store className="w-3.5 h-3.5 text-orange-500 group-hover/link:scale-110 transition-transform" />

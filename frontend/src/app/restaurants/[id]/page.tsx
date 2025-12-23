@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -50,17 +50,38 @@ export default function RestaurantDetailPage() {
 
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isFollowed, setIsFollowed] = useState(false);
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<'info' | 'menu' | 'reviews'>('info');
+
+  // Handle tab from query param
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'menu' || tabParam === 'reviews' || tabParam === 'info') {
+      setActiveTab(tabParam);
+
+      // Auto scroll to content if tab is specified
+      if (tabParam !== 'info') {
+        const timer = setTimeout(() => {
+          const container = document.getElementById('content-container');
+          if (container) {
+            const offset = container.getBoundingClientRect().top + window.scrollY - 80;
+            window.scrollTo({ top: offset, behavior: 'smooth' });
+          }
+        }, 100);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [searchParams]);
   const [showReservationModal, setShowReservationModal] = useState(false);
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [myThemes, setMyThemes] = useState<Theme[]>([]);
   const [reviewPage, setReviewPage] = useState(0);
   const [hasMoreReviews, setHasMoreReviews] = useState(true);
-  
+
   // 🔴 실시간 대기 인원
   const [waitingCount, setWaitingCount] = useState<number>(0);
-  
+
   // 🔴 WebSocket 연결
   const { isConnected, subscribeToWaitingCount } = useWebSocket();
 
@@ -75,7 +96,7 @@ export default function RestaurantDetailPage() {
   useEffect(() => {
     setIsFollowed(initialIsFollowed);
   }, [initialIsFollowed]);
-  
+
   // 🔴 초기 대기 인원 조회 + WebSocket 구독
   useEffect(() => {
     // 초기 대기 인원 조회 (API)
@@ -87,21 +108,21 @@ export default function RestaurantDetailPage() {
         console.error('Failed to fetch waiting count:', error);
       }
     };
-    
+
     if (restaurantId) {
       fetchWaitingCount();
     }
   }, [restaurantId]);
-  
+
   // 🔴 WebSocket 구독 (연결 후)
   useEffect(() => {
     if (!isConnected || !restaurantId) return;
-    
+
     const unsubscribe = subscribeToWaitingCount(restaurantId, (data) => {
       console.log('[Restaurant] Waiting count update:', data);
       setWaitingCount(data.waitingCount);
     });
-    
+
     return () => {
       unsubscribe?.();
     };
