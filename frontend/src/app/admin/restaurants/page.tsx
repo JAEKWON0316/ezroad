@@ -65,7 +65,7 @@ export default function AdminRestaurantsPage() {
         page,
         12,
         keyword || undefined,
-        status === 'ALL' ? undefined : status
+        statusFilter === '' ? undefined : statusFilter
       );
       setRestaurants(response.content);
       setTotalPages(response.totalPages);
@@ -75,7 +75,7 @@ export default function AdminRestaurantsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [keyword, page, status]);
+  }, [keyword, page, statusFilter]);
 
   useEffect(() => {
     fetchRestaurants();

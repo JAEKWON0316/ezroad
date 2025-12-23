@@ -41,13 +41,19 @@ export default function AdminReviewsPage() {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [keyword, setKeyword] = useState('');
+  const [restaurantFilter, setRestaurantFilter] = useState<number | null>(null);
   const [deleteModal, setDeleteModal] = useState<Review | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchReviews = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response: PageResponse<Review> = await adminApi.getReviews(page, 10, keyword || undefined);
+      const response: PageResponse<Review> = await adminApi.getReviews(
+        page,
+        10,
+        keyword || undefined,
+        restaurantFilter || undefined
+      );
       setReviews(response.content);
       setTotalPages(response.totalPages);
     } catch (error) {
@@ -56,7 +62,7 @@ export default function AdminReviewsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, keyword]);
+  }, [page, keyword, restaurantFilter]);
 
   useEffect(() => {
     fetchReviews();
@@ -132,6 +138,16 @@ export default function AdminReviewsPage() {
           <Button type="submit" className="h-12 px-8 rounded-2xl font-black shadow-lg shadow-orange-200">
             검색
           </Button>
+          {restaurantFilter && (
+            <Button
+              type="button"
+              variant="outline"
+              className="h-12 px-6 rounded-2xl font-bold border-rose-100 text-rose-500 hover:bg-rose-50"
+              onClick={() => { setRestaurantFilter(null); setPage(0); }}
+            >
+              필터 초기화
+            </Button>
+          )}
         </form>
       </motion.div>
 
@@ -191,10 +207,13 @@ export default function AdminReviewsPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-xs font-bold text-gray-500 bg-gray-50 px-3 py-2 rounded-xl">
-                        <Store className="w-3.5 h-3.5 text-orange-500" />
+                      <button
+                        onClick={() => { setRestaurantFilter(Number(review.restaurantId)); setPage(0); }}
+                        className="w-full flex items-center gap-2 text-xs font-bold text-gray-500 bg-gray-50 px-3 py-2 rounded-xl hover:bg-orange-50 hover:text-orange-600 transition-colors group/link"
+                      >
+                        <Store className="w-3.5 h-3.5 text-orange-500 group-hover/link:scale-110 transition-transform" />
                         <span className="truncate">{review.restaurantName || '알 수 없는 식당'}</span>
-                      </div>
+                      </button>
                       <div className="flex items-center gap-2 text-xs font-bold text-gray-500 bg-gray-50 px-3 py-2 rounded-xl">
                         <Calendar className="w-3.5 h-3.5 text-blue-500" />
                         <span>{review.createdAt ? format(new Date(review.createdAt), 'yyyy. MM. dd', { locale: ko }) : '-'}</span>

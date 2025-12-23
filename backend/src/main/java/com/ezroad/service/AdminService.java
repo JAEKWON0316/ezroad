@@ -37,26 +37,26 @@ public class AdminService {
 
     public Map<String, Object> getDashboardStats() {
         Map<String, Object> stats = new HashMap<>();
-        
+
         // 전체 통계
         stats.put("totalMembers", memberRepository.count());
         stats.put("totalRestaurants", restaurantRepository.count());
         stats.put("totalReviews", reviewRepository.count());
         stats.put("totalReservations", reservationRepository.count());
-        
+
         // 오늘 통계
         LocalDateTime todayStart = LocalDate.now().atStartOfDay();
         LocalDateTime todayEnd = todayStart.plusDays(1);
-        
+
         stats.put("todayMembers", memberRepository.countByCreatedAtBetween(todayStart, todayEnd));
         stats.put("todayReservations", reservationRepository.countByCreatedAtBetween(todayStart, todayEnd));
         stats.put("todayReviews", reviewRepository.countByCreatedAtBetween(todayStart, todayEnd));
-        
+
         // 이번 주 통계
         LocalDateTime weekStart = LocalDate.now().minusDays(7).atStartOfDay();
         stats.put("weekMembers", memberRepository.countByCreatedAtBetween(weekStart, todayEnd));
         stats.put("weekReservations", reservationRepository.countByCreatedAtBetween(weekStart, todayEnd));
-        
+
         return stats;
     }
 
@@ -64,10 +64,11 @@ public class AdminService {
 
     public Page<MemberResponse> getMembers(String keyword, String role, Pageable pageable) {
         Page<Member> members;
-        
+
         if (keyword != null && !keyword.isEmpty() && role != null && !role.isEmpty()) {
             MemberRole memberRole = MemberRole.valueOf(role);
-            members = memberRepository.findByNicknameContainingOrEmailContainingAndRole(keyword, keyword, memberRole, pageable);
+            members = memberRepository.findByNicknameContainingOrEmailContainingAndRole(keyword, keyword, memberRole,
+                    pageable);
         } else if (keyword != null && !keyword.isEmpty()) {
             members = memberRepository.findByNicknameContainingOrEmailContaining(keyword, keyword, pageable);
         } else if (role != null && !role.isEmpty()) {
@@ -76,7 +77,7 @@ public class AdminService {
         } else {
             members = memberRepository.findAll(pageable);
         }
-        
+
         return members.map(MemberResponse::from);
     }
 
@@ -90,10 +91,10 @@ public class AdminService {
     public MemberResponse updateMemberRole(Long id, String role) {
         Member member = memberRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 회원입니다"));
-        
+
         MemberRole newRole = MemberRole.valueOf(role);
         member.updateRole(newRole);
-        
+
         return MemberResponse.from(member);
     }
 
@@ -101,7 +102,7 @@ public class AdminService {
     public void deleteMember(Long id) {
         Member member = memberRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 회원입니다"));
-        
+
         member.delete(); // Soft delete
     }
 
@@ -109,7 +110,7 @@ public class AdminService {
 
     public Page<RestaurantResponse> getRestaurants(String keyword, String status, Pageable pageable) {
         Page<Restaurant> restaurants;
-        
+
         if (keyword != null && !keyword.isEmpty() && status != null && !status.isEmpty()) {
             RestaurantStatus restaurantStatus = RestaurantStatus.valueOf(status);
             restaurants = restaurantRepository.findByNameContainingAndStatus(keyword, restaurantStatus, pageable);
@@ -121,7 +122,7 @@ public class AdminService {
         } else {
             restaurants = restaurantRepository.findAll(pageable);
         }
-        
+
         return restaurants.map(RestaurantResponse::from);
     }
 
@@ -135,10 +136,10 @@ public class AdminService {
     public RestaurantResponse updateRestaurantStatus(Long id, String status) {
         Restaurant restaurant = restaurantRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 식당입니다"));
-        
+
         RestaurantStatus newStatus = RestaurantStatus.valueOf(status);
         restaurant.updateStatus(newStatus);
-        
+
         return RestaurantResponse.from(restaurant);
     }
 
@@ -146,18 +147,15 @@ public class AdminService {
     public void deleteRestaurant(Long id) {
         Restaurant restaurant = restaurantRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("존재하지 않는 식당입니다"));
-        
+
         restaurant.updateStatus(RestaurantStatus.DELETED);
     }
 
     // ==================== 리뷰 관리 ====================
 
-    public Page<ReviewResponse> getReviews(String keyword, Pageable pageable) {
-        if (keyword != null && !keyword.isEmpty()) {
-            return reviewRepository.findByContentContaining(keyword, pageable)
-                    .map(ReviewResponse::from);
-        }
-        return reviewRepository.findAll(pageable).map(ReviewResponse::from);
+    public Page<ReviewResponse> getReviews(String keyword, Long restaurantId, Pageable pageable) {
+        return reviewRepository.findBySearchKeyword(keyword, restaurantId, pageable)
+                .map(ReviewResponse::from);
     }
 
     @Transactional

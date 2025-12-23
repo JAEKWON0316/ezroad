@@ -100,8 +100,9 @@ public class AdminController {
     @GetMapping("/reviews")
     public ResponseEntity<Page<ReviewResponse>> getReviews(
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long restaurantId,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(adminService.getReviews(keyword, pageable));
+        return ResponseEntity.ok(adminService.getReviews(keyword, restaurantId, pageable));
     }
 
     @DeleteMapping("/reviews/{id}")
@@ -112,9 +113,14 @@ public class AdminController {
 
     // ==================== Request DTOs ====================
 
-    public record RoleUpdateRequest(String role) {}
-    public record StatusUpdateRequest(String status) {}
-    public record AdminNoteRequest(String adminNote) {}
+    public record RoleUpdateRequest(String role) {
+    }
+
+    public record StatusUpdateRequest(String status) {
+    }
+
+    public record AdminNoteRequest(String adminNote) {
+    }
 
     // ==================== 신고 관리 ====================
 
