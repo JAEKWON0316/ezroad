@@ -1,7 +1,6 @@
 import { Noto_Sans_KR, Montserrat } from 'next/font/google';
 import './globals.css';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
+import MainLayoutWrapper from '@/components/layout/MainLayoutWrapper';
 import Providers from './providers';
 import type { Metadata } from 'next';
 
@@ -91,11 +90,9 @@ export default function RootLayout({
         className={`${notoSansKR.variable} ${montserrat.variable} font-sans antialiased`}
       >
         <Providers>
-          <div className="min-h-screen flex flex-col">
-            <Header />
-            <main className="flex-1 pt-16">{children}</main>
-            <Footer />
-          </div>
+          <MainLayoutWrapper>
+            {children}
+          </MainLayoutWrapper>
         </Providers>
       </body>
     </html>
