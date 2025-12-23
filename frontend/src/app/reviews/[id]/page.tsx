@@ -206,10 +206,10 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
 
               <div className="flex items-center gap-5 relative z-10">
                 <div className="relative w-20 h-20 bg-gray-50 rounded-[1.5rem] overflow-hidden flex-shrink-0 shadow-inner group-hover:scale-105 transition-transform duration-500">
-                  {(review as any).restaurantThumbnail ? (
+                  {review.restaurantThumbnail ? (
                     <Image
-                      src={(review as any).restaurantThumbnail}
-                      alt={(review as any).restaurantName || '식당'}
+                      src={review.restaurantThumbnail}
+                      alt={review.restaurantName || '식당'}
                       fill
                       sizes="80px"
                       className="object-cover"
@@ -223,12 +223,12 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
                     <span className="px-2.5 py-1 bg-orange-100 text-[10px] font-black text-orange-600 rounded-lg uppercase tracking-wider">Restaurant</span>
                   </div>
                   <h2 className="text-xl font-black text-[#0F172A] group-hover:text-orange-500 transition-colors">
-                    {(review as any).restaurantName || '식당 정보 없음'}
+                    {review.restaurantName || '식당 정보 없음'}
                   </h2>
-                  {(review as any).restaurantAddress && (
+                  {review.restaurantAddress && (
                     <p className="text-sm text-gray-400 font-medium flex items-center mt-1">
                       <MapPin className="h-3.5 w-3.5 mr-1 text-orange-300" />
-                      {(review as any).restaurantAddress}
+                      {review.restaurantAddress}
                     </p>
                   )}
                 </div>
@@ -251,22 +251,22 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
           <div className="px-8 py-6 border-b border-orange-50/50 flex items-center justify-between bg-gradient-to-r from-white to-orange-50/20">
             <div className="flex items-center gap-4">
               <div className="relative w-14 h-14 bg-gradient-to-br from-orange-100 to-orange-200 rounded-[1.25rem] flex items-center justify-center overflow-hidden shadow-sm">
-                {(review as any).memberProfileImage ? (
+                {review.memberProfileImage ? (
                   <Image
-                    src={(review as any).memberProfileImage}
-                    alt={(review as any).memberNickname || '사용자'}
+                    src={review.memberProfileImage}
+                    alt={review.memberNickname || '사용자'}
                     fill
                     sizes="56px"
                     className="object-cover"
                   />
                 ) : (
                   <span className="text-orange-600 font-black text-xl">
-                    {(review as any).memberNickname?.charAt(0) || 'U'}
+                    {review.memberNickname?.charAt(0) || 'U'}
                   </span>
                 )}
               </div>
               <div>
-                <p className="font-black text-[#0F172A]">{(review as any).memberNickname || '사용자'}</p>
+                <p className="font-black text-[#0F172A]">{review.memberNickname || '사용자'}</p>
                 <div className="flex items-center gap-3 mt-1">
                   <p className="text-xs text-gray-400 font-bold flex items-center gap-1.5">
                     <Calendar className="h-3.5 w-3.5 text-orange-300" />
@@ -291,13 +291,13 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
           </div>
 
           {/* Premium Image Grid */}
-          {(review as any).imageUrls && (review as any).imageUrls.length > 0 && (
+          {review.imageUrls && review.imageUrls.length > 0 && (
             <div className="px-8 py-4">
-              <div className={`grid gap-3 ${(review as any).imageUrls.length === 1 ? 'grid-cols-1' :
-                  (review as any).imageUrls.length === 2 ? 'grid-cols-2' :
-                    'grid-cols-3'
+              <div className={`grid gap-3 ${review.imageUrls.length === 1 ? 'grid-cols-1' :
+                review.imageUrls.length === 2 ? 'grid-cols-2' :
+                  'grid-cols-3'
                 }`}>
-                {(review as any).imageUrls.map((image: string, index: number) => (
+                {review.imageUrls.map((image: string, index: number) => (
                   <motion.button
                     key={index}
                     whileHover={{ scale: 0.98 }}
@@ -326,7 +326,7 @@ export default function ReviewDetailPage({ params }: { params: Promise<{ id: str
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2 text-gray-400 font-bold uppercase text-[10px] tracking-widest">
                 <Eye className="h-4 w-4 text-orange-300" />
-                <span>Views <span className="text-[#0F172A] ml-1">{(review as any).hit || 0}</span></span>
+                <span>Views <span className="text-[#0F172A] ml-1">{review.hit || 0}</span></span>
               </div>
             </div>
             <motion.button

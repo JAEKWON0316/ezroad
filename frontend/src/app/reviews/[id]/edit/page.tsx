@@ -64,7 +64,7 @@ export default function EditReviewPage({ params }: { params: Promise<{ id: strin
 
         setReview(data);
         setRating(data.rating);
-        setImages(data.images || []);
+        setImages(data.imageUrls || data.images || []);
         reset({
           title: data.title || '',
           content: data.content,

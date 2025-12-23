@@ -122,6 +122,7 @@ export interface Review {
   rating: number;
   hit?: number; // Backend uses hit instead of viewCount in DTO
   imageUrls?: string[];
+  images?: string[]; // Alias for compatibility with existing code
   createdAt: string;
   updatedAt?: string;
   // Legacy fields for compatibility if needed elsewhere
