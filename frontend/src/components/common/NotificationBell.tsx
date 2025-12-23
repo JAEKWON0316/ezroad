@@ -49,7 +49,7 @@ export function NotificationBell() {
 
       {/* 드롭다운 패널 */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-[70vh] flex flex-col">
+        <div className="fixed inset-x-4 top-20 sm:absolute sm:inset-auto sm:right-0 sm:mt-2 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 z-[100] max-h-[80vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
           {/* 헤더 */}
           <div className="flex items-center justify-between px-4 py-3 border-b">
             <h3 className="font-semibold text-gray-900">알림</h3>
@@ -126,9 +126,8 @@ function NotificationItem({ notification, onClick, onDelete }: NotificationItemP
 
   const content = (
     <div
-      className={`px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors ${
-        !notification.isRead ? 'bg-blue-50' : ''
-      }`}
+      className={`px-4 py-3 hover:bg-gray-50 cursor-pointer transition-colors ${!notification.isRead ? 'bg-blue-50' : ''
+        }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
