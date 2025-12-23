@@ -13,6 +13,12 @@ import {
   Utensils,
   ChevronDown,
   Heart,
+  UtensilsCrossed,
+  Soup,
+  Fish,
+  Pizza,
+  Coffee,
+  Flame,
 } from 'lucide-react';
 import { followApi, searchApi } from '@/lib/api'; // restaurantApi removed
 import { Restaurant } from '@/types';
@@ -219,8 +225,22 @@ function RestaurantsContent() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Results Header */}
         <div className="mb-8 flex items-baseline gap-2">
-          <h1 className="text-2xl font-bold font-display text-gray-900">
-            {category === '전체' ? '🍽️ 전체 맛집' : category === '한식' ? '🍚 한식' : category === '일식' ? '🍣 일식' : category === '중식' ? '🥟 중식' : category === '양식' ? '🍝 양식' : category === '카페' ? '☕ 카페' : `${category} 맛집`}
+          <h1 className="text-2xl font-bold font-display text-gray-900 flex items-center gap-2">
+            {category === '전체' ? (
+              <><UtensilsCrossed className="h-7 w-7 text-orange-500" /> 전체 맛집</>
+            ) : category === '한식' ? (
+              <><Soup className="h-7 w-7 text-orange-500" /> 한식</>
+            ) : category === '일식' ? (
+              <><Fish className="h-7 w-7 text-orange-500" /> 일식</>
+            ) : category === '중식' ? (
+              <><Utensils className="h-7 w-7 text-orange-500" /> 중식</>
+            ) : category === '양식' ? (
+              <><Pizza className="h-7 w-7 text-orange-500" /> 양식</>
+            ) : category === '카페' ? (
+              <><Coffee className="h-7 w-7 text-orange-500" /> 카페</>
+            ) : (
+              <>{category} 맛집</>
+            )}
           </h1>
           <span className="text-orange-500 font-bold text-lg">
             {totalElements.toLocaleString()}
@@ -323,8 +343,8 @@ function RestaurantCard({
               {restaurant.category}
             </span>
             {restaurant.reviewCount > 100 && (
-              <span className="px-3 py-1 bg-orange-500/90 backdrop-blur-md rounded-full text-xs font-bold text-white shadow-sm shimmer">
-                🔥 인기
+              <span className="px-3 py-1 bg-orange-500/90 backdrop-blur-md rounded-full text-xs font-bold text-white shadow-sm shimmer flex items-center gap-1">
+                <Flame className="h-3 w-3" /> 인기
               </span>
             )}
           </div>

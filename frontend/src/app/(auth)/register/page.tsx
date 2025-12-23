@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Eye, EyeOff, Mail, Lock, User, Phone, Building2, MapPin, Search, X } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Phone, Building2, MapPin, Search, X, UtensilsCrossed } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DaumPostcodeEmbed from 'react-daum-postcode';
 import { useAuth } from '@/context/AuthContext';
@@ -104,7 +104,7 @@ function RegisterPageContent() {
         {/* Logo */}
         <div className="text-center mb-8 animate-[fadeInUp_0.5s_ease-out]">
           <Link href="/" className="inline-flex items-center gap-2 group">
-            <span className="text-5xl group-hover:scale-110 transition-transform duration-300">🍽️</span>
+            <UtensilsCrossed className="h-10 w-10 text-orange-500 group-hover:scale-110 transition-transform duration-300" />
             <span className="text-3xl font-black font-display text-gradient">Linkisy</span>
           </Link>
           <h1 className="mt-6 text-2xl font-bold text-gray-900 font-display">

@@ -14,6 +14,8 @@ import {
   Soup,
   Fish,
   Beef,
+  Flame,
+  Compass,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { restaurantApi, themeApi, searchApi, SearchKeyword } from '@/lib/api';
@@ -161,7 +163,10 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-10">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">🔥 실시간 인기 맛집</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <Flame className="h-8 w-8 text-orange-500" />
+                실시간 인기 맛집
+              </h2>
               <p className="text-gray-500">지금 가장 핫한 플레이스를 만나보세요</p>
             </div>
             <Link
@@ -242,7 +247,10 @@ export default function HomePage() {
       {topThemes.length > 0 && (
         <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-10">🗺️ 큐레이션 테마</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-10 flex items-center gap-2">
+              <Compass className="h-8 w-8 text-orange-500" />
+              큐레이션 테마
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 auto-rows-[300px]">
               {topThemes.map((theme, idx) => (
                 <Link
