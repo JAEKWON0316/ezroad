@@ -11,6 +11,7 @@ import { ko } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import Button from '@/components/common/Button';
 import Avatar from '@/components/common/Avatar';
+import { getNotificationIcon, getNotificationUrl } from '@/utils/notificationUtils';
 
 export default function NotificationsPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -130,28 +131,6 @@ interface NotificationItemProps {
 }
 
 // Generate URL based on referenceType/Id
-function getNotificationUrl(notification: Notification): string | null {
-  if (notification.linkUrl) {
-    if (notification.linkUrl === '/partner/reservations' || notification.linkUrl === '/partner/waitings') {
-      return '/partner';
-    }
-    return notification.linkUrl;
-  }
-
-  if (!notification.referenceType || !notification.referenceId) {
-    return null;
-  }
-
-  switch (notification.referenceType) {
-    case 'RESERVATION': return '/mypage/reservations';
-    case 'WAITING': return '/mypage/waitings';
-    case 'REVIEW': return `/reviews/${notification.referenceId}`;
-    case 'RESTAURANT': return `/restaurants/${notification.referenceId}`;
-    case 'MEMBER': return `/mypage/followers`;
-    case 'THEME': return `/themes/${notification.referenceId}`;
-    default: return null;
-  }
-}
 
 function NotificationItem({ notification, onMarkAsRead, onDelete }: NotificationItemProps) {
   const router = useRouter();
@@ -231,17 +210,3 @@ function NotificationItem({ notification, onMarkAsRead, onDelete }: Notification
   );
 }
 
-function getNotificationIcon(type: string): string {
-  switch (type) {
-    case 'RESERVATION_NEW': return '📅';
-    case 'RESERVATION_CONFIRMED': return '✅';
-    case 'RESERVATION_CANCELLED': return '❌';
-    case 'RESERVATION_COMPLETED': return '🎉';
-    case 'WAITING_NEW': return '⏳';
-    case 'WAITING_CALLED': return '🔔';
-    case 'WAITING_CANCELLED': return '🚫';
-    case 'NEW_FOLLOWER': return '👋';
-    case 'NEW_REVIEW': return '💬';
-    default: return '📢';
-  }
-}

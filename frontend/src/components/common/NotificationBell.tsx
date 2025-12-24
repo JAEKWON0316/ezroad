@@ -1,18 +1,21 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Bell, Check, Trash2, X, MoreHorizontal, BellOff } from 'lucide-react';
+import { Bell, MoreHorizontal, BellOff, Trash2 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useNotifications, Notification } from '@/context/NotificationContext';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import Avatar from '@/components/common/Avatar';
+import { getNotificationIcon, getNotificationUrl } from '@/utils/notificationUtils';
 
 export function NotificationBell() {
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -228,27 +231,3 @@ function NotificationItem({ notification, onClick, onDelete }: NotificationItemP
   );
 }
 
-function getNotificationIcon(type: string): string {
-  switch (type) {
-    case 'RESERVATION_NEW':
-      return '📅';
-    case 'RESERVATION_CONFIRMED':
-      return '✅';
-    case 'RESERVATION_CANCELLED':
-      return '❌';
-    case 'RESERVATION_COMPLETED':
-      return '🎉';
-    case 'WAITING_NEW':
-      return '⏳';
-    case 'WAITING_CALLED':
-      return '🔔';
-    case 'WAITING_CANCELLED':
-      return '🚫';
-    case 'NEW_FOLLOWER':
-      return '👋';
-    case 'NEW_REVIEW':
-      return '💬';
-    default:
-      return '📢';
-  }
-}
