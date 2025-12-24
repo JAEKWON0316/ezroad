@@ -123,7 +123,7 @@ export default function NotificationsPage() {
 
 interface NotificationItemProps {
   notification: Notification;
-  onMarkAsRead: () => void;
+  onMarkAsRead: () => Promise<void>;
   onDelete: () => void;
 }
 
@@ -154,9 +154,9 @@ function getNotificationUrl(notification: Notification): string | null {
 function NotificationItem({ notification, onMarkAsRead, onDelete }: NotificationItemProps) {
   const router = useRouter();
 
-  const handleClick = () => {
+  const handleClick = async () => {
     if (!notification.isRead) {
-      onMarkAsRead();
+      await onMarkAsRead();
     }
 
     const url = getNotificationUrl(notification);
