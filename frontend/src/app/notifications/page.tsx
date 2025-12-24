@@ -108,7 +108,9 @@ export default function NotificationsPage() {
                   <NotificationItem
                     key={notification.id || notification.createdAt}
                     notification={notification}
-                    onMarkAsRead={() => notification.id && markAsRead(notification.id)}
+                    onMarkAsRead={async () => {
+                      if (notification.id) await markAsRead(notification.id);
+                    }}
                     onDelete={() => notification.id && deleteNotification(notification.id)}
                   />
                 ))}
