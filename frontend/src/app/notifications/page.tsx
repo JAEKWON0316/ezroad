@@ -3,12 +3,14 @@
 import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Bell, Check, Trash2, ChevronLeft, Settings } from 'lucide-react';
+import { Bell, Check, Trash2, ChevronLeft, BellOff } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications, Notification } from '@/context/NotificationContext';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { motion, AnimatePresence } from 'framer-motion';
 import Button from '@/components/common/Button';
+import Avatar from '@/components/common/Avatar';
 
 export default function NotificationsPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -37,68 +39,80 @@ export default function NotificationsPage() {
 
   if (authLoading || !isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-orange-50/30">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        {/* 헤더 */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-orange-100/40 via-orange-50/20 to-white pt-24 pb-12">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
             <button
               onClick={() => router.back()}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2.5 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl transition-all shadow-sm hover:-translate-x-0.5"
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="w-5 h-5 text-gray-600" />
             </button>
-            <h1 className="text-2xl font-bold text-gray-900">알림</h1>
-            {unreadCount > 0 && (
-              <span className="px-2 py-0.5 text-sm font-medium text-white bg-orange-500 rounded-full">
-                {unreadCount}
-              </span>
-            )}
+            <div className="flex items-baseline gap-3">
+              <h1 className="text-3xl font-black font-display text-gray-900">알림 센터</h1>
+              {unreadCount > 0 && (
+                <span className="px-2.5 py-0.5 text-sm font-bold text-white bg-orange-500 rounded-full shadow-sm animate-pulse">
+                  {unreadCount}
+                </span>
+              )}
+            </div>
           </div>
           {unreadCount > 0 && (
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={() => markAllAsRead()}
-              className="text-blue-600 hover:text-blue-800"
+              className="text-orange-600 border-orange-200 hover:bg-orange-50 hover:border-orange-300 font-bold rounded-xl"
             >
-              <Check className="w-4 h-4 mr-1" />
+              <Check className="w-4 h-4 mr-1.5" />
               모두 읽음
             </Button>
           )}
         </div>
 
-        {/* 알림 목록 */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        {/* Notification List Panel */}
+        <div className="glass-card rounded-3xl p-1 shadow-xl shadow-orange-500/5 overflow-hidden min-h-[500px] relative">
           {isLoading ? (
-            <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto" />
+            <div className="absolute inset-0 flex items-center justify-center bg-white/50 backdrop-blur-sm z-10">
+              <div className="animate-spin rounded-full h-10 w-10 border-4 border-orange-200 border-t-orange-500" />
             </div>
           ) : notifications.length === 0 ? (
-            <div className="p-12 text-center">
-              <Bell className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">알림이 없습니다</p>
-              <p className="text-sm text-gray-400 mt-1">
-                새로운 소식이 있으면 여기서 확인할 수 있어요
+            <div className="h-[500px] flex flex-col items-center justify-center text-center p-8">
+              <div className="w-24 h-24 bg-orange-50 rounded-full flex items-center justify-center mb-6 animate-[bounce_3s_infinite]">
+                <BellOff className="w-10 h-10 text-orange-200" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">새로운 알림이 없습니다</h3>
+              <p className="text-gray-500 max-w-xs mx-auto">
+                아직 도착한 소식이 없네요.<br />
+                다양한 활동을 통해 새로운 알림을 받아보세요!
               </p>
+              <Link href="/" className="mt-8">
+                <Button className="rounded-xl px-8 font-bold shadow-lg shadow-orange-500/20">
+                  메인으로 가기
+                </Button>
+              </Link>
             </div>
           ) : (
             <ul className="divide-y divide-gray-100">
-              {notifications.map((notification) => (
-                <NotificationItem
-                  key={notification.id || notification.createdAt}
-                  notification={notification}
-                  onMarkAsRead={() => notification.id && markAsRead(notification.id)}
-                  onDelete={() => notification.id && deleteNotification(notification.id)}
-                />
-              ))}
+              <AnimatePresence mode='popLayout'>
+                {notifications.map((notification) => (
+                  <NotificationItem
+                    key={notification.id || notification.createdAt}
+                    notification={notification}
+                    onMarkAsRead={() => notification.id && markAsRead(notification.id)}
+                    onDelete={() => notification.id && deleteNotification(notification.id)}
+                  />
+                ))}
+              </AnimatePresence>
             </ul>
           )}
         </div>
@@ -113,41 +127,27 @@ interface NotificationItemProps {
   onDelete: () => void;
 }
 
-// referenceType과 referenceId를 기반으로 URL 생성
+// Generate URL based on referenceType/Id
 function getNotificationUrl(notification: Notification): string | null {
-  // linkUrl이 있으면 검증 후 사용
   if (notification.linkUrl) {
-    // 잘못된 URL 수정
-    if (notification.linkUrl === '/partner/reservations') {
-      // 파트너 대시보드로 이동 (특정 레스토랑 ID가 없으므로)
-      return '/partner';
-    }
-    if (notification.linkUrl === '/partner/waitings') {
+    if (notification.linkUrl === '/partner/reservations' || notification.linkUrl === '/partner/waitings') {
       return '/partner';
     }
     return notification.linkUrl;
   }
 
-  // referenceType과 referenceId로 URL 생성
   if (!notification.referenceType || !notification.referenceId) {
     return null;
   }
 
   switch (notification.referenceType) {
-    case 'RESERVATION':
-      return '/mypage/reservations';
-    case 'WAITING':
-      return '/mypage/waitings';
-    case 'REVIEW':
-      return `/reviews/${notification.referenceId}`;
-    case 'RESTAURANT':
-      return `/restaurants/${notification.referenceId}`;
-    case 'MEMBER':
-      return `/mypage/followers`;
-    case 'THEME':
-      return `/themes/${notification.referenceId}`;
-    default:
-      return null;
+    case 'RESERVATION': return '/mypage/reservations';
+    case 'WAITING': return '/mypage/waitings';
+    case 'REVIEW': return `/reviews/${notification.referenceId}`;
+    case 'RESTAURANT': return `/restaurants/${notification.referenceId}`;
+    case 'MEMBER': return `/mypage/followers`;
+    case 'THEME': return `/themes/${notification.referenceId}`;
+    default: return null;
   }
 }
 
@@ -158,7 +158,7 @@ function NotificationItem({ notification, onMarkAsRead, onDelete }: Notification
     if (!notification.isRead) {
       onMarkAsRead();
     }
-    
+
     const url = getNotificationUrl(notification);
     if (url) {
       router.push(url);
@@ -171,69 +171,75 @@ function NotificationItem({ notification, onMarkAsRead, onDelete }: Notification
   });
 
   return (
-    <li
-      className={`group relative px-4 py-4 hover:bg-gray-50 transition-colors cursor-pointer ${
-        !notification.isRead ? 'bg-blue-50/50' : ''
-      }`}
+    <motion.li
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: -100 }}
+      whileHover={{ backgroundColor: 'rgba(255,247,237, 0.5)' }}
+      className={`group relative p-6 cursor-pointer transition-colors ${!notification.isRead ? 'bg-orange-50/60' : 'bg-transparent'
+        }`}
       onClick={handleClick}
     >
-      <div className="flex items-start gap-4">
-        {/* 아이콘 */}
-        <span className="text-2xl flex-shrink-0 mt-1">
-          {getNotificationIcon(notification.type)}
-        </span>
+      <div className="flex items-start gap-5">
+        {/* Icon / Avatar */}
+        <div className="flex-shrink-0 pt-1">
+          {notification.senderProfileImage ? (
+            <Avatar src={notification.senderProfileImage} alt="" size="lg" className="ring-4 ring-white shadow-sm" />
+          ) : (
+            <div className="w-12 h-12 rounded-2xl bg-white shadow-sm border border-gray-100 flex items-center justify-center text-2xl">
+              {getNotificationIcon(notification.type)}
+            </div>
+          )}
+        </div>
 
-        {/* 내용 */}
+        {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <p className="font-medium text-gray-900">{notification.title}</p>
-              <p className="text-sm text-gray-600 mt-0.5">{notification.message}</p>
+              <p className={`text-base ${!notification.isRead ? 'font-bold text-gray-900' : 'font-medium text-gray-700'}`}>
+                {notification.title}
+              </p>
+              <p className="text-gray-600 mt-1 leading-relaxed">{notification.message}</p>
             </div>
-            {!notification.isRead && (
-              <span className="w-2.5 h-2.5 bg-blue-500 rounded-full flex-shrink-0 mt-2" />
-            )}
+            <div className="flex flex-col items-center gap-3">
+              {!notification.isRead && (
+                <span className="w-2.5 h-2.5 bg-orange-500 rounded-full shadow-sm" />
+              )}
+            </div>
           </div>
-          <p className="text-xs text-gray-400 mt-2">{formattedTime}</p>
+          <p className="text-xs font-medium text-gray-400 mt-2">{formattedTime}</p>
         </div>
 
-        {/* 삭제 버튼 */}
-        <button
+        {/* Delete Button (Hover) */}
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
           onClick={(e) => {
             e.stopPropagation();
             onDelete();
           }}
-          className="opacity-0 group-hover:opacity-100 p-2 text-gray-400 hover:text-red-500 transition-all"
+          className="absolute right-4 top-4 opacity-0 group-hover:opacity-100 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
           aria-label="알림 삭제"
         >
           <Trash2 className="w-4 h-4" />
-        </button>
+        </motion.button>
       </div>
-    </li>
+    </motion.li>
   );
 }
 
 function getNotificationIcon(type: string): string {
   switch (type) {
-    case 'RESERVATION_NEW':
-      return '📅';
-    case 'RESERVATION_CONFIRMED':
-      return '✅';
-    case 'RESERVATION_CANCELLED':
-      return '❌';
-    case 'RESERVATION_COMPLETED':
-      return '🎉';
-    case 'WAITING_NEW':
-      return '⏳';
-    case 'WAITING_CALLED':
-      return '🔔';
-    case 'WAITING_CANCELLED':
-      return '🚫';
-    case 'NEW_FOLLOWER':
-      return '👤';
-    case 'NEW_REVIEW':
-      return '⭐';
-    default:
-      return '📢';
+    case 'RESERVATION_NEW': return '📅';
+    case 'RESERVATION_CONFIRMED': return '✅';
+    case 'RESERVATION_CANCELLED': return '❌';
+    case 'RESERVATION_COMPLETED': return '🎉';
+    case 'WAITING_NEW': return '⏳';
+    case 'WAITING_CALLED': return '🔔';
+    case 'WAITING_CANCELLED': return '🚫';
+    case 'NEW_FOLLOWER': return '👋';
+    case 'NEW_REVIEW': return '💬';
+    default: return '📢';
   }
 }
