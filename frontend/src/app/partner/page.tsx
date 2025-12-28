@@ -29,6 +29,7 @@ import Loading from '@/components/common/Loading';
 import DashboardSkeleton from '@/components/layout/DashboardSkeleton';
 import Button from '@/components/common/Button';
 import toast from 'react-hot-toast';
+import { format } from 'date-fns';
 
 export default function PartnerPage() {
   const router = useRouter();
@@ -61,14 +62,20 @@ export default function PartnerPage() {
         // Fetch reservations and waitings for first restaurant
         const [reservationsData, waitingsData] = await Promise.all([
           reservationApi.getByRestaurant(restaurantsData[0].id, 0, 5),
-          waitingApi.getByRestaurant(restaurantsData[0].id, 0, 10),
+          waitingApi.getByRestaurant(restaurantsData[0].id, 0, 100),
         ]);
 
         setPendingReservations(
           reservationsData.content.filter(r => r.status === 'PENDING')
         );
+        
+        // 오늘 날짜의 대기만 필터링
+        const today = format(new Date(), 'yyyy-MM-dd');
         setActiveWaitings(
-          waitingsData.content.filter(w => w.status === 'WAITING' || w.status === 'CALLED')
+          waitingsData.content.filter(w => {
+            const waitingDate = format(new Date(w.createdAt), 'yyyy-MM-dd');
+            return waitingDate === today && (w.status === 'WAITING' || w.status === 'CALLED');
+          })
         );
       }
     } catch (error) {
@@ -108,13 +115,19 @@ export default function PartnerPage() {
       
       Promise.all([
         reservationApi.getByRestaurant(selectedRestaurant.id, 0, 5),
-        waitingApi.getByRestaurant(selectedRestaurant.id, 0, 10),
+        waitingApi.getByRestaurant(selectedRestaurant.id, 0, 100),
       ]).then(([reservationsData, waitingsData]) => {
         setPendingReservations(
           reservationsData.content.filter(r => r.status === 'PENDING')
         );
+        
+        // 오늘 날짜의 대기만 필터링
+        const today = format(new Date(), 'yyyy-MM-dd');
         setActiveWaitings(
-          waitingsData.content.filter(w => w.status === 'WAITING' || w.status === 'CALLED')
+          waitingsData.content.filter(w => {
+            const waitingDate = format(new Date(w.createdAt), 'yyyy-MM-dd');
+            return waitingDate === today && (w.status === 'WAITING' || w.status === 'CALLED');
+          })
         );
       });
     }
@@ -141,13 +154,19 @@ export default function PartnerPage() {
     try {
       const [reservationsData, waitingsData] = await Promise.all([
         reservationApi.getByRestaurant(restaurant.id, 0, 5),
-        waitingApi.getByRestaurant(restaurant.id, 0, 10),
+        waitingApi.getByRestaurant(restaurant.id, 0, 100),
       ]);
       setPendingReservations(
         reservationsData.content.filter(r => r.status === 'PENDING')
       );
+      
+      // 오늘 날짜의 대기만 필터링
+      const today = format(new Date(), 'yyyy-MM-dd');
       setActiveWaitings(
-        waitingsData.content.filter(w => w.status === 'WAITING' || w.status === 'CALLED')
+        waitingsData.content.filter(w => {
+          const waitingDate = format(new Date(w.createdAt), 'yyyy-MM-dd');
+          return waitingDate === today && (w.status === 'WAITING' || w.status === 'CALLED');
+        })
       );
     } catch (error) {
       console.error('Failed to fetch data:', error);
