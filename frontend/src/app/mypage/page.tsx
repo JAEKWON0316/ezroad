@@ -261,25 +261,43 @@ export default function MyPage() {
                 ) : (
                   <div className="space-y-3">
                     {recentReviews.map((review) => (
-                      <Link key={review.id} href={`/restaurants/${review.restaurantId}`}>
+                      <Link key={review.id} href={`/reviews/${review.id}`}>
                         <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all group">
-                          <div className="flex justify-between items-start mb-2">
+                          <div className="flex justify-between items-start mb-3">
                             <div className="flex items-center gap-3">
-                              <div className="relative w-10 h-10 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
-                                {review.restaurant?.thumbnail ? (
-                                  <Image src={review.restaurant.thumbnail} alt={review.restaurant?.name || '식당'} fill sizes="40px" className="object-cover" />
+                              <div className="relative w-12 h-12 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
+                                {review.restaurantThumbnail ? (
+                                  <Image src={review.restaurantThumbnail} alt={review.restaurantName || '식당'} fill sizes="48px" className="object-cover" />
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center text-gray-400"><Utensils className="w-5 h-5" /></div>
                                 )}
                               </div>
                               <div>
-                                <h3 className="font-bold text-gray-900 group-hover:text-orange-600 transition-colors">{review.restaurant?.name || '식당'}</h3>
+                                <h3 className="font-bold text-gray-900 group-hover:text-orange-600 transition-colors">{review.restaurantName || '식당'}</h3>
                                 <span className="text-xs text-gray-500">{new Date(review.createdAt).toLocaleDateString()}</span>
                               </div>
                             </div>
                             <RatingStars rating={review.rating} size="sm" />
                           </div>
-                          <p className="text-gray-600 text-sm line-clamp-2 pl-[52px]">{review.content}</p>
+                          {review.title && (
+                            <p className="font-medium text-gray-800 mb-1 pl-[60px]">{review.title}</p>
+                          )}
+                          <p className="text-gray-600 text-sm line-clamp-2 pl-[60px]">{review.content}</p>
+                          {/* 리뷰 이미지 미리보기 */}
+                          {review.imageUrls && review.imageUrls.length > 0 && (
+                            <div className="flex gap-2 mt-3 pl-[60px]">
+                              {review.imageUrls.slice(0, 3).map((url, idx) => (
+                                <div key={idx} className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100">
+                                  <Image src={url} alt={`리뷰 이미지 ${idx + 1}`} fill sizes="64px" className="object-cover" />
+                                </div>
+                              ))}
+                              {review.imageUrls.length > 3 && (
+                                <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 text-sm font-medium">
+                                  +{review.imageUrls.length - 3}
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </Link>
                     ))}

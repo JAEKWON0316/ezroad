@@ -17,21 +17,21 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     
     // ==================== N+1 최적화 쿼리 ====================
     
-    // 회원별 예약 목록 (restaurant 함께 로딩)
+    // 회원별 예약 목록 - 날짜 가까운 순 (오름차순)
     @EntityGraph(attributePaths = {"restaurant"})
-    Page<Reservation> findByMemberIdOrderByReservationDateDescReservationTimeDesc(Long memberId, Pageable pageable);
+    Page<Reservation> findByMemberIdOrderByReservationDateAscReservationTimeAsc(Long memberId, Pageable pageable);
     
-    // 식당별 예약 목록 (member 함께 로딩)
+    // 식당별 예약 목록 - 날짜 가까운 순 (오름차순)
     @EntityGraph(attributePaths = {"member"})
-    Page<Reservation> findByRestaurantIdOrderByReservationDateDescReservationTimeDesc(Long restaurantId, Pageable pageable);
+    Page<Reservation> findByRestaurantIdOrderByReservationDateAscReservationTimeAsc(Long restaurantId, Pageable pageable);
     
     // 회원별 예약 목록 (리스트, restaurant 함께 로딩)
     @EntityGraph(attributePaths = {"restaurant"})
-    List<Reservation> findByMemberIdOrderByReservationDateDesc(Long memberId);
+    List<Reservation> findByMemberIdOrderByReservationDateAsc(Long memberId);
     
     // 식당별 예약 목록 (리스트, member 함께 로딩)
     @EntityGraph(attributePaths = {"member"})
-    List<Reservation> findByRestaurantIdOrderByReservationDateDesc(Long restaurantId);
+    List<Reservation> findByRestaurantIdOrderByReservationDateAsc(Long restaurantId);
     
     // 식당 + 날짜별 예약 (member 함께 로딩)
     @EntityGraph(attributePaths = {"member"})

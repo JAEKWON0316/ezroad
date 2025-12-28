@@ -31,21 +31,21 @@ public class ReservationService {
     private final RestaurantRepository restaurantRepository;
     private final NotificationService notificationService;
 
-    // 예약 목록 조회 (회원별)
+    // 예약 목록 조회 (회원별) - 날짜 가까운 순
     public Page<ReservationResponse> getReservationsByMember(Long memberId, Pageable pageable) {
         if (!memberRepository.existsById(memberId)) {
             throw new ResourceNotFoundException("존재하지 않는 회원입니다");
         }
-        return reservationRepository.findByMemberIdOrderByReservationDateDescReservationTimeDesc(memberId, pageable)
+        return reservationRepository.findByMemberIdOrderByReservationDateAscReservationTimeAsc(memberId, pageable)
                 .map(ReservationResponse::from);
     }
 
-    // 예약 목록 조회 (식당별)
+    // 예약 목록 조회 (식당별) - 날짜 가까운 순
     public Page<ReservationResponse> getReservationsByRestaurant(Long restaurantId, Pageable pageable) {
         if (!restaurantRepository.existsById(restaurantId)) {
             throw new ResourceNotFoundException("존재하지 않는 식당입니다");
         }
-        return reservationRepository.findByRestaurantIdOrderByReservationDateDescReservationTimeDesc(restaurantId, pageable)
+        return reservationRepository.findByRestaurantIdOrderByReservationDateAscReservationTimeAsc(restaurantId, pageable)
                 .map(ReservationResponse::from);
     }
 

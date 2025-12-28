@@ -97,7 +97,7 @@ public class PartnerService {
             Long restaurantId = restaurant.getId();
             
             // 예약 통계
-            totalReservations += reservationRepository.findByRestaurantIdOrderByReservationDateDesc(restaurantId).size();
+            totalReservations += reservationRepository.findByRestaurantIdOrderByReservationDateAsc(restaurantId).size();
             todayReservations += reservationRepository.countByRestaurantIdAndCreatedAtBetween(restaurantId, todayStart, todayEnd);
             weekReservations += reservationRepository.countByRestaurantIdAndCreatedAtBetween(restaurantId, weekStart, todayEnd);
             
@@ -133,7 +133,7 @@ public class PartnerService {
         stats.put("reviewCount", reviewRepository.countByRestaurantIdAndDeletedAtIsNull(restaurantId));
         stats.put("followerCount", followRepository.countByRestaurantId(restaurantId));
         stats.put("avgRating", reviewRepository.findAverageRatingByRestaurantId(restaurantId).orElse(0.0));
-        stats.put("reservationCount", reservationRepository.findByRestaurantIdOrderByReservationDateDesc(restaurantId).size());
+        stats.put("reservationCount", reservationRepository.findByRestaurantIdOrderByReservationDateAsc(restaurantId).size());
         
         return stats;
     }
