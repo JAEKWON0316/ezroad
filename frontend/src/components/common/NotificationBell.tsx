@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Bell, MoreHorizontal, BellOff, Trash2 } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Bell, BellOff, Trash2, CheckCheck, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useNotifications, Notification } from '@/context/NotificationContext';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -12,16 +11,25 @@ import Avatar from '@/components/common/Avatar';
 import { getNotificationIcon, getNotificationUrl } from '@/utils/notificationUtils';
 
 export function NotificationBell() {
-  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
+  const { 
+    notifications, 
+    unreadCount, 
+    markAsRead, 
+    markAllAsRead, 
+    deleteNotification,
+    fetchNotifications,
+    isLoading 
+  } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
+  const [displayCount, setDisplayCount] = useState(10);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
 
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
+        setDisplayCount(10); // Reset display count when closing
       }
     }
 
@@ -29,12 +37,26 @@ export function NotificationBell() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Fetch notifications when dropdown opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchNotifications();
+    }
+  }, [isOpen, fetchNotifications]);
+
   const handleNotificationClick = async (notification: Notification) => {
     if (!notification.isRead && notification.id) {
       await markAsRead(notification.id);
     }
     setIsOpen(false);
   };
+
+  const handleLoadMore = useCallback(() => {
+    setDisplayCount(prev => prev + 10);
+  }, []);
+
+  const displayedNotifications = notifications.slice(0, displayCount);
+  const hasMore = notifications.length > displayCount;
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -84,29 +106,24 @@ export function NotificationBell() {
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-1">
-                {unreadCount > 0 && (
-                  <button
-                    onClick={() => markAllAsRead()}
-                    className="text-xs font-semibold text-gray-500 hover:text-orange-600 px-3 py-1.5 rounded-lg hover:bg-orange-50 transition-colors"
-                  >
-                    모두 읽음
-                  </button>
-                )}
-                <Link
-                  href="/notifications"
-                  onClick={() => setIsOpen(false)}
-                  className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                  title="전체보기"
+              {unreadCount > 0 && (
+                <button
+                  onClick={() => markAllAsRead()}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-orange-600 px-3 py-1.5 rounded-lg hover:bg-orange-50 transition-colors"
                 >
-                  <MoreHorizontal className="w-5 h-5" />
-                </Link>
-              </div>
+                  <CheckCheck className="w-4 h-4" />
+                  모두 읽음
+                </button>
+              )}
             </div>
 
             {/* Notification List */}
             <div className="flex-1 overflow-y-auto scrollbar-hide">
-              {notifications.length === 0 ? (
+              {isLoading ? (
+                <div className="flex items-center justify-center py-16">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500" />
+                </div>
+              ) : notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
                   <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
                     <BellOff className="w-8 h-8 text-gray-300" />
@@ -115,30 +132,40 @@ export function NotificationBell() {
                   <p className="text-sm text-gray-500">새로운 소식이 도착하면 알려드릴게요!</p>
                 </div>
               ) : (
-                <ul className="divide-y divide-gray-50">
-                  {notifications.slice(0, 10).map((notification) => (
-                    <NotificationItem
-                      key={notification.id || notification.createdAt}
-                      notification={notification}
-                      onClick={() => handleNotificationClick(notification)}
-                      onDelete={() => notification.id && deleteNotification(notification.id)}
-                    />
-                  ))}
-                </ul>
+                <>
+                  <ul className="divide-y divide-gray-50">
+                    {displayedNotifications.map((notification) => (
+                      <NotificationItem
+                        key={notification.id || notification.createdAt}
+                        notification={notification}
+                        onClick={() => handleNotificationClick(notification)}
+                        onDelete={() => notification.id && deleteNotification(notification.id)}
+                      />
+                    ))}
+                  </ul>
+                  
+                  {/* Load More Button */}
+                  {hasMore && (
+                    <div className="p-3 border-t border-gray-100/50">
+                      <button
+                        onClick={handleLoadMore}
+                        className="flex items-center justify-center gap-2 w-full py-2.5 text-sm font-medium text-gray-600 hover:text-orange-600 bg-gray-50 hover:bg-orange-50 rounded-xl transition-all"
+                      >
+                        <ChevronDown className="w-4 h-4" />
+                        더보기 ({notifications.length - displayCount}개 남음)
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
-            {/* Footer */}
+            {/* Footer - 알림 정보 */}
             {notifications.length > 0 && (
-              <div className="p-3 bg-gray-50/50 border-t border-gray-100/50">
-                <Link
-                  href="/notifications"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center justify-center gap-2 w-full py-2.5 text-sm font-bold text-gray-600 hover:text-orange-600 bg-white hover:bg-orange-50 rounded-xl border border-gray-200 hover:border-orange-100 transition-all shadow-sm hover:shadow"
-                >
-                  <MoreHorizontal className="w-4 h-4" />
-                  전체 알림 보기
-                </Link>
+              <div className="px-4 py-2 bg-gray-50/50 border-t border-gray-100/50">
+                <p className="text-xs text-center text-gray-400">
+                  알림은 7일 후 자동으로 삭제됩니다
+                </p>
               </div>
             )}
           </motion.div>
@@ -159,6 +186,8 @@ function NotificationItem({ notification, onClick, onDelete }: NotificationItemP
     addSuffix: true,
     locale: ko,
   });
+
+  const url = getNotificationUrl(notification);
 
   const content = (
     <motion.div
@@ -214,10 +243,10 @@ function NotificationItem({ notification, onClick, onDelete }: NotificationItemP
     </motion.div>
   );
 
-  if (notification.linkUrl) {
+  if (url) {
     return (
       <li onClick={onClick}>
-        <Link href={notification.linkUrl} className="block">
+        <Link href={url} className="block">
           {content}
         </Link>
       </li>
@@ -230,4 +259,3 @@ function NotificationItem({ notification, onClick, onDelete }: NotificationItemP
     </li>
   );
 }
-

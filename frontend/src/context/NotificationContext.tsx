@@ -29,7 +29,7 @@ export interface Notification {
 
 interface NotificationContextType {
   notifications: Notification[];
-  lastNotification: Notification | null; // ✅ 추가
+  lastNotification: Notification | null;
   unreadCount: number;
   isConnected: boolean;
   isLoading: boolean;
@@ -46,8 +46,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [lastNotification, setLastNotification] =
-    useState<Notification | null>(null); // ✅ 추가
+  const [lastNotification, setLastNotification] = useState<Notification | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -55,11 +54,14 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const handleNotification = useCallback((notification: Notification) => {
     console.log('[Notification] Received:', notification);
 
-    // ✅ Waiting 페이지에서 사용하는 핵심
     setLastNotification(notification);
 
-    // 알림 목록 업데이트
-    setNotifications(prev => [notification, ...prev]);
+    // 알림 목록 업데이트 (중복 방지)
+    setNotifications(prev => {
+      const exists = prev.some(n => n.id === notification.id);
+      if (exists) return prev;
+      return [notification, ...prev];
+    });
 
     // 읽지 않은 알림 수 증가
     if (!notification.isRead) {
@@ -77,14 +79,20 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     onNotification: handleNotification,
   });
 
-  // 알림 목록 조회
+  // 알림 목록 조회 + 읽지 않은 수 동시 조회
   const fetchNotifications = useCallback(async () => {
     if (!isAuthenticated) return;
 
     setIsLoading(true);
     try {
-      const response = await api.get('/notifications?size=20');
-      setNotifications(response.data.content || []);
+      // 두 API를 병렬로 호출
+      const [notificationsRes, unreadRes] = await Promise.all([
+        api.get('/notifications?size=50'),
+        api.get('/notifications/unread-count')
+      ]);
+
+      setNotifications(notificationsRes.data.content || []);
+      setUnreadCount(unreadRes.data.count || 0);
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
     } finally {
@@ -92,22 +100,16 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     }
   }, [isAuthenticated]);
 
-  // 읽지 않은 알림 수 조회
-  const fetchUnreadCount = useCallback(async () => {
-    if (!isAuthenticated) return;
-
-    try {
-      const response = await api.get('/notifications/unread-count');
-      setUnreadCount(response.data.count || 0);
-    } catch (error) {
-      console.error('Failed to fetch unread count:', error);
-    }
-  }, [isAuthenticated]);
-
   // 단일 알림 읽음 처리
   const markAsRead = useCallback(async (id: number) => {
+    // 이미 읽음 상태인지 확인
+    const notification = notifications.find(n => n.id === id);
+    if (!notification || notification.isRead) return;
+
     try {
       await api.patch(`/notifications/${id}/read`);
+      
+      // 로컬 상태 업데이트
       setNotifications(prev =>
         prev.map(n => (n.id === id ? { ...n, isRead: true } : n))
       );
@@ -115,10 +117,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Failed to mark as read:', error);
     }
-  }, []);
+  }, [notifications]);
 
   // 모든 알림 읽음 처리
   const markAllAsRead = useCallback(async () => {
+    if (unreadCount === 0) return;
+
     try {
       await api.patch('/notifications/read-all');
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
@@ -126,35 +130,42 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Failed to mark all as read:', error);
     }
-  }, []);
+  }, [unreadCount]);
 
   // 알림 삭제
   const deleteNotification = useCallback(async (id: number) => {
+    const notification = notifications.find(n => n.id === id);
+    
     try {
       await api.delete(`/notifications/${id}`);
+      
+      // 삭제한 알림이 읽지 않은 상태였으면 카운트 감소
+      if (notification && !notification.isRead) {
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+      
       setNotifications(prev => prev.filter(n => n.id !== id));
     } catch (error) {
       console.error('Failed to delete notification:', error);
     }
-  }, []);
+  }, [notifications]);
 
   // 로그인 / 로그아웃 시 처리
   useEffect(() => {
     if (isAuthenticated) {
       fetchNotifications();
-      fetchUnreadCount();
     } else {
       setNotifications([]);
       setUnreadCount(0);
       setLastNotification(null);
     }
-  }, [isAuthenticated, fetchNotifications, fetchUnreadCount]);
+  }, [isAuthenticated, fetchNotifications]);
 
   return (
     <NotificationContext.Provider
       value={{
         notifications,
-        lastNotification, // ✅ 제공
+        lastNotification,
         unreadCount,
         isConnected,
         isLoading,
