@@ -3,25 +3,31 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronLeft, Clock, Users, X, Hash, Coffee, TrendingUp } from 'lucide-react';
+import { 
+  ChevronLeft, 
+  Clock, 
+  Users, 
+  X, 
+  Hash, 
+  Coffee, 
+  TrendingUp,
+  Bell,
+  CheckCircle,
+  XCircle,
+  ChevronDown,
+  ChevronUp,
+  RefreshCw
+} from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/context/NotificationContext';
 import { waitingApi } from '@/lib/api';
 import { Waiting, PageResponse, WaitingQueueUpdate } from '@/types';
 import Button from '@/components/common/Button';
 import Loading from '@/components/common/Loading';
-import CardListSkeleton from '@/components/common/CardListSkeleton';
-import Pagination from '@/components/common/Pagination';
 import Modal from '@/components/common/Modal';
 import toast from 'react-hot-toast';
-
-const statusStyles: Record<string, string> = {
-  WAITING: 'bg-purple-100/80 text-purple-700 border-purple-200',
-  CALLED: 'bg-blue-100/80 text-blue-700 border-blue-200 animate-pulse',
-  SEATED: 'bg-green-100/80 text-green-700 border-green-200',
-  CANCELLED: 'bg-red-100/80 text-red-700 border-red-200',
-  NO_SHOW: 'bg-gray-100/80 text-gray-700 border-gray-200',
-};
+import { format } from 'date-fns';
+import { ko } from 'date-fns/locale';
 
 const statusLabels: Record<string, string> = {
   WAITING: '대기중',
@@ -38,30 +44,37 @@ export default function MyWaitingsPage() {
 
   const [waitings, setWaitings] = useState<Waiting[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [page, setPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [cancelModal, setCancelModal] = useState<{ isOpen: boolean; id: number | null }>({
     isOpen: false,
     id: null,
   });
   const [isCancelling, setIsCancelling] = useState(false);
-  
-  // 🔴 실시간 순번 정보 (WaitingQueueUpdate)
   const [queueUpdates, setQueueUpdates] = useState<Map<number, WaitingQueueUpdate>>(new Map());
 
-  const fetchWaitings = useCallback(async () => {
-    setIsLoading(true);
+  // 현재 활성 웨이팅 (대기중 또는 호출중)
+  const activeWaitings = waitings.filter(w => w.status === 'WAITING' || w.status === 'CALLED');
+  // 지난 웨이팅 (착석, 취소, 노쇼)
+  const historyWaitings = waitings.filter(w => 
+    w.status === 'SEATED' || w.status === 'CANCELLED' || w.status === 'NO_SHOW'
+  );
+
+  const fetchWaitings = useCallback(async (showRefresh = false) => {
+    if (showRefresh) setIsRefreshing(true);
+    else setIsLoading(true);
+    
     try {
-      const response: PageResponse<Waiting> = await waitingApi.getMyWaitings(page, 10);
+      const response: PageResponse<Waiting> = await waitingApi.getMyWaitings(0, 50);
       setWaitings(response.content);
-      setTotalPages(response.totalPages);
     } catch (error) {
       console.error('Failed to fetch waitings:', error);
       toast.error('대기 목록을 불러오는데 실패했습니다');
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
-  }, [page]);
+  }, []);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -73,22 +86,17 @@ export default function MyWaitingsPage() {
     }
   }, [authLoading, isAuthenticated, router, fetchWaitings]);
 
-  // 🔴 WebSocket 알림 수신 시 처리
+  // WebSocket 알림 수신 시 처리
   useEffect(() => {
     if (!lastNotification) return;
-    
     const { type } = lastNotification;
     
-    // 대기 관련 알림이면 목록 새로고침
     if (type === 'WAITING_CALLED' || type === 'WAITING_CANCELLED') {
-      console.log('[MyWaitings] 대기 상태 변경 알림 수신, 목록 새로고침');
-      fetchWaitings();
+      fetchWaitings(true);
     }
     
-    // 순번 업데이트 알림 처리
     if (type === 'WAITING_QUEUE_UPDATE') {
       const update = lastNotification as unknown as WaitingQueueUpdate;
-      console.log('[MyWaitings] 순번 업데이트:', update);
       setQueueUpdates(prev => {
         const newMap = new Map(prev);
         newMap.set(update.waitingId, update);
@@ -105,7 +113,7 @@ export default function MyWaitingsPage() {
       await waitingApi.cancel(cancelModal.id);
       toast.success('대기가 취소되었습니다');
       setCancelModal({ isOpen: false, id: null });
-      fetchWaitings();
+      fetchWaitings(true);
     } catch {
       toast.error('대기 취소에 실패했습니다');
     } finally {
@@ -113,183 +121,234 @@ export default function MyWaitingsPage() {
     }
   };
 
-  // 대기 순번 정보 가져오기
   const getQueueInfo = (waiting: Waiting) => {
-    // WebSocket 업데이트가 있으면 우선 사용 (더 최신 정보)
     const update = queueUpdates.get(waiting.id);
     if (update) {
       return {
         positionInQueue: update.positionInQueue,
         estimatedWaitTime: update.estimatedWaitTime,
-        totalWaitingCount: update.totalWaitingCount,
       };
     }
-    // API 응답 데이터 사용 (초기 로딩 시)
     return {
       positionInQueue: waiting.positionInQueue ?? null,
       estimatedWaitTime: waiting.estimatedWaitTime,
-      totalWaitingCount: waiting.totalWaitingCount ?? null,
     };
   };
 
-  if (authLoading) {
+  if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-white">
         <Loading size="lg" />
       </div>
     );
   }
 
+
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-white pb-20">
+      {/* Header */}
       <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-100">
-        <div className="max-w-4xl mx-auto px-4 h-16 flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors">
-            <ChevronLeft className="h-6 w-6 text-gray-700" />
+        <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button onClick={() => router.back()} className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors">
+              <ChevronLeft className="h-6 w-6 text-gray-700" />
+            </button>
+            <h1 className="text-xl font-bold text-gray-900">웨이팅 내역</h1>
+          </div>
+          <button
+            onClick={() => fetchWaitings(true)}
+            disabled={isRefreshing}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <RefreshCw className={`w-5 h-5 text-gray-500 ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
-          <h1 className="text-xl font-bold text-gray-900">웨이팅 내역</h1>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {isLoading ? (
-          <CardListSkeleton viewMode="list" count={5} />
-        ) : waitings.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-gray-200 shadow-sm">
-            <div className="w-20 h-20 bg-purple-50 rounded-full flex items-center justify-center mb-6">
-              <Coffee className="h-10 w-10 text-purple-400" />
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+        {/* 현재 웨이팅이 없을 때 */}
+        {activeWaitings.length === 0 && historyWaitings.length === 0 && (
+          <div className="bg-white rounded-3xl border border-gray-100 p-12 text-center shadow-sm">
+            <div className="w-20 h-20 bg-purple-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Coffee className="w-10 h-10 text-purple-300" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">대기 내역이 없습니다</h3>
-            <p className="text-gray-500 mb-8 text-center max-w-xs">
-              긴 줄 서지 말고<br />스마트하게 웨이팅을 신청해보세요!
-            </p>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">웨이팅 내역이 없습니다</h3>
+            <p className="text-gray-500 mb-6">맛집에서 스마트하게 웨이팅을 신청해보세요!</p>
             <Link href="/restaurants">
-              <Button size="lg" className="bg-purple-600 hover:bg-purple-700 shadow-lg shadow-purple-200">맛집 둘러보기</Button>
+              <Button className="bg-purple-600 hover:bg-purple-700">맛집 둘러보기</Button>
             </Link>
           </div>
-        ) : (
-          <>
-            <div className="grid gap-6">
-              {waitings.map((waiting, index) => {
-                const queueInfo = getQueueInfo(waiting);
-                
-                return (
+        )}
+
+        {/* 현재 웨이팅만 없을 때 */}
+        {activeWaitings.length === 0 && historyWaitings.length > 0 && (
+          <div className="bg-purple-50 rounded-2xl p-6 text-center border border-purple-100">
+            <p className="text-purple-600 font-medium">현재 대기중인 웨이팅이 없습니다</p>
+          </div>
+        )}
+
+        {/* 🔴 현재 웨이팅 (강조) */}
+        {activeWaitings.map((waiting) => {
+          const queueInfo = getQueueInfo(waiting);
+          const isCalled = waiting.status === 'CALLED';
+
+          return (
+            <div
+              key={waiting.id}
+              className={`rounded-3xl overflow-hidden shadow-lg ${
+                isCalled 
+                  ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white animate-pulse' 
+                  : 'bg-white border border-gray-100'
+              }`}
+            >
+              {/* 호출 알림 배너 */}
+              {isCalled && (
+                <div className="bg-white/20 px-6 py-3 flex items-center justify-center gap-2">
+                  <Bell className="w-5 h-5 animate-bounce" />
+                  <span className="font-bold">순서가 되었습니다! 매장으로 와주세요</span>
+                </div>
+              )}
+
+              <div className="p-6">
+                {/* 식당명 */}
+                <div className="flex items-center justify-between mb-6">
+                  <Link href={`/restaurants/${waiting.restaurantId}`}>
+                    <h3 className={`text-xl font-bold ${isCalled ? 'text-white' : 'text-gray-900'} hover:underline`}>
+                      {waiting.restaurantName || '식당 정보 없음'}
+                    </h3>
+                  </Link>
+                  <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+                    isCalled ? 'bg-white/20 text-white' : 'bg-purple-100 text-purple-600'
+                  }`}>
+                    {statusLabels[waiting.status]}
+                  </span>
+                </div>
+
+                {/* 대기번호 크게 */}
+                <div className="text-center py-6">
+                  <p className={`text-sm font-medium mb-2 ${isCalled ? 'text-white/70' : 'text-gray-500'}`}>
+                    대기번호
+                  </p>
+                  <div className={`text-6xl font-black ${isCalled ? 'text-white' : 'text-purple-600'}`}>
+                    #{waiting.waitingNumber}
+                  </div>
+                </div>
+
+                {/* 내 앞 팀 & 예상 대기시간 */}
+                <div className={`grid grid-cols-2 gap-4 p-4 rounded-2xl mb-6 ${
+                  isCalled ? 'bg-white/10' : 'bg-purple-50'
+                }`}>
+                  <div className="text-center">
+                    <p className={`text-sm mb-1 ${isCalled ? 'text-white/70' : 'text-gray-500'}`}>내 앞</p>
+                    <p className={`text-2xl font-black ${isCalled ? 'text-white' : 'text-purple-600'}`}>
+                      {queueInfo.positionInQueue !== null ? `${queueInfo.positionInQueue}팀` : '-'}
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className={`text-sm mb-1 ${isCalled ? 'text-white/70' : 'text-gray-500'}`}>예상 대기</p>
+                    <p className={`text-2xl font-black ${isCalled ? 'text-white' : 'text-purple-600'}`}>
+                      약 {queueInfo.estimatedWaitTime || 0}분
+                    </p>
+                  </div>
+                </div>
+
+                {/* 인원 & 등록시간 */}
+                <div className={`flex items-center justify-between text-sm ${
+                  isCalled ? 'text-white/70' : 'text-gray-500'
+                }`}>
+                  <span className="flex items-center gap-1">
+                    <Users className="w-4 h-4" />
+                    {waiting.guestCount}명
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    {format(new Date(waiting.createdAt), 'HH:mm')} 등록
+                  </span>
+                </div>
+
+                {/* 취소 버튼 */}
+                {waiting.status === 'WAITING' && (
+                  <button
+                    onClick={() => setCancelModal({ isOpen: true, id: waiting.id })}
+                    className="w-full mt-6 py-3 border border-gray-200 rounded-xl text-gray-500 font-medium hover:bg-gray-50 transition-colors"
+                  >
+                    대기 취소
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+
+
+        {/* 📋 지난 웨이팅 기록 (접기/펼치기) */}
+        {historyWaitings.length > 0 && (
+          <div>
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className="w-full flex items-center justify-between p-4 bg-gray-100 hover:bg-gray-200 rounded-2xl transition-colors"
+            >
+              <span className="font-bold text-gray-700">지난 웨이팅 기록 ({historyWaitings.length}건)</span>
+              {showHistory ? (
+                <ChevronUp className="w-5 h-5 text-gray-500" />
+              ) : (
+                <ChevronDown className="w-5 h-5 text-gray-500" />
+              )}
+            </button>
+
+            {showHistory && (
+              <div className="mt-3 space-y-2">
+                {historyWaitings.map((waiting) => (
                   <div
                     key={waiting.id}
-                    className="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-300 hover:-translate-y-1 block relative"
-                    style={{ animationDelay: `${index * 50}ms` }}
+                    className="bg-white rounded-xl p-4 border border-gray-100 flex items-center gap-4"
                   >
-                    {/* Status Bar */}
-                    <div className={`h-1.5 w-full ${waiting.status === 'SEATED' ? 'bg-green-500' :
-                      waiting.status === 'CALLED' ? 'bg-blue-500' :
-                        waiting.status === 'WAITING' ? 'bg-purple-500' :
-                          waiting.status === 'CANCELLED' ? 'bg-red-400' : 'bg-gray-300'
-                      }`} />
-
-                    <div className="p-6">
-                      <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
-                        <div>
-                          <Link href={`/restaurants/${waiting.restaurantId}`}>
-                            <h3 className="text-xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors flex items-center gap-2">
-                              {waiting.restaurantName || '식당 정보 없음'}
-                              <span className="bg-gray-100 text-gray-500 text-xs px-2 py-1 rounded-md font-normal">웨이팅</span>
-                            </h3>
-                          </Link>
-                          <p className="text-sm text-gray-500 mt-2">
-                            신청일시: <span className="font-medium text-gray-700">{new Date(waiting.createdAt).toLocaleDateString()} {new Date(waiting.createdAt).toLocaleTimeString()}</span>
-                          </p>
-                        </div>
-                        <span className={`px-4 py-1.5 rounded-full text-sm font-bold border ${statusStyles[waiting.status]}`}>
-                          {statusLabels[waiting.status]}
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 p-5 bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-100">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm border border-gray-100">
-                            <Hash className="h-5 w-5 text-purple-500" />
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-xs text-gray-500 font-medium">대기번호</span>
-                            <span className="font-bold text-gray-900 text-lg">{waiting.waitingNumber}번</span>
-                          </div>
-                        </div>
-                        
-                        {/* 🔴 내 앞에 몇 팀 (실시간) */}
-                        {waiting.status === 'WAITING' && (
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm border border-purple-100">
-                              <TrendingUp className="h-5 w-5 text-purple-500" />
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="text-xs text-gray-500 font-medium">내 앞에</span>
-                              <span className={`font-bold text-lg ${queueInfo.positionInQueue !== null ? 'text-purple-600' : 'text-gray-900'}`}>
-                                {queueInfo.positionInQueue !== null 
-                                  ? `${queueInfo.positionInQueue}팀` 
-                                  : '-'}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                        
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm border border-gray-100">
-                            <Users className="h-5 w-5 text-purple-500" />
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-xs text-gray-500 font-medium">인원</span>
-                            <span className="font-bold text-gray-900 text-lg">{waiting.guestCount}명</span>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm border border-gray-100">
-                            <Clock className="h-5 w-5 text-purple-500" />
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-xs text-gray-500 font-medium">예상대기</span>
-                            <span className={`font-bold text-lg ${waiting.status === 'WAITING' ? 'text-purple-600 animate-pulse' : 'text-gray-900'}`}>
-                              약 {queueInfo.estimatedWaitTime || 0}분
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {waiting.status === 'CALLED' && (
-                        <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100 animate-bounce-subtle">
-                          <p className="text-blue-700 font-bold flex items-center justify-center gap-2">
-                            🔔 순서가 되었습니다! 지금 바로 매장으로 와주세요.
-                          </p>
-                        </div>
-                      )}
-
-                      {waiting.status === 'WAITING' && (
-                        <div className="mt-6 flex justify-end pt-4 border-t border-gray-100">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setCancelModal({ isOpen: true, id: waiting.id })}
-                            className="hover:bg-red-50 hover:text-red-500 hover:border-red-200"
-                          >
-                            대기 취소하기
-                          </Button>
-                        </div>
+                    {/* 상태 아이콘 */}
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      waiting.status === 'SEATED' 
+                        ? 'bg-green-100' 
+                        : waiting.status === 'CANCELLED' 
+                        ? 'bg-red-50' 
+                        : 'bg-gray-100'
+                    }`}>
+                      {waiting.status === 'SEATED' ? (
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-red-400" />
                       )}
                     </div>
-                  </div>
-                );
-              })}
-            </div>
 
-            {totalPages > 1 && (
-              <div className="mt-12 flex justify-center">
-                <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+                    {/* 정보 */}
+                    <div className="flex-1 min-w-0">
+                      <Link href={`/restaurants/${waiting.restaurantId}`}>
+                        <h4 className="font-bold text-gray-900 truncate hover:text-purple-600">
+                          {waiting.restaurantName || '식당'}
+                        </h4>
+                      </Link>
+                      <p className="text-sm text-gray-500">
+                        {format(new Date(waiting.createdAt), 'M/d (EEE) HH:mm', { locale: ko })} · {waiting.guestCount}명
+                      </p>
+                    </div>
+
+                    {/* 상태 */}
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                      waiting.status === 'SEATED' 
+                        ? 'bg-green-100 text-green-600' 
+                        : waiting.status === 'CANCELLED'
+                        ? 'bg-red-50 text-red-500'
+                        : 'bg-gray-100 text-gray-500'
+                    }`}>
+                      {statusLabels[waiting.status]}
+                    </span>
+                  </div>
+                ))}
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
 
+      {/* 취소 확인 모달 */}
       <Modal
         isOpen={cancelModal.isOpen}
         onClose={() => setCancelModal({ isOpen: false, id: null })}
@@ -312,11 +371,11 @@ export default function MyWaitingsPage() {
               닫기
             </Button>
             <Button
-              className="flex-1 py-3 bg-red-500 hover:bg-red-600 shadow-md shadow-red-200"
+              className="flex-1 py-3 bg-red-500 hover:bg-red-600"
               onClick={handleCancelWaiting}
               isLoading={isCancelling}
             >
-              대기 취소 완료
+              대기 취소
             </Button>
           </div>
         </div>
