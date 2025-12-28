@@ -460,7 +460,7 @@ export const adminApi = {
   },
 
   updateMemberRole: async (id: number, role: string): Promise<User> => {
-    const response = await api.put<User>(`/admin/members/${id}/role`, { role });
+    const response = await api.patch<User>(`/admin/members/${id}/role`, { role });
     return response.data;
   },
 
@@ -477,7 +477,7 @@ export const adminApi = {
   },
 
   updateRestaurantStatus: async (id: number, status: string): Promise<Restaurant> => {
-    const response = await api.put<Restaurant>(`/admin/restaurants/${id}/status`, { status });
+    const response = await api.patch<Restaurant>(`/admin/restaurants/${id}/status`, { status });
     return response.data;
   },
 
