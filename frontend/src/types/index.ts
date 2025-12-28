@@ -189,6 +189,9 @@ export interface Waiting {
   status: 'WAITING' | 'CALLED' | 'SEATED' | 'CANCELLED' | 'NO_SHOW';
   createdAt: string;
   updatedAt?: string;
+  // 순번 정보 (API 응답에 포함)
+  positionInQueue?: number;      // 내 앞에 몇 팀 (0이면 맨 앞)
+  totalWaitingCount?: number;    // 전체 대기 팀 수
 }
 
 // Follow Types

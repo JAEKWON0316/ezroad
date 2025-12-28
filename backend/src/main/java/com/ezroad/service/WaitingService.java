@@ -110,19 +110,58 @@ public class WaitingService {
         // 🔔 대기 인원 변경 브로드캐스트 + 기존 대기자들에게 순번 업데이트
         broadcastWaitingUpdate(restaurant.getId(), restaurant.getName());
         
-        return WaitingResponse.from(savedWaiting);
+        // 새로 등록한 대기의 순번 정보 포함해서 반환
+        return WaitingResponse.from(savedWaiting, activeCount, activeCount + 1);
     }
 
-    // 내 대기 목록
+    // 내 대기 목록 (순번 정보 포함)
     public Page<WaitingResponse> getMyWaitings(Long memberId, Pageable pageable) {
         Page<Waiting> waitings = waitingRepository.findByMemberId(memberId, pageable);
-        return waitings.map(WaitingResponse::from);
+        LocalDateTime startOfToday = LocalDate.now(KOREA_ZONE).atStartOfDay();
+        
+        return waitings.map(waiting -> {
+            // WAITING 상태인 경우에만 순번 계산
+            if (waiting.getStatus() == WaitingStatus.WAITING) {
+                int position = calculatePosition(waiting, startOfToday);
+                int totalCount = getActiveWaitingCount(waiting.getRestaurant().getId(), startOfToday);
+                return WaitingResponse.from(waiting, position, totalCount);
+            }
+            return WaitingResponse.from(waiting);
+        });
     }
 
-    // 식당별 대기 목록 (사업자용)
+    // 식당별 대기 목록 (사업자용, 순번 정보 포함)
     public Page<WaitingResponse> getWaitingsByRestaurant(Long restaurantId, Pageable pageable) {
         Page<Waiting> waitings = waitingRepository.findByRestaurantId(restaurantId, pageable);
-        return waitings.map(WaitingResponse::from);
+        LocalDateTime startOfToday = LocalDate.now(KOREA_ZONE).atStartOfDay();
+        int totalCount = getActiveWaitingCount(restaurantId, startOfToday);
+        
+        return waitings.map(waiting -> {
+            // WAITING 상태인 경우에만 순번 계산
+            if (waiting.getStatus() == WaitingStatus.WAITING) {
+                int position = calculatePosition(waiting, startOfToday);
+                return WaitingResponse.from(waiting, position, totalCount);
+            }
+            return WaitingResponse.from(waiting);
+        });
+    }
+    
+    // 순번 계산 (내 앞에 몇 팀)
+    private int calculatePosition(Waiting waiting, LocalDateTime startOfToday) {
+        Integer count = waitingRepository.countWaitingsBeforeMe(
+                waiting.getRestaurant().getId(),
+                waiting.getWaitingNumber(),
+                WaitingStatus.WAITING,
+                startOfToday
+        );
+        return count != null ? count : 0;
+    }
+    
+    // 현재 대기중인 팀 수
+    private int getActiveWaitingCount(Long restaurantId, LocalDateTime startOfToday) {
+        Integer count = waitingRepository.countTodayWaitingsByRestaurantAndStatus(
+                restaurantId, WaitingStatus.WAITING, startOfToday);
+        return count != null ? count : 0;
     }
 
     // 대기 상세 조회
@@ -134,6 +173,14 @@ public class WaitingService {
         if (!waiting.getMember().getId().equals(memberId) &&
             !waiting.getRestaurant().getOwner().getId().equals(memberId)) {
             throw new UnauthorizedException("조회 권한이 없습니다");
+        }
+        
+        // WAITING 상태면 순번 정보 포함
+        if (waiting.getStatus() == WaitingStatus.WAITING) {
+            LocalDateTime startOfToday = LocalDate.now(KOREA_ZONE).atStartOfDay();
+            int position = calculatePosition(waiting, startOfToday);
+            int totalCount = getActiveWaitingCount(waiting.getRestaurant().getId(), startOfToday);
+            return WaitingResponse.from(waiting, position, totalCount);
         }
         
         return WaitingResponse.from(waiting);

@@ -50,4 +50,19 @@ public interface WaitingRepository extends JpaRepository<Waiting, Long> {
     @EntityGraph(attributePaths = {"member"})
     @Query("SELECT w FROM Waiting w WHERE w.restaurant.id = :restaurantId AND w.status = :status AND w.createdAt >= :startOfDay ORDER BY w.waitingNumber ASC")
     List<Waiting> findActiveWaitingsByRestaurant(@Param("restaurantId") Long restaurantId, @Param("status") WaitingStatus status, @Param("startOfDay") LocalDateTime startOfDay);
+    
+    // ==================== 순번 계산 쿼리 ====================
+    
+    // 나보다 앞에 있는 대기 수 (내 앞에 몇 팀?)
+    @Query("SELECT COUNT(w) FROM Waiting w " +
+           "WHERE w.restaurant.id = :restaurantId " +
+           "AND w.waitingNumber < :myNumber " +
+           "AND w.status = :status " +
+           "AND w.createdAt >= :startOfDay")
+    Integer countWaitingsBeforeMe(
+            @Param("restaurantId") Long restaurantId,
+            @Param("myNumber") Integer myNumber,
+            @Param("status") WaitingStatus status,
+            @Param("startOfDay") LocalDateTime startOfDay
+    );
 }

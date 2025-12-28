@@ -115,6 +115,7 @@ export default function MyWaitingsPage() {
 
   // 대기 순번 정보 가져오기
   const getQueueInfo = (waiting: Waiting) => {
+    // WebSocket 업데이트가 있으면 우선 사용 (더 최신 정보)
     const update = queueUpdates.get(waiting.id);
     if (update) {
       return {
@@ -123,11 +124,11 @@ export default function MyWaitingsPage() {
         totalWaitingCount: update.totalWaitingCount,
       };
     }
-    // 기본값 (API에서 받은 정보)
+    // API 응답 데이터 사용 (초기 로딩 시)
     return {
-      positionInQueue: null,
+      positionInQueue: waiting.positionInQueue ?? null,
       estimatedWaitTime: waiting.estimatedWaitTime,
-      totalWaitingCount: null,
+      totalWaitingCount: waiting.totalWaitingCount ?? null,
     };
   };
 
