@@ -42,6 +42,24 @@ interface NotificationContextType {
 const NotificationContext =
   createContext<NotificationContextType | undefined>(undefined);
 
+// API 응답을 정규화하는 함수 (isRead/read 둘 다 처리)
+function normalizeNotification(data: any): Notification {
+  return {
+    id: data.id,
+    type: data.type,
+    title: data.title,
+    message: data.message,
+    referenceId: data.referenceId,
+    referenceType: data.referenceType,
+    linkUrl: data.linkUrl,
+    // isRead 또는 read 둘 다 체크
+    isRead: data.isRead === true || data.read === true,
+    createdAt: data.createdAt,
+    senderNickname: data.senderNickname,
+    senderProfileImage: data.senderProfileImage,
+  };
+}
+
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
 
@@ -51,7 +69,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
 
   // 🔔 새 알림 수신 처리 (WebSocket)
-  const handleNotification = useCallback((notification: Notification) => {
+  const handleNotification = useCallback((data: any) => {
+    const notification = normalizeNotification(data);
     console.log('[Notification] Received:', notification);
 
     setLastNotification(notification);
@@ -79,20 +98,36 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     onNotification: handleNotification,
   });
 
-  // 알림 목록 조회 + 읽지 않은 수 동시 조회
+  // 읽지 않은 알림 수 조회
+  const fetchUnreadCount = useCallback(async () => {
+    if (!isAuthenticated) return;
+    try {
+      const response = await api.get('/notifications/unread-count');
+      setUnreadCount(response.data.count || 0);
+    } catch (error) {
+      console.error('Failed to fetch unread count:', error);
+    }
+  }, [isAuthenticated]);
+
+  // 알림 목록 조회
   const fetchNotifications = useCallback(async () => {
     if (!isAuthenticated) return;
 
     setIsLoading(true);
     try {
-      // 두 API를 병렬로 호출
       const [notificationsRes, unreadRes] = await Promise.all([
         api.get('/notifications?size=50'),
         api.get('/notifications/unread-count')
       ]);
 
-      setNotifications(notificationsRes.data.content || []);
+      // 응답 정규화
+      const normalizedNotifications = (notificationsRes.data.content || [])
+        .map(normalizeNotification);
+      
+      setNotifications(normalizedNotifications);
       setUnreadCount(unreadRes.data.count || 0);
+      
+      console.log('[Notification] Fetched:', normalizedNotifications.length, 'unread:', unreadRes.data.count);
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
     } finally {
@@ -104,10 +139,14 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const markAsRead = useCallback(async (id: number) => {
     // 이미 읽음 상태인지 확인
     const notification = notifications.find(n => n.id === id);
-    if (!notification || notification.isRead) return;
+    if (!notification || notification.isRead) {
+      console.log('[Notification] Already read or not found:', id);
+      return;
+    }
 
     try {
       await api.patch(`/notifications/${id}/read`);
+      console.log('[Notification] Marked as read:', id);
       
       // 로컬 상태 업데이트
       setNotifications(prev =>
@@ -125,6 +164,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
     try {
       await api.patch('/notifications/read-all');
+      console.log('[Notification] Marked all as read');
+      
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
       setUnreadCount(0);
     } catch (error) {
@@ -138,6 +179,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     
     try {
       await api.delete(`/notifications/${id}`);
+      console.log('[Notification] Deleted:', id);
       
       // 삭제한 알림이 읽지 않은 상태였으면 카운트 감소
       if (notification && !notification.isRead) {

@@ -1,6 +1,7 @@
 package com.ezroad.dto.response;
 
 import com.ezroad.entity.Notification;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,7 +19,10 @@ public class NotificationResponse {
     private Long referenceId;
     private String referenceType;
     private String linkUrl;
+    
+    @JsonProperty("isRead")
     private boolean isRead;
+    
     private String createdAt;
     private String senderNickname;
     private String senderProfileImage;
