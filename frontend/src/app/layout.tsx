@@ -2,6 +2,7 @@ import { Noto_Sans_KR, Montserrat } from 'next/font/google';
 import './globals.css';
 import MainLayoutWrapper from '@/components/layout/MainLayoutWrapper';
 import Providers from './providers';
+import { ChatWidget } from '@/components/chat';
 import type { Metadata } from 'next';
 
 const notoSansKR = Noto_Sans_KR({
@@ -74,7 +75,7 @@ export const metadata: Metadata = {
     width: 'device-width',
     initialScale: 1,
     maximumScale: 1,
-    userScalable: false, // Prevent input zooming issues, but consider accessibility if needed
+    userScalable: false,
     viewportFit: 'cover',
   },
 };
@@ -93,6 +94,8 @@ export default function RootLayout({
           <MainLayoutWrapper>
             {children}
           </MainLayoutWrapper>
+          {/* 전역 챗봇 위젯 */}
+          <ChatWidget />
         </Providers>
       </body>
     </html>

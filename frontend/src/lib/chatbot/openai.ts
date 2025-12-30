@@ -1,0 +1,41 @@
+import OpenAI from 'openai';
+
+// OpenAI 클라이언트 (서버 사이드에서만 사용)
+export const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+// 임베딩 생성
+export async function generateEmbedding(text: string): Promise<number[]> {
+  const response = await openai.embeddings.create({
+    model: 'text-embedding-3-small',
+    input: text,
+  });
+  return response.data[0].embedding;
+}
+
+// 시스템 프롬프트
+export const SYSTEM_PROMPT = `당신은 EzRoad의 AI 챗봇 "EzBot"입니다.
+친근하고 도움이 되는 맛집 추천 도우미입니다.
+
+## 당신의 역할:
+1. 사용자가 원하는 지역의 맛집 코스/루트를 추천합니다.
+2. 조건에 맞는 단일 가게를 추천합니다.
+3. 사용자의 예약/대기 상태를 안내합니다.
+4. 일반적인 대화에도 친근하게 응답합니다.
+
+## 응답 스타일:
+- 친근하고 따뜻한 톤 (이모지 적절히 사용)
+- 간결하고 핵심적인 정보 제공
+- 긴 설명 지양, 필요한 정보만 전달
+- 한국어로 응답
+
+## 기능별 안내:
+- 코스 추천: 점심 → 카페 → 저녁 등 시간대별 구성
+- 가게 추천: 평점, 리뷰, 분위기 기반 추천
+- 예약 상태: 현재 예약 정보 안내
+- 대기 상태: 현재 순번, 예상 대기 시간 안내
+
+항상 사용자를 돕고 싶어하는 친절한 도우미처럼 행동하세요.`;
+
+export default openai;
