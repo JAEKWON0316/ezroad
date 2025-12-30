@@ -16,11 +16,18 @@ const STATUS_TEXT: Record<string, string> = {
   COMPLETED: '완료됨',
 };
 
+const STATUS_EMOJI: Record<string, string> = {
+  PENDING: '⏳',
+  CONFIRMED: '✅',
+  CANCELLED: '❌',
+  COMPLETED: '✔️',
+};
+
 // 날짜 포맷팅
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
   const days = ['일', '월', '화', '수', '목', '금', '토'];
-  return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 (${days[date.getDay()]})`;
+  return `${date.getMonth() + 1}월 ${date.getDate()}일 (${days[date.getDay()]})`;
 }
 
 export async function handleGetReservationStatus(
@@ -92,23 +99,25 @@ export async function handleGetReservationStatus(
       };
     }
 
-    // 5. 예약 있음 - 메시지 생성
-    const reservation = reservations[0]; // 가장 최근 예약
-    const statusEmoji = reservation.status === 'CONFIRMED' ? '✅' : '⏳';
-
+    // 5. 모든 예약 보여주기
     let message = `현재 예약 상태 확인했어요! 📋\n\n`;
-    message += `📍 **${reservation.restaurantName}**\n`;
-    message += `📅 ${formatDate(reservation.reservationDate)} ${reservation.reservationTime}\n`;
-    message += `👥 ${reservation.guestCount}명\n`;
-    message += `${statusEmoji} 상태: ${STATUS_TEXT[reservation.status] || reservation.status}`;
-    
-    if (reservation.request) {
-      message += `\n📝 요청사항: ${reservation.request}`;
-    }
+    message += `총 **${reservations.length}건**의 예약이 있어요!\n\n`;
 
-    if (reservations.length > 1) {
-      message += `\n\n📌 총 ${reservations.length}건의 예약이 있어요!`;
-    }
+    // 각 예약 정보 표시
+    reservations.forEach((reservation, index) => {
+      const emoji = STATUS_EMOJI[reservation.status] || '📌';
+      message += `**${index + 1}. ${reservation.restaurantName}**\n`;
+      message += `   📅 ${formatDate(reservation.reservationDate)} ${reservation.reservationTime}\n`;
+      message += `   👥 ${reservation.guestCount}명 | ${emoji} ${STATUS_TEXT[reservation.status] || reservation.status}`;
+      
+      if (reservation.request) {
+        message += `\n   📝 ${reservation.request}`;
+      }
+      
+      if (index < reservations.length - 1) {
+        message += '\n\n';
+      }
+    });
 
     message += '\n\n예약 변경이나 취소가 필요하시면 말씀해주세요!';
 
@@ -116,8 +125,7 @@ export async function handleGetReservationStatus(
       message,
       reservations,
       actions: [
-        { type: 'link', label: '예약 상세 보기', url: '/mypage/reservations', variant: 'primary' },
-        { type: 'link', label: `${reservation.restaurantName} 보기`, url: `/restaurants/${reservation.restaurantId}`, variant: 'secondary' },
+        { type: 'link', label: '예약 관리하기', url: '/mypage/reservations', variant: 'primary' },
       ],
     };
   } catch (error) {

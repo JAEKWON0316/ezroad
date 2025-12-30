@@ -17,6 +17,14 @@ const STATUS_TEXT: Record<string, string> = {
   NO_SHOW: '노쇼',
 };
 
+const STATUS_EMOJI: Record<string, string> = {
+  WAITING: '⏳',
+  CALLED: '🔔',
+  SEATED: '✅',
+  CANCELLED: '❌',
+  NO_SHOW: '😢',
+};
+
 export async function handleGetWaitingStatus(
   token?: string
 ): Promise<WaitingHandlerResult> {
@@ -80,41 +88,55 @@ export async function handleGetWaitingStatus(
       };
     }
 
-    // 5. 대기 있음 - 메시지 생성
-    const waiting = waitings[0]; // 가장 최근 대기
-    
+    // 5. 호출된 대기가 있는지 확인
+    const calledWaitings = waitings.filter(w => w.status === 'CALLED');
+    const pendingWaitings = waitings.filter(w => w.status === 'WAITING');
+
     let message = '';
-    
-    if (waiting.status === 'CALLED') {
-      // 호출됨 상태
-      message = `🔔 **호출되었어요!**\n\n`;
-      message += `📍 **${waiting.restaurantName}**\n`;
-      message += `🎫 대기번호: #${waiting.waitingNumber}\n\n`;
-      message += `지금 바로 입장해주세요! 🏃‍♂️`;
-    } else {
-      // 대기중 상태
-      message = `현재 대기 상태 확인했어요! ⏳\n\n`;
-      message += `📍 **${waiting.restaurantName}**\n`;
-      message += `🎫 대기번호: #${waiting.waitingNumber}\n`;
-      message += `👥 내 앞 대기: ${waiting.teamAhead}팀\n`;
+
+    // 호출된 대기가 있으면 먼저 알림
+    if (calledWaitings.length > 0) {
+      message += `🔔 **호출되었어요!** 지금 바로 입장해주세요!\n\n`;
+      calledWaitings.forEach((waiting, index) => {
+        message += `**${index + 1}. ${waiting.restaurantName}**\n`;
+        message += `   🎫 대기번호: #${waiting.waitingNumber}\n`;
+        if (index < calledWaitings.length - 1) message += '\n';
+      });
       
-      if (waiting.estimatedWaitTime > 0) {
-        message += `⏱️ 예상 대기시간: 약 ${waiting.estimatedWaitTime}분\n`;
+      if (pendingWaitings.length > 0) {
+        message += '\n\n---\n\n';
       }
-      
-      message += '\n호출되면 바로 알려드릴게요!\n잠시만 기다려주세요 😊';
     }
 
-    if (waitings.length > 1) {
-      message += `\n\n📌 총 ${waitings.length}곳에서 대기중이에요!`;
+    // 대기중인 목록 표시
+    if (pendingWaitings.length > 0) {
+      if (calledWaitings.length === 0) {
+        message += `현재 대기 상태 확인했어요! ⏳\n\n`;
+      }
+      message += `총 **${pendingWaitings.length}곳**에서 대기중이에요!\n\n`;
+
+      pendingWaitings.forEach((waiting, index) => {
+        message += `**${index + 1}. ${waiting.restaurantName}**\n`;
+        message += `   🎫 대기번호: #${waiting.waitingNumber}\n`;
+        message += `   👥 내 앞 대기: ${waiting.teamAhead}팀`;
+        
+        if (waiting.estimatedWaitTime > 0) {
+          message += ` | ⏱️ 약 ${waiting.estimatedWaitTime}분`;
+        }
+        
+        if (index < pendingWaitings.length - 1) {
+          message += '\n\n';
+        }
+      });
+
+      message += '\n\n호출되면 바로 알려드릴게요! 😊';
     }
 
     return {
       message,
       waitings,
       actions: [
-        { type: 'link', label: '대기 현황 보기', url: '/mypage/waitings', variant: 'primary' },
-        { type: 'link', label: `${waiting.restaurantName} 보기`, url: `/restaurants/${waiting.restaurantId}`, variant: 'secondary' },
+        { type: 'link', label: '대기 관리하기', url: '/mypage/waitings', variant: 'primary' },
       ],
     };
   } catch (error) {
