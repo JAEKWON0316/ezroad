@@ -5,6 +5,7 @@
   <img src="https://img.shields.io/badge/Spring_Boot-3.2-6DB33F?style=for-the-badge&logo=spring-boot" alt="Spring Boot"/>
   <img src="https://img.shields.io/badge/PostgreSQL-Supabase-4169E1?style=for-the-badge&logo=postgresql" alt="PostgreSQL"/>
   <img src="https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white" alt="Redis"/>
+  <img src="https://img.shields.io/badge/OpenAI-GPT--4o--mini-412991?style=for-the-badge&logo=openai" alt="OpenAI"/>
 </p>
 
 <p align="center">
@@ -150,6 +151,103 @@ Spring Boot + Next.js 기반의 현대적인 맛집 검색, 예약, 웨이팅 �
 | 🏪 식당 관리 | 상태 변경, 삭제 |
 | 📝 리뷰 관리 | 신고된 리뷰 처리 |
 | 🚨 신고 관리 | 신고 접수/처리 |
+
+---
+
+## 🤖 AI 챗봇 시스템
+
+실시간 맛집 추천과 예약 조회를 지원하는 **GPT-4o-mini 기반 AI 챗봇**입니다.
+
+### 📋 핵심 기능
+
+| 기능 | 설명 |
+|------|------|
+| 💬 맛집 추천 | 지역/분위기/음식 종류 기반 맛집 추천 |
+| 🗺️ 코스 추천 | 데이트, 회식 등 상황별 맛집 코스 생성 |
+| 📅 예약 조회 | 내 예약/웨이팅 내역 실시간 확인 |
+| 🔍 식당 검색 | 자연어로 식당 정보 검색 |
+
+### 🏗️ 아키텍처
+
+```
+사용자 질문
+    ↓
+┌─────────────────────────────────────┐
+│          Next.js API Route          │
+│       /api/chat/route.ts            │
+├─────────────────────────────────────┤
+│  1. 시스템 프롬프트 구성              │
+│     └─ Supabase에서 가게 목록 로드    │
+│  2. Vector 유사도 검색 (Optional)    │
+│     └─ pgvector로 관련 식당 검색     │
+│  3. OpenAI GPT-4o-mini 호출         │
+│     └─ Function Calling 지원        │
+└─────────────────────────────────────┘
+    ↓
+┌─────────────────────────────────────┐
+│        Function Handlers            │
+├─────────────────────────────────────┤
+│  🍽️ recommend_restaurants          │
+│     → 조건 기반 맛집 추천            │
+│  🗺️ recommend_course               │
+│     → 지역별 맛집 코스 생성          │
+│  📅 get_my_reservations            │
+│     → 예약 내역 조회                │
+│  ⏳ get_my_waitings                │
+│     → 웨이팅 내역 조회              │
+│  🔍 search_restaurants             │
+│     → 식당 상세 검색                │
+└─────────────────────────────────────┘
+```
+
+### 🔧 기술 스택
+
+| 기술 | 용도 |
+|------|------|
+| **OpenAI GPT-4o-mini** | 자연어 이해 및 응답 생성 |
+| **Function Calling** | 구조화된 API 호출 |
+| **pgvector** | Vector 유사도 검색 (PostgreSQL 확장) |
+| **Supabase** | 실시간 데이터 조회 |
+| **Kakao Local API** | 지역 좌표 → 주소 변환 |
+
+### 💬 사용 예시
+
+```
+👤 "강남역 근처 분위기 좋은 이탈리안 추천해줘"
+🤖 "강남역 주변 이탈리안 맛집을 추천해드릴게요!
+    1. 파스타 팩토리 - 수제 파스타 전문점
+    2. 트라토리아 - 정통 이탈리안 레스토랑
+    ..."
+
+👤 "내 예약 내역 알려줘"  
+🤖 "현재 예약 내역이에요:
+    📅 맛있는 한식당 - 12/31 18:00 (4명)
+    상태: 확정됨"
+
+👤 "홍대에서 데이트 코스 짜줘"
+🤖 "홍대 데이트 코스를 추천해드릴게요!
+    1️⃣ 카페라떼 (카페) - 분위기 좋은 루프탑
+    2️⃣ 스시오마카세 (일식) - 프라이빗 룸
+    3️⃣ 와인바 홍대 (바) - 야경 맛집"
+```
+
+### 📁 관련 파일
+
+```
+frontend/src/
+├── app/api/chat/
+│   ├── route.ts              # 메인 API (GPT 호출)
+│   └── sync-embeddings/      # 임베딩 동기화 API
+├── lib/chatbot/
+│   ├── systemPrompt.ts       # 시스템 프롬프트 빌더
+│   ├── functions.ts          # Function 스키마 정의
+│   ├── handlers.ts           # Function 실행 핸들러
+│   └── vectordb.ts           # Vector DB (pgvector)
+└── components/chat/
+    ├── ChatWidget.tsx        # 플로팅 버튼
+    ├── ChatModal.tsx         # 채팅 UI
+    └── ChatMessages.tsx      # 메시지 렌더링
+```
 
 ---
 
