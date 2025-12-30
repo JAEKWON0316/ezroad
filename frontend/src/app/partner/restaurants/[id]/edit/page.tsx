@@ -14,6 +14,7 @@ import Input from '@/components/common/Input';
 import Loading from '@/components/common/Loading';
 import RestaurantEditSkeleton from '@/components/partner/RestaurantEditSkeleton';
 import toast from 'react-hot-toast';
+import PartnerHeader from '@/components/layout/PartnerHeader';
 
 const restaurantSchema = z.object({
   name: z.string().min(2, '식당명은 2자 이상이어야 합니다'),
@@ -149,14 +150,7 @@ export default function EditRestaurantPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b sticky top-16 z-30">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-full">
-            <ChevronLeft className="h-6 w-6" />
-          </button>
-          <h1 className="font-semibold text-gray-900">식당 정보 수정</h1>
-        </div>
-      </div>
+      <PartnerHeader title="식당 정보 수정" />
 
       <div className="max-w-2xl mx-auto px-4 py-6">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

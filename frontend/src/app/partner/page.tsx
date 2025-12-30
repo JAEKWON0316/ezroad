@@ -30,6 +30,7 @@ import DashboardSkeleton from '@/components/layout/DashboardSkeleton';
 import Button from '@/components/common/Button';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
+import PartnerHeader from '@/components/layout/PartnerHeader';
 
 export default function PartnerPage() {
   const router = useRouter();
@@ -43,7 +44,7 @@ export default function PartnerPage() {
   const [activeWaitings, setActiveWaitings] = useState<Waiting[]>([]);
   const [partnerStats, setPartnerStats] = useState<PartnerStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // 🔴 실시간 대기 인원 (WebSocket)
   const [realtimeWaitingCount, setRealtimeWaitingCount] = useState<number | null>(null);
 
@@ -68,7 +69,7 @@ export default function PartnerPage() {
         setPendingReservations(
           reservationsData.content.filter(r => r.status === 'PENDING')
         );
-        
+
         // 오늘 날짜의 대기만 필터링
         const today = format(new Date(), 'yyyy-MM-dd');
         setActiveWaitings(
@@ -92,27 +93,27 @@ export default function PartnerPage() {
       setRealtimeWaitingCount(null);
       return;
     }
-    
+
     const unsubscribe = subscribeToWaitingCount(selectedRestaurant.id, (data) => {
       console.log('[Partner] Waiting count update:', data);
       setRealtimeWaitingCount(data.waitingCount);
     });
-    
+
     return () => {
       unsubscribe?.();
     };
   }, [isConnected, selectedRestaurant?.id, subscribeToWaitingCount]);
-  
+
   // 🔴 알림 수신 시 대기/예약 목록 자동 새로고침
   useEffect(() => {
     if (!lastNotification || !selectedRestaurant) return;
-    
+
     const { type } = lastNotification;
-    
+
     // 새 대기, 예약, 취소 알림이면 목록 새로고침
     if (['WAITING_NEW', 'RESERVATION_NEW', 'RESERVATION_CANCELLED', 'WAITING_CANCELLED'].includes(type)) {
       console.log('[Partner] 알림 수신, 목록 새로고침:', type);
-      
+
       Promise.all([
         reservationApi.getByRestaurant(selectedRestaurant.id, 0, 5),
         waitingApi.getByRestaurant(selectedRestaurant.id, 0, 100),
@@ -120,7 +121,7 @@ export default function PartnerPage() {
         setPendingReservations(
           reservationsData.content.filter(r => r.status === 'PENDING')
         );
-        
+
         // 오늘 날짜의 대기만 필터링
         const today = format(new Date(), 'yyyy-MM-dd');
         setActiveWaitings(
@@ -159,7 +160,7 @@ export default function PartnerPage() {
       setPendingReservations(
         reservationsData.content.filter(r => r.status === 'PENDING')
       );
-      
+
       // 오늘 날짜의 대기만 필터링
       const today = format(new Date(), 'yyyy-MM-dd');
       setActiveWaitings(
@@ -213,34 +214,13 @@ export default function PartnerPage() {
 
   return (
     <div className="min-h-screen bg-gray-50/50 pb-20">
+      <PartnerHeader />
+
       {/* Dynamic Background Pattern */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-orange-400/10 to-transparent rounded-full blur-3xl transform translate-x-1/4 -translate-y-1/4" />
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-blue-400/10 to-transparent rounded-full blur-3xl transform -translate-x-1/4 translate-y-1/4" />
       </div>
-
-      {/* Header */}
-      <header className="sticky top-0 z-40 backdrop-blur-md bg-white/70 border-b border-white/50 shadow-sm supports-[backdrop-filter]:bg-white/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-              Partner Center
-            </h1>
-            <span className="px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 text-xs font-semibold">
-              BUSINESS
-            </span>
-          </div>
-          <Link href="/partner/restaurants/new">
-            <Button
-              size="sm"
-              leftIcon={<Plus className="h-4 w-4" />}
-              className="bg-gray-900 hover:bg-black text-white shadow-lg shadow-gray-900/20 rounded-full px-5"
-            >
-              새 가게 등록
-            </Button>
-          </Link>
-        </div>
-      </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {restaurants.length === 0 ? (

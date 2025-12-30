@@ -173,23 +173,18 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     }
   }, [unreadCount]);
 
-  // 알림 삭제
+  // 알림 삭제 (프론트엔드에서만 숨김 - DB는 유지)
   const deleteNotification = useCallback(async (id: number) => {
     const notification = notifications.find(n => n.id === id);
     
-    try {
-      await api.delete(`/notifications/${id}`);
-      console.log('[Notification] Deleted:', id);
-      
-      // 삭제한 알림이 읽지 않은 상태였으면 카운트 감소
-      if (notification && !notification.isRead) {
-        setUnreadCount(prev => Math.max(0, prev - 1));
-      }
-      
-      setNotifications(prev => prev.filter(n => n.id !== id));
-    } catch (error) {
-      console.error('Failed to delete notification:', error);
+    // 삭제한 알림이 읽지 않은 상태였으면 카운트 감소
+    if (notification && !notification.isRead) {
+      setUnreadCount(prev => Math.max(0, prev - 1));
     }
+    
+    // 프론트엔드 상태에서만 제거 (DB는 삭제 안 함)
+    setNotifications(prev => prev.filter(n => n.id !== id));
+    console.log('[Notification] Hidden from UI (DB preserved):', id);
   }, [notifications]);
 
   // 로그인 / 로그아웃 시 처리

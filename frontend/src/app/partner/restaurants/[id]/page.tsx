@@ -13,6 +13,7 @@ import Button from '@/components/common/Button';
 import Input from '@/components/common/Input';
 import Loading from '@/components/common/Loading';
 import toast from 'react-hot-toast';
+import PartnerHeader from '@/components/layout/PartnerHeader';
 
 const restaurantSchema = z.object({
     name: z.string().min(2, '식당명은 2자 이상이어야 합니다'),
@@ -168,39 +169,7 @@ export default function EditRestaurantPage({ params }: { params: Promise<{ id: s
                 <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-blue-400/10 to-transparent rounded-full blur-3xl transform -translate-x-1/4 translate-y-1/4" />
             </div>
 
-            <div className="sticky top-0 z-30 backdrop-blur-md bg-white/70 border-b border-white/50 shadow-sm supports-[backdrop-filter]:bg-white/60">
-                <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <button
-                            onClick={() => router.back()}
-                            className="p-2 hover:bg-black/5 rounded-full transition-colors text-gray-700"
-                        >
-                            <ChevronLeft className="h-6 w-6" />
-                        </button>
-                        <h1 className="font-bold text-xl text-gray-900">식당 정보 수정</h1>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <div className="hidden md:flex text-sm text-gray-500 font-medium border-r border-gray-300 pr-4 mr-4 gap-6">
-                            <button onClick={() => router.push(`/partner/restaurants/${id}/menus`)} className="hover:text-orange-600 transition-colors flex items-center gap-1.5">
-                                <Utensils className="w-4 h-4" /> 메뉴 관리
-                            </button>
-                            <button onClick={() => router.push(`/partner/restaurants/${id}/reservations`)} className="hover:text-orange-600 transition-colors flex items-center gap-1.5">
-                                <CalendarDays className="w-4 h-4" /> 예약 관리
-                            </button>
-                            <button onClick={() => router.push(`/partner/restaurants/${id}/waitings`)} className="hover:text-orange-600 transition-colors flex items-center gap-1.5">
-                                <Users className="w-4 h-4" /> 웨이팅 관리
-                            </button>
-                        </div>
-                        <button
-                            onClick={handleDelete}
-                            className="text-red-500 hover:text-red-600 transition-colors p-2 hover:bg-red-50 rounded-lg"
-                            title="식당 삭제"
-                        >
-                            <Trash2 className="w-5 h-5" />
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <PartnerHeader title="식당 관리" />
 
             <div className="max-w-4xl mx-auto px-4 py-8">
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
