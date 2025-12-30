@@ -100,7 +100,7 @@ export interface RecommendCourseParams {
   location: string;
   situation?: 'date' | 'friends' | 'family' | 'solo' | 'business';
   meal_types?: ('lunch' | 'cafe' | 'dinner' | 'bar')[];
-  preferences?: string;
+  preferences?: string[];
 }
 
 export interface RecommendRestaurantParams {

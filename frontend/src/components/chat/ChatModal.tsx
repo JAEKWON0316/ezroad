@@ -17,16 +17,8 @@ export default function ChatModal({ onClose }: ChatModalProps) {
     {
       id: '1',
       role: 'assistant',
-      content: `안녕하세요! 🙌 EzRoad AI 챗봇이에요.\n\n무엇을 도와드릴까요?`,
+      content: `안녕하세요! 🙌 Linkisy AI 챗봇이에요.\n\n무엇을 도와드릴까요?`,
       timestamp: new Date(),
-      data: {
-        type: 'text',
-        actions: [
-          { type: 'action', label: '맛집 추천', action: 'recommend', variant: 'secondary' },
-          { type: 'action', label: '내 예약', action: 'reservation', variant: 'secondary' },
-          { type: 'action', label: '대기 현황', action: 'waiting', variant: 'secondary' },
-        ],
-      },
     },
   ]);
   const [input, setInput] = useState('');
@@ -114,6 +106,9 @@ export default function ChatModal({ onClose }: ChatModalProps) {
       case 'recommend':
         sendMessage('맛집 추천해줘');
         break;
+      case 'theme':
+        sendMessage('인기 테마 추천해줘');
+        break;
       case 'reservation':
         sendMessage('내 예약 상태 알려줘');
         break;
@@ -141,7 +136,7 @@ export default function ChatModal({ onClose }: ChatModalProps) {
           <Bot className="w-6 h-6" />
         </div>
         <div className="flex-1">
-          <h3 className="font-semibold">EzBot</h3>
+          <h3 className="font-semibold">LinkyBot</h3>
           <p className="text-xs text-orange-100">
             {user ? `${user.name}님, 무엇을 도와드릴까요?` : '맛집 추천 AI'}
           </p>
@@ -166,9 +161,7 @@ export default function ChatModal({ onClose }: ChatModalProps) {
       </div>
 
       {/* 퀵 액션 */}
-      {messages.length <= 2 && (
-        <QuickActions onAction={handleQuickAction} />
-      )}
+      <QuickActions onAction={handleQuickAction} />
 
       {/* 입력 영역 */}
       <div className="p-3 border-t bg-white">

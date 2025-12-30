@@ -4,6 +4,7 @@ import { chatTools } from '@/lib/chatbot/tools';
 import { SYSTEM_PROMPT } from '@/lib/chatbot/openai';
 import { handleRecommendRestaurant } from '@/lib/chatbot/handlers/restaurantHandler';
 import { handleRecommendCourse } from '@/lib/chatbot/handlers/courseHandler';
+import { handleRecommendTheme } from '@/lib/chatbot/handlers/themeHandler';
 import { handleGetReservationStatus } from '@/lib/chatbot/handlers/reservationHandler';
 import { handleGetWaitingStatus } from '@/lib/chatbot/handlers/waitingHandler';
 import { handleNavigateToReservation } from '@/lib/chatbot/handlers/navigationHandler';
@@ -80,6 +81,17 @@ export async function POST(request: NextRequest) {
               data: {
                 type: 'course',
                 course: result.course,
+                actions: result.actions,
+              },
+            });
+
+          case 'recommend_theme':
+            result = await handleRecommendTheme();
+            return NextResponse.json({
+              message: result.message,
+              data: {
+                type: 'themes',
+                themes: result.themes,
                 actions: result.actions,
               },
             });

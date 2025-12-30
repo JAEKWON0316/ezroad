@@ -29,8 +29,9 @@ export const chatTools: ChatCompletionTool[] = [
             description: '원하는 코스 구성 (lunch: 점심, cafe: 카페, dinner: 저녁, bar: 술집)',
           },
           preferences: {
-            type: 'string',
-            description: '추가 선호사항 (분위기, 가격대, 음식 종류 등)',
+            type: 'array',
+            items: { type: 'string' },
+            description: '추가 선호사항 (고급스러운, 캐주얼, 분위기 좋은 등)',
           },
         },
         required: ['location'],
@@ -70,7 +71,20 @@ export const chatTools: ChatCompletionTool[] = [
     },
   },
 
-  // 3. 예약 상태 조회
+  // 3. 테마 추천
+  {
+    type: 'function',
+    function: {
+      name: 'recommend_theme',
+      description: '인기 있는 맛집 테마를 추천합니다. "테마 추천", "인기 테마", "추천 테마", "어떤 테마가 있어?" 등의 요청에 사용합니다.',
+      parameters: {
+        type: 'object',
+        properties: {},
+      },
+    },
+  },
+
+  // 4. 예약 상태 조회
   {
     type: 'function',
     function: {
@@ -88,7 +102,7 @@ export const chatTools: ChatCompletionTool[] = [
     },
   },
 
-  // 4. 대기 상태 조회
+  // 5. 대기 상태 조회
   {
     type: 'function',
     function: {
@@ -101,7 +115,7 @@ export const chatTools: ChatCompletionTool[] = [
     },
   },
 
-  // 5. 예약 액션 연결 (페이지 이동)
+  // 6. 예약 액션 연결 (페이지 이동)
   {
     type: 'function',
     function: {

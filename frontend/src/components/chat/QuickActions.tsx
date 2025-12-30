@@ -1,6 +1,6 @@
 'use client';
 
-import { MapPin, Calendar, Clock } from 'lucide-react';
+import { MapPin, Calendar, Clock, Sparkles } from 'lucide-react';
 
 interface QuickActionsProps {
   onAction: (action: string) => void;
@@ -13,6 +13,12 @@ export default function QuickActions({ onAction }: QuickActionsProps) {
       label: '맛집 추천', 
       icon: MapPin,
       color: 'bg-blue-50 text-blue-600 hover:bg-blue-100' 
+    },
+    { 
+      id: 'theme', 
+      label: '테마 추천', 
+      icon: Sparkles,
+      color: 'bg-pink-50 text-pink-600 hover:bg-pink-100' 
     },
     { 
       id: 'reservation', 
@@ -31,7 +37,7 @@ export default function QuickActions({ onAction }: QuickActionsProps) {
   return (
     <div className="px-4 py-3 border-t bg-white">
       <p className="text-xs text-gray-500 mb-2">빠른 질문</p>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {actions.map((action) => (
           <button
             key={action.id}

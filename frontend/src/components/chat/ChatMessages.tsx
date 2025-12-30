@@ -3,6 +3,7 @@
 import { Bot, User } from 'lucide-react';
 import { ChatMessage } from '@/types/chat';
 import ActionButton from './ActionButton';
+import Link from 'next/link';
 
 interface ChatMessagesProps {
   messages: ChatMessage[];
@@ -64,19 +65,90 @@ export default function ChatMessages({ messages, onQuickAction }: ChatMessagesPr
   );
 }
 
-// 간단한 마크다운 스타일 처리
+// 마크다운 스타일 처리 (Bold + Link)
 function formatMessage(content: string): React.ReactNode {
-  // **bold** 처리
-  const parts = content.split(/(\*\*[^*]+\*\*)/g);
+  // 먼저 줄 단위로 분리
+  const lines = content.split('\n');
   
-  return parts.map((part, index) => {
-    if (part.startsWith('**') && part.endsWith('**')) {
-      return (
-        <strong key={index} className="font-semibold">
-          {part.slice(2, -2)}
+  return lines.map((line, lineIndex) => (
+    <span key={lineIndex}>
+      {lineIndex > 0 && <br />}
+      {formatLine(line)}
+    </span>
+  ));
+}
+
+function formatLine(line: string): React.ReactNode {
+  // **[텍스트](링크)** 패턴 처리 (Bold Link)
+  // [텍스트](링크) 패턴 처리 (Normal Link)
+  // **텍스트** 패턴 처리 (Bold)
+  
+  const elements: React.ReactNode[] = [];
+  let remaining = line;
+  let key = 0;
+
+  while (remaining.length > 0) {
+    // Bold Link: **[text](url)**
+    const boldLinkMatch = remaining.match(/^\*\*\[([^\]]+)\]\(([^)]+)\)\*\*/);
+    if (boldLinkMatch) {
+      const [full, text, url] = boldLinkMatch;
+      elements.push(
+        <Link 
+          key={key++} 
+          href={url} 
+          className="font-semibold text-orange-600 hover:text-orange-700 hover:underline"
+        >
+          {text}
+        </Link>
+      );
+      remaining = remaining.slice(full.length);
+      continue;
+    }
+
+    // Normal Link: [text](url)
+    const linkMatch = remaining.match(/^\[([^\]]+)\]\(([^)]+)\)/);
+    if (linkMatch) {
+      const [full, text, url] = linkMatch;
+      elements.push(
+        <Link 
+          key={key++} 
+          href={url} 
+          className="text-orange-600 hover:text-orange-700 hover:underline"
+        >
+          {text}
+        </Link>
+      );
+      remaining = remaining.slice(full.length);
+      continue;
+    }
+
+    // Bold: **text**
+    const boldMatch = remaining.match(/^\*\*([^*]+)\*\*/);
+    if (boldMatch) {
+      const [full, text] = boldMatch;
+      elements.push(
+        <strong key={key++} className="font-semibold">
+          {text}
         </strong>
       );
+      remaining = remaining.slice(full.length);
+      continue;
     }
-    return part;
-  });
+
+    // 일반 텍스트 (다음 특수 문자까지)
+    const nextSpecial = remaining.search(/\*\*|\[/);
+    if (nextSpecial === -1) {
+      elements.push(<span key={key++}>{remaining}</span>);
+      break;
+    } else if (nextSpecial === 0) {
+      // 특수 문자로 시작하지만 패턴 매칭 안 됨 - 한 글자씩 진행
+      elements.push(<span key={key++}>{remaining[0]}</span>);
+      remaining = remaining.slice(1);
+    } else {
+      elements.push(<span key={key++}>{remaining.slice(0, nextSpecial)}</span>);
+      remaining = remaining.slice(nextSpecial);
+    }
+  }
+
+  return elements;
 }
