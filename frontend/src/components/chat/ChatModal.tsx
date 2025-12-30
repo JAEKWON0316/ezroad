@@ -137,7 +137,7 @@ export default function ChatModal({ onClose }: ChatModalProps) {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="궁금한 점을 물어보세요..."
-              className="w-full pl-5 pr-14 py-3.5 bg-gray-100 border-transparent rounded-2xl focus:bg-white focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/5 transition-all text-sm font-medium placeholder:text-gray-400 outline-none"
+              className="w-full pl-5 pr-14 py-3.5 bg-gray-100 border-transparent rounded-2xl focus:bg-white focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/5 transition-all text-base font-medium placeholder:text-gray-400 outline-none"
               disabled={isLoading}
             />
             <button
