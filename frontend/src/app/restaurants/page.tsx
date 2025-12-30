@@ -126,9 +126,9 @@ function RestaurantsContent() {
 
   return (
     <div className="min-h-screen bg-gray-50/50">
-      {/* Modern Sticky Header */}
-      <div className="sticky top-16 z-40 backdrop-blur-xl bg-white/70 border-b border-white/20 shadow-sm transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-4">
+      {/* Modern Search & Filter Header (Non-sticky) */}
+      <div className="bg-white border-b border-gray-100 shadow-sm transition-all duration-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
 
           {/* Top Row: Search & Filters Toggle */}
           <div className="flex gap-3">

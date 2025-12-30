@@ -1,51 +1,35 @@
 'use client';
 
-import Link from 'next/link';
-import { ExternalLink } from 'lucide-react';
-import { ActionButton as ActionButtonType } from '@/types/chat';
+import { motion } from 'framer-motion';
+import { LucideIcon } from 'lucide-react';
+
+interface Action {
+  type: string;
+  label: string;
+  icon?: LucideIcon;
+  primary?: boolean;
+}
 
 interface ActionButtonProps {
-  action: ActionButtonType;
-  onAction?: (action: string) => void;
+  action: Action;
+  onAction: (action: string) => void;
 }
 
 export default function ActionButton({ action, onAction }: ActionButtonProps) {
-  const baseStyles = 'inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors';
-  
-  const variantStyles = {
-    primary: 'bg-orange-500 text-white hover:bg-orange-600',
-    secondary: 'bg-gray-100 text-gray-700 hover:bg-gray-200',
-    link: 'text-orange-500 hover:text-orange-600 underline',
-  };
-
-  const style = `${baseStyles} ${variantStyles[action.variant || 'secondary']}`;
-
-  // 링크 타입
-  if (action.type === 'link' && action.url) {
-    return (
-      <Link href={action.url} className={style}>
-        {action.label}
-        {action.variant === 'primary' && <ExternalLink className="w-3 h-3" />}
-      </Link>
-    );
-  }
-
-  // 액션 타입
-  if (action.type === 'action' && action.action && onAction) {
-    return (
-      <button
-        onClick={() => onAction(action.action!)}
-        className={style}
-      >
-        {action.label}
-      </button>
-    );
-  }
-
-  // 기본 버튼
   return (
-    <button className={style}>
-      {action.label}
-    </button>
+    <motion.button
+      whileHover={{ y: -2, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={() => onAction(action.type)}
+      className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm border ${action.primary
+          ? 'bg-gradient-to-tr from-orange-500 to-red-500 text-white border-transparent shadow-orange-500/20'
+          : 'bg-white text-gray-700 border-gray-100 hover:border-orange-200'
+        }`}
+    >
+      <div className="flex items-center gap-2">
+        {action.icon && <action.icon className="w-3.5 h-3.5" />}
+        {action.label}
+      </div>
+    </motion.button>
   );
 }

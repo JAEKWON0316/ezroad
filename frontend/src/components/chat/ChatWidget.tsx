@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X } from 'lucide-react';
 import ChatModal from './ChatModal';
 
@@ -10,27 +11,48 @@ export default function ChatWidget() {
   return (
     <>
       {/* 플로팅 버튼 */}
-      <button
+      <motion.button
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg 
-          flex items-center justify-center transition-all duration-300 
-          ${isOpen 
-            ? 'bg-gray-600 hover:bg-gray-700' 
-            : 'bg-orange-500 hover:bg-orange-600'
+        className={`fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full shadow-2xl 
+          flex items-center justify-center transition-colors duration-300 group
+          ${isOpen
+            ? 'bg-gray-800 text-white'
+            : 'bg-gradient-to-tr from-orange-500 to-red-500 text-white'
           }`}
         aria-label={isOpen ? '챗봇 닫기' : '챗봇 열기'}
       >
+        <div className="absolute inset-0 rounded-full bg-white opacity-0 group-hover:opacity-10 transition-opacity" />
         {isOpen ? (
-          <X className="w-6 h-6 text-white" />
+          <motion.div
+            initial={{ rotate: -90, opacity: 0 }}
+            animate={{ rotate: 0, opacity: 1 }}
+            exit={{ rotate: 90, opacity: 0 }}
+          >
+            <X className="w-7 h-7" />
+          </motion.div>
         ) : (
-          <MessageCircle className="w-6 h-6 text-white" />
+          <motion.div
+            initial={{ rotate: 90, opacity: 0 }}
+            animate={{ rotate: 0, opacity: 1 }}
+            exit={{ rotate: -90, opacity: 0 }}
+            className="relative"
+          >
+            <MessageCircle className="w-7 h-7" />
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border-2 border-white rounded-full animate-pulse" />
+          </motion.div>
         )}
-      </button>
+      </motion.button>
 
       {/* 채팅 모달 */}
-      {isOpen && (
-        <ChatModal onClose={() => setIsOpen(false)} />
-      )}
+      <AnimatePresence>
+        {isOpen && (
+          <ChatModal onClose={() => setIsOpen(false)} />
+        )}
+      </AnimatePresence>
     </>
   );
 }
