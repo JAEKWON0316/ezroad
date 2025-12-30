@@ -3,13 +3,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  ChevronLeft, 
-  Calendar, 
-  Clock, 
-  Users, 
-  MapPin, 
-  X, 
+import {
+  ChevronLeft,
+  Calendar,
+  Clock,
+  Users,
+  MapPin,
+  X,
   PenSquare,
   CalendarCheck,
   CalendarX,
@@ -54,11 +54,11 @@ export default function MyReservationsPage() {
     return !isPast(reservationDate) || isToday(reservationDate) || r.status === 'PENDING' || r.status === 'CONFIRMED';
   }).filter(r => r.status !== 'COMPLETED');
 
-  const pastReservations = reservations.filter(r => 
+  const pastReservations = reservations.filter(r =>
     r.status === 'COMPLETED'
   );
 
-  const cancelledReservations = reservations.filter(r => 
+  const cancelledReservations = reservations.filter(r =>
     r.status === 'CANCELLED'
   );
 
@@ -138,38 +138,35 @@ export default function MyReservationsPage() {
         <div className="flex bg-gray-100 p-1 rounded-2xl mb-6">
           <button
             onClick={() => setActiveTab('upcoming')}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all ${
-              activeTab === 'upcoming' 
-                ? 'bg-white text-orange-600 shadow-sm' 
+            className={`flex-1 flex items-center justify-center gap-1.5 py-3 px-1 rounded-xl font-bold text-[13px] transition-all whitespace-nowrap ${activeTab === 'upcoming'
+                ? 'bg-white text-orange-600 shadow-sm'
                 : 'text-gray-500 hover:text-gray-700'
-            }`}
+              }`}
           >
             <CalendarCheck className="w-4 h-4" />
             예정된 예약
             {upcomingReservations.length > 0 && (
-              <span className="bg-orange-100 text-orange-600 text-xs px-2 py-0.5 rounded-full">
+              <span className="bg-orange-100 text-orange-600 text-[10px] px-1.5 py-0.5 rounded-full">
                 {upcomingReservations.length}
               </span>
             )}
           </button>
           <button
             onClick={() => setActiveTab('past')}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all ${
-              activeTab === 'past' 
-                ? 'bg-white text-orange-600 shadow-sm' 
+            className={`flex-1 flex items-center justify-center gap-1.5 py-3 px-1 rounded-xl font-bold text-[13px] transition-all whitespace-nowrap ${activeTab === 'past'
+                ? 'bg-white text-orange-600 shadow-sm'
                 : 'text-gray-500 hover:text-gray-700'
-            }`}
+              }`}
           >
             <History className="w-4 h-4" />
             지난 예약
           </button>
           <button
             onClick={() => setActiveTab('cancelled')}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all ${
-              activeTab === 'cancelled' 
-                ? 'bg-white text-orange-600 shadow-sm' 
+            className={`flex-1 flex items-center justify-center gap-1.5 py-3 px-1 rounded-xl font-bold text-[13px] transition-all whitespace-nowrap ${activeTab === 'cancelled'
+                ? 'bg-white text-orange-600 shadow-sm'
                 : 'text-gray-500 hover:text-gray-700'
-            }`}
+              }`}
           >
             <CalendarX className="w-4 h-4" />
             취소됨
@@ -199,15 +196,14 @@ export default function MyReservationsPage() {
             {filteredReservations.map((reservation) => (
               <div
                 key={reservation.id}
-                className={`bg-white rounded-2xl border overflow-hidden transition-all hover:shadow-md ${
-                  reservation.status === 'CONFIRMED' 
-                    ? 'border-l-4 border-l-green-500 border-t-gray-100 border-r-gray-100 border-b-gray-100' 
+                className={`bg-white rounded-2xl border overflow-hidden transition-all hover:shadow-md ${reservation.status === 'CONFIRMED'
+                    ? 'border-l-4 border-l-green-500 border-t-gray-100 border-r-gray-100 border-b-gray-100'
                     : reservation.status === 'PENDING'
-                    ? 'border-l-4 border-l-yellow-400 border-t-gray-100 border-r-gray-100 border-b-gray-100'
-                    : reservation.status === 'COMPLETED'
-                    ? 'border-l-4 border-l-blue-400 border-t-gray-100 border-r-gray-100 border-b-gray-100'
-                    : 'border-gray-100 opacity-70'
-                }`}
+                      ? 'border-l-4 border-l-yellow-400 border-t-gray-100 border-r-gray-100 border-b-gray-100'
+                      : reservation.status === 'COMPLETED'
+                        ? 'border-l-4 border-l-blue-400 border-t-gray-100 border-r-gray-100 border-b-gray-100'
+                        : 'border-gray-100 opacity-70'
+                  }`}
               >
                 <div className="p-5">
                   {/* 날짜/시간 헤더 */}
@@ -225,15 +221,14 @@ export default function MyReservationsPage() {
                         </div>
                       </div>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                      reservation.status === 'CONFIRMED' 
-                        ? 'bg-green-100 text-green-600' 
+                    <span className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${reservation.status === 'CONFIRMED'
+                        ? 'bg-green-100 text-green-600'
                         : reservation.status === 'PENDING'
-                        ? 'bg-yellow-100 text-yellow-600'
-                        : reservation.status === 'COMPLETED'
-                        ? 'bg-blue-100 text-blue-600'
-                        : 'bg-gray-100 text-gray-500'
-                    }`}>
+                          ? 'bg-yellow-100 text-yellow-600'
+                          : reservation.status === 'COMPLETED'
+                            ? 'bg-blue-100 text-blue-600'
+                            : 'bg-gray-100 text-gray-500'
+                      }`}>
                       {statusLabels[reservation.status]}
                     </span>
                   </div>

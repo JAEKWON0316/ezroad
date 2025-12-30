@@ -2,15 +2,15 @@
 
 import { useState, useEffect, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  ChevronLeft, 
+import {
+  ChevronLeft,
   ChevronRight,
-  Calendar, 
-  Users, 
-  Phone, 
-  Clock, 
-  Check, 
-  X, 
+  Calendar,
+  Users,
+  Phone,
+  Clock,
+  Check,
+  X,
   Bell,
   RefreshCw
 } from 'lucide-react';
@@ -51,7 +51,7 @@ export default function ReservationsManagementPage({ params }: { params: Promise
   const fetchData = useCallback(async (showRefresh = false) => {
     if (showRefresh) setIsRefreshing(true);
     else setIsLoading(true);
-    
+
     try {
       const [restaurantData, reservationsData] = await Promise.all([
         restaurantApi.getById(Number(id)),
@@ -130,7 +130,7 @@ export default function ReservationsManagementPage({ params }: { params: Promise
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
-  
+
   // 시작 요일에 맞춰 빈 칸 추가
   const startDayOfWeek = monthStart.getDay();
   const emptyDays = Array(startDayOfWeek).fill(null);
@@ -154,8 +154,8 @@ export default function ReservationsManagementPage({ params }: { params: Promise
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <button 
-                onClick={() => router.back()} 
+              <button
+                onClick={() => router.back()}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               >
                 <ChevronLeft className="h-6 w-6 text-gray-600" />
@@ -204,11 +204,10 @@ export default function ReservationsManagementPage({ params }: { params: Promise
               {/* 요일 헤더 */}
               <div className="grid grid-cols-7 mb-2">
                 {['일', '월', '화', '수', '목', '금', '토'].map((day, i) => (
-                  <div 
-                    key={day} 
-                    className={`text-center text-xs font-bold py-2 ${
-                      i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : 'text-gray-400'
-                    }`}
+                  <div
+                    key={day}
+                    className={`text-center text-xs font-bold py-2 ${i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : 'text-gray-400'
+                      }`}
                   >
                     {day}
                   </div>
@@ -221,24 +220,23 @@ export default function ReservationsManagementPage({ params }: { params: Promise
                 {emptyDays.map((_, i) => (
                   <div key={`empty-${i}`} className="aspect-square" />
                 ))}
-                
+
                 {/* 날짜들 */}
                 {daysInMonth.map((day) => {
                   const count = getReservationCountByDate(day);
                   const isSelected = isSameDay(day, selectedDate);
                   const isTodayDate = isToday(day);
-                  
+
                   return (
                     <button
                       key={day.toString()}
                       onClick={() => setSelectedDate(day)}
-                      className={`aspect-square rounded-xl flex flex-col items-center justify-center relative transition-all ${
-                        isSelected 
-                          ? 'bg-orange-500 text-white shadow-lg shadow-orange-200' 
-                          : isTodayDate
+                      className={`aspect-square rounded-xl flex flex-col items-center justify-center relative transition-all ${isSelected
+                        ? 'bg-orange-500 text-white shadow-lg shadow-orange-200'
+                        : isTodayDate
                           ? 'bg-orange-50 text-orange-600 ring-2 ring-orange-200'
                           : 'hover:bg-gray-100 text-gray-700'
-                      }`}
+                        }`}
                     >
                       <span className={`text-sm font-bold ${isSelected ? 'text-white' : ''}`}>
                         {format(day, 'd')}
@@ -247,17 +245,15 @@ export default function ReservationsManagementPage({ params }: { params: Promise
                         <div className={`absolute bottom-1 flex gap-0.5 ${isSelected ? 'opacity-80' : ''}`}>
                           {count <= 3 ? (
                             Array(count).fill(null).map((_, i) => (
-                              <div 
-                                key={i} 
-                                className={`w-1.5 h-1.5 rounded-full ${
-                                  isSelected ? 'bg-white' : 'bg-orange-400'
-                                }`} 
+                              <div
+                                key={i}
+                                className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-orange-400'
+                                  }`}
                               />
                             ))
                           ) : (
-                            <span className={`text-[10px] font-bold ${
-                              isSelected ? 'text-white' : 'text-orange-500'
-                            }`}>
+                            <span className={`text-[10px] font-bold ${isSelected ? 'text-white' : 'text-orange-500'
+                              }`}>
                               {count}건
                             </span>
                           )}
@@ -302,15 +298,14 @@ export default function ReservationsManagementPage({ params }: { params: Promise
                 {selectedDateReservations.map((reservation) => (
                   <div
                     key={reservation.id}
-                    className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-all hover:shadow-md ${
-                      reservation.status === 'PENDING' 
-                        ? 'border-l-4 border-l-yellow-400 border-t-gray-100 border-r-gray-100 border-b-gray-100' 
-                        : reservation.status === 'CONFIRMED'
+                    className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-all hover:shadow-md ${reservation.status === 'PENDING'
+                      ? 'border-l-4 border-l-yellow-400 border-t-gray-100 border-r-gray-100 border-b-gray-100'
+                      : reservation.status === 'CONFIRMED'
                         ? 'border-l-4 border-l-blue-500 border-t-gray-100 border-r-gray-100 border-b-gray-100'
                         : reservation.status === 'COMPLETED'
-                        ? 'border-l-4 border-l-green-500 border-t-gray-100 border-r-gray-100 border-b-gray-100'
-                        : 'border-gray-100 opacity-60'
-                    }`}
+                          ? 'border-l-4 border-l-green-500 border-t-gray-100 border-r-gray-100 border-b-gray-100'
+                          : 'border-gray-100 opacity-60'
+                      }`}
                   >
                     <div className="p-5">
                       <div className="flex items-start justify-between gap-4">
@@ -325,11 +320,11 @@ export default function ReservationsManagementPage({ params }: { params: Promise
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-2">
                             <span className="font-bold text-gray-900">{reservation.memberName || '예약자'}</span>
-                            <span className={`px-2 py-0.5 rounded-full text-xs font-bold border ${statusStyles[reservation.status]}`}>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-bold border ${statusStyles[reservation.status]} whitespace-nowrap`}>
                               {statusLabels[reservation.status]}
                             </span>
                           </div>
-                          
+
                           <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
                             <span className="flex items-center gap-1">
                               <Users className="w-4 h-4" />
@@ -342,12 +337,6 @@ export default function ReservationsManagementPage({ params }: { params: Promise
                               </span>
                             )}
                           </div>
-
-                          {reservation.request && (
-                            <div className="mt-3 p-3 bg-orange-50 rounded-xl text-sm text-gray-700">
-                              <span className="font-bold text-orange-600">요청:</span> {reservation.request}
-                            </div>
-                          )}
                         </div>
 
                         {/* 액션 버튼 */}
@@ -393,6 +382,13 @@ export default function ReservationsManagementPage({ params }: { params: Promise
                           )}
                         </div>
                       </div>
+
+                      {/* 요청사항 - Full width outside the flex container */}
+                      {reservation.request && (
+                        <div className="mt-4 p-4 bg-orange-50 rounded-xl text-sm text-gray-700 border border-orange-100/50">
+                          <span className="font-bold text-orange-600">요청사항:</span> {reservation.request}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -401,6 +397,6 @@ export default function ReservationsManagementPage({ params }: { params: Promise
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
