@@ -17,7 +17,7 @@ export default function ChatModal({ onClose }: ChatModalProps) {
     {
       id: '1',
       role: 'assistant',
-      content: `안녕하세요! 🙌 Linkisy AI 챗봇이에요.\n\n무엇을 도와드릴까요?`,
+      content: `안녕하세요! 🙌 EzBot이에요.\n\n무엇을 도와드릴까요?`,
       timestamp: new Date(),
     },
   ]);
@@ -136,7 +136,7 @@ export default function ChatModal({ onClose }: ChatModalProps) {
           <Bot className="w-6 h-6" />
         </div>
         <div className="flex-1">
-          <h3 className="font-semibold">LinkyBot</h3>
+          <h3 className="font-semibold">EzBot</h3>
           <p className="text-xs text-orange-100">
             {user ? `${user.name}님, 무엇을 도와드릴까요?` : '맛집 추천 AI'}
           </p>

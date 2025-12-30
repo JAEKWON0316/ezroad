@@ -7,6 +7,7 @@ import { handleRecommendCourse } from '@/lib/chatbot/handlers/courseHandler';
 import { handleGetReservationStatus } from '@/lib/chatbot/handlers/reservationHandler';
 import { handleGetWaitingStatus } from '@/lib/chatbot/handlers/waitingHandler';
 import { handleNavigateToReservation } from '@/lib/chatbot/handlers/navigationHandler';
+import { searchRestaurantsByVector } from '@/lib/chatbot/vectordb';
 import { ChatMessage, RestaurantRecommendation } from '@/types/chat';
 
 const openai = new OpenAI({
@@ -29,18 +30,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const lastUserMessage = messages[messages.length - 1];
+
     // 동적으로 시스템 프롬프트 생성 (DB에서 가게 목록 가져옴)
     let systemPrompt: string;
     try {
       systemPrompt = await buildSystemPrompt();
     } catch (error) {
       console.error('Failed to build dynamic prompt, using fallback:', error);
-      systemPrompt = SYSTEM_PROMPT; // fallback
+      systemPrompt = SYSTEM_PROMPT;
+    }
+
+    // Vector 검색 결과 추가 (의미 검색)
+    let vectorContext = '';
+    if (lastUserMessage.content.length > 5) {
+      try {
+        const vectorResults = await searchRestaurantsByVector(
+          lastUserMessage.content,
+          0.5,  // threshold
+          3     // limit
+        );
+        
+        if (vectorResults.length > 0) {
+          vectorContext = `\n\n## 🔍 관련 식당 (Vector 검색 결과)\n`;
+          vectorResults.forEach((r, i) => {
+            vectorContext += `${i + 1}. ${r.name} (${r.category || '기타'}) - 유사도: ${(r.similarity * 100).toFixed(1)}%\n`;
+          });
+        }
+      } catch (error) {
+        console.error('Vector search failed:', error);
+        // Vector 검색 실패해도 계속 진행
+      }
     }
 
     // OpenAI 메시지 형식으로 변환
     const openaiMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
-      { role: 'system', content: systemPrompt },
+      { role: 'system', content: systemPrompt + vectorContext },
       ...messages.map((m) => ({
         role: m.role as 'user' | 'assistant',
         content: m.content,
@@ -63,7 +88,6 @@ export async function POST(request: NextRequest) {
     if (assistantMessage.tool_calls && assistantMessage.tool_calls.length > 0) {
       const toolCall = assistantMessage.tool_calls[0];
       
-      // 타입 가드: function 타입인지 확인
       if ('function' in toolCall) {
         const functionName = toolCall.function.name;
         const functionArgs = JSON.parse(toolCall.function.arguments);
@@ -126,7 +150,6 @@ export async function POST(request: NextRequest) {
             });
 
           default:
-            // 알 수 없는 함수인 경우 일반 응답
             break;
         }
       }
