@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X } from 'lucide-react';
 import ChatModal from './ChatModal';
+import { useChat } from '@/context/ChatContext';
 
 export default function ChatWidget() {
-  const [isOpen, setIsOpen] = useState(false);
+  const { isChatOpen, toggleChat } = useChat();
 
   return (
     <>
@@ -16,17 +16,17 @@ export default function ChatWidget() {
         animate={{ scale: 1, opacity: 1 }}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => toggleChat()}
         className={`fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full shadow-2xl 
           flex items-center justify-center transition-colors duration-300 group
-          ${isOpen
+          ${isChatOpen
             ? 'bg-gray-800 text-white'
             : 'bg-gradient-to-tr from-orange-500 to-red-500 text-white'
           }`}
-        aria-label={isOpen ? '챗봇 닫기' : '챗봇 열기'}
+        aria-label={isChatOpen ? '챗봇 닫기' : '챗봇 열기'}
       >
         <div className="absolute inset-0 rounded-full bg-white opacity-0 group-hover:opacity-10 transition-opacity" />
-        {isOpen ? (
+        {isChatOpen ? (
           <motion.div
             initial={{ rotate: -90, opacity: 0 }}
             animate={{ rotate: 0, opacity: 1 }}
@@ -49,8 +49,8 @@ export default function ChatWidget() {
 
       {/* 채팅 모달 */}
       <AnimatePresence>
-        {isOpen && (
-          <ChatModal onClose={() => setIsOpen(false)} />
+        {isChatOpen && (
+          <ChatModal onClose={() => toggleChat(false)} />
         )}
       </AnimatePresence>
     </>
