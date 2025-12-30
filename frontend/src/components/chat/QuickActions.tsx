@@ -1,6 +1,6 @@
 'use client';
 
-import { MapPin, Calendar, Clock, Sparkles } from 'lucide-react';
+import { MapPin, Calendar, Clock, Heart } from 'lucide-react';
 
 interface QuickActionsProps {
   onAction: (action: string) => void;
@@ -15,9 +15,9 @@ export default function QuickActions({ onAction }: QuickActionsProps) {
       color: 'bg-blue-50 text-blue-600 hover:bg-blue-100' 
     },
     { 
-      id: 'theme', 
-      label: '테마 추천', 
-      icon: Sparkles,
+      id: 'course', 
+      label: '코스 추천', 
+      icon: Heart,
       color: 'bg-pink-50 text-pink-600 hover:bg-pink-100' 
     },
     { 

@@ -163,12 +163,12 @@ ${restaurantListText}
     }
 
     if (!courseData?.spots?.length) {
-      // GPT 파싱 실패 시 기본 로직으로 fallback
       return fallbackCourseGeneration(params, filteredRestaurants);
     }
 
-    // 5. 코스 스팟 생성
+    // 5. 코스 스팟 생성 (좌표 포함)
     const spots: CourseSpot[] = [];
+    const spotsWithCoords: { spot: CourseSpot; lat: number; lng: number }[] = [];
     
     for (let i = 0; i < courseData.spots.length; i++) {
       const spotData = courseData.spots[i];
@@ -176,20 +176,7 @@ ${restaurantListText}
       
       if (!restaurant) continue;
 
-      // 이전 스팟과의 거리 계산
-      if (spots.length > 0) {
-        const prevRest = spots[spots.length - 1].restaurant as RestaurantData;
-        if (prevRest.latitude && prevRest.longitude && restaurant.latitude && restaurant.longitude) {
-          const dist = calculateDistance(
-            prevRest.latitude, prevRest.longitude,
-            restaurant.latitude, restaurant.longitude
-          );
-          spots[spots.length - 1].distanceToNext = Math.round(dist * 1000);
-          spots[spots.length - 1].walkingTimeToNext = Math.round((dist / 4) * 60);
-        }
-      }
-
-      spots.push({
+      const spot: CourseSpot = {
         order: spots.length + 1,
         type: spotData.type as CourseSpot['type'],
         restaurant: {
@@ -202,30 +189,46 @@ ${restaurantListText}
           distance: restaurant.distance,
         },
         suggestedTime: spotData.time,
+      };
+
+      spots.push(spot);
+      spotsWithCoords.push({
+        spot,
+        lat: restaurant.latitude,
+        lng: restaurant.longitude,
       });
+    }
+
+    // 6. 스팟 간 거리 계산
+    let totalDistance = 0;
+    for (let i = 0; i < spotsWithCoords.length - 1; i++) {
+      const current = spotsWithCoords[i];
+      const next = spotsWithCoords[i + 1];
+      
+      if (current.lat && current.lng && next.lat && next.lng) {
+        const dist = calculateDistance(current.lat, current.lng, next.lat, next.lng);
+        const distMeters = Math.round(dist * 1000);
+        const walkingTime = Math.round((dist / 4) * 60); // 4km/h 도보 속도
+        
+        spots[i].distanceToNext = distMeters;
+        spots[i].walkingTimeToNext = walkingTime;
+        totalDistance += dist;
+      }
     }
 
     if (spots.length === 0) {
       return fallbackCourseGeneration(params, filteredRestaurants);
     }
 
-    // 6. 총 거리 계산
-    let totalDistance = 0;
-    for (const spot of spots) {
-      if (spot.distanceToNext) {
-        totalDistance += spot.distanceToNext / 1000;
-      }
-    }
-
     const course: CourseRecommendation = {
       title: `${params.location} ${situationText} 코스`,
       description: courseData.totalCourseReason || `${params.location} 추천 맛집 코스`,
-      totalDistance: Math.round(totalDistance * 10) / 10,
+      totalDistance: Math.round(totalDistance * 100) / 100,
       estimatedTime: spots.length * 90,
       spots,
     };
 
-    // 7. 응답 메시지 생성 (가게명에 링크 포함)
+    // 7. 응답 메시지 생성 (가게명에 링크 + 거리 표시)
     const typeEmoji: Record<string, string> = {
       lunch: '🍽️ 점심',
       cafe: '☕ 카페', 
@@ -241,8 +244,9 @@ ${restaurantListText}
           `   📍 ${spot.restaurant.address}\n` +
           `   ⭐ ${spot.restaurant.avgRating?.toFixed(1)} (리뷰 ${spot.restaurant.reviewCount}개)`;
         
-        if (spot.walkingTimeToNext && idx < spots.length - 1) {
-          text += `\n\n   ↓ 도보 ${spot.walkingTimeToNext}분 (${spot.distanceToNext}m)`;
+        // 다음 장소까지 거리 표시 (마지막 제외)
+        if (spot.distanceToNext && spot.walkingTimeToNext && idx < spots.length - 1) {
+          text += `\n\n   ↓ 🚶 도보 약 ${spot.walkingTimeToNext}분 (${spot.distanceToNext}m)`;
         }
         return text;
       }).join('\n\n') +
@@ -268,6 +272,8 @@ function fallbackCourseGeneration(
 ): CourseHandlerResult {
   const sorted = [...restaurants].sort((a, b) => b.avgRating - a.avgRating);
   const spots: CourseSpot[] = [];
+  const spotsWithCoords: { lat: number; lng: number }[] = [];
+  
   const types: Array<{ type: CourseSpot['type']; time: string }> = [
     { type: 'lunch', time: '12:00' },
     { type: 'cafe', time: '14:30' },
@@ -290,20 +296,40 @@ function fallbackCourseGeneration(
       },
       suggestedTime: types[i].time,
     });
+    spotsWithCoords.push({ lat: r.latitude, lng: r.longitude });
+  }
+
+  // 거리 계산
+  let totalDistance = 0;
+  for (let i = 0; i < spotsWithCoords.length - 1; i++) {
+    const current = spotsWithCoords[i];
+    const next = spotsWithCoords[i + 1];
+    
+    if (current.lat && current.lng && next.lat && next.lng) {
+      const dist = calculateDistance(current.lat, current.lng, next.lat, next.lng);
+      spots[i].distanceToNext = Math.round(dist * 1000);
+      spots[i].walkingTimeToNext = Math.round((dist / 4) * 60);
+      totalDistance += dist;
+    }
   }
 
   const message = `${params.location} 코스 추천이에요! 🍽️\n\n` +
-    spots.map((spot) => 
-      `${spot.order}️⃣ [${spot.suggestedTime}] **[${spot.restaurant.name}](/restaurants/${spot.restaurant.id})**\n` +
-      `   📍 ${spot.restaurant.address} | ⭐ ${spot.restaurant.avgRating?.toFixed(1)}`
-    ).join('\n\n');
+    spots.map((spot, idx) => {
+      let text = `${spot.order}️⃣ [${spot.suggestedTime}] **[${spot.restaurant.name}](/restaurants/${spot.restaurant.id})**\n` +
+        `   📍 ${spot.restaurant.address} | ⭐ ${spot.restaurant.avgRating?.toFixed(1)}`;
+      
+      if (spot.distanceToNext && spot.walkingTimeToNext && idx < spots.length - 1) {
+        text += `\n\n   ↓ 🚶 도보 약 ${spot.walkingTimeToNext}분 (${spot.distanceToNext}m)`;
+      }
+      return text;
+    }).join('\n\n');
 
   return {
     message,
     course: {
       title: `${params.location} 추천 코스`,
       description: '',
-      totalDistance: 0,
+      totalDistance: Math.round(totalDistance * 100) / 100,
       estimatedTime: spots.length * 90,
       spots,
     },

@@ -7,7 +7,7 @@ export const chatTools: ChatCompletionTool[] = [
     type: 'function',
     function: {
       name: 'recommend_course',
-      description: '사용자가 가는 지역에 대한 맛집 코스/루트를 추천합니다. 데이트, 친구 모임, 가족 식사 등 상황에 맞는 코스를 생성합니다. "코스 추천", "루트 추천", "데이트 코스", "맛집 코스" 등의 요청에 사용합니다.',
+      description: '사용자가 가는 지역에 대한 맛집 코스/루트를 추천합니다. 데이트, 친구 모임, 가족 식사 등 상황에 맞는 코스를 생성합니다. "코스 추천", "루트 추천", "데이트 코스", "맛집 코스", "테마 추천" 등의 요청에 사용합니다.',
       parameters: {
         type: 'object',
         properties: {
@@ -71,20 +71,7 @@ export const chatTools: ChatCompletionTool[] = [
     },
   },
 
-  // 3. 테마 추천
-  {
-    type: 'function',
-    function: {
-      name: 'recommend_theme',
-      description: '인기 있는 맛집 테마를 추천합니다. "테마 추천", "인기 테마", "추천 테마", "어떤 테마가 있어?" 등의 요청에 사용합니다.',
-      parameters: {
-        type: 'object',
-        properties: {},
-      },
-    },
-  },
-
-  // 4. 예약 상태 조회
+  // 3. 예약 상태 조회
   {
     type: 'function',
     function: {
@@ -102,7 +89,7 @@ export const chatTools: ChatCompletionTool[] = [
     },
   },
 
-  // 5. 대기 상태 조회
+  // 4. 대기 상태 조회
   {
     type: 'function',
     function: {
@@ -115,7 +102,7 @@ export const chatTools: ChatCompletionTool[] = [
     },
   },
 
-  // 6. 예약 액션 연결 (페이지 이동)
+  // 5. 예약 액션 연결 (페이지 이동)
   {
     type: 'function',
     function: {

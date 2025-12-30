@@ -106,8 +106,8 @@ export default function ChatModal({ onClose }: ChatModalProps) {
       case 'recommend':
         sendMessage('맛집 추천해줘');
         break;
-      case 'theme':
-        sendMessage('인기 테마 추천해줘');
+      case 'course':
+        sendMessage('강남역 데이트 코스 추천해줘');
         break;
       case 'reservation':
         sendMessage('내 예약 상태 알려줘');
