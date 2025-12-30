@@ -31,12 +31,36 @@ interface RestaurantData {
   distance: number;
 }
 
+// 지역 키워드 생성
+function getLocationKeywords(location: string): string[] {
+  const keywords = [location];
+  const parts = location.split(/\s+/);
+  keywords.push(...parts);
+  
+  const subLocations: Record<string, string[]> = {
+    '중구': ['중구', '명동', '을지로', '충무로'],
+    '강남': ['강남', '역삼', '삼성', '테헤란'],
+    '홍대': ['홍대', '상수', '합정', '연남'],
+    '마포': ['마포', '홍대', '연남', '상수', '합정'],
+    '이태원': ['이태원', '한남', '녹사평'],
+    '신촌': ['신촌', '이대', '홍대'],
+  };
+
+  for (const [key, values] of Object.entries(subLocations)) {
+    if (location.includes(key)) {
+      keywords.push(...values);
+    }
+  }
+
+  return [...new Set(keywords)];
+}
+
 export async function handleRecommendCourse(
   params: RecommendCourseParams
 ): Promise<CourseHandlerResult> {
   try {
     // 1. API에서 식당 목록 가져오기
-    const response = await fetch(`${API_URL}/restaurants?page=0&size=50&sort=avgRating,desc`, {
+    const response = await fetch(`${API_URL}/restaurants?page=0&size=100&sort=avgRating,desc`, {
       headers: { 'Content-Type': 'application/json' },
     });
 
@@ -55,42 +79,50 @@ export async function handleRecommendCourse(
 
     if (location) {
       filteredRestaurants = allRestaurants
-        .filter((r: { latitude?: number; longitude?: number }) => r.latitude && r.longitude)
-        .map((r: { id: number; name: string; category: string; address: string; avgRating?: number; reviewCount?: number; latitude: number; longitude: number }) => ({
-          id: r.id,
-          name: r.name,
-          category: r.category,
-          address: r.address,
-          avgRating: r.avgRating || 0,
-          reviewCount: r.reviewCount || 0,
-          latitude: r.latitude,
-          longitude: r.longitude,
-          distance: calculateDistance(location.lat, location.lng, r.latitude, r.longitude),
-        }))
+        .filter((r: { latitude?: number | string; longitude?: number | string }) => r.latitude && r.longitude)
+        .map((r: { id: number; name: string; category: string; address: string; avgRating?: number; reviewCount?: number; latitude: number | string; longitude: number | string }) => {
+          const lat = typeof r.latitude === 'string' ? parseFloat(r.latitude) : r.latitude;
+          const lng = typeof r.longitude === 'string' ? parseFloat(r.longitude) : r.longitude;
+          return {
+            id: r.id,
+            name: r.name,
+            category: r.category,
+            address: r.address,
+            avgRating: r.avgRating || 0,
+            reviewCount: r.reviewCount || 0,
+            latitude: lat,
+            longitude: lng,
+            distance: calculateDistance(location.lat, location.lng, lat, lng),
+          };
+        })
         .filter((r: RestaurantData) => r.distance <= 5);
     }
 
     // 좌표 검색 결과가 없으면 주소 키워드로 fallback
     if (filteredRestaurants.length === 0) {
-      const searchKeyword = params.location.replace(/역|구|동|시/g, '').trim();
+      const searchKeywords = getLocationKeywords(params.location);
       
       filteredRestaurants = allRestaurants
-        .filter((r: { address?: string; latitude?: number; longitude?: number }) => {
+        .filter((r: { address?: string; latitude?: number | string; longitude?: number | string }) => {
           if (!r.address) return false;
-          return r.address.includes(params.location) || 
-                 r.address.includes(searchKeyword);
+          const addr = r.address.toLowerCase();
+          return searchKeywords.some(kw => addr.includes(kw.toLowerCase()));
         })
-        .map((r: { id: number; name: string; category: string; address: string; avgRating?: number; reviewCount?: number; latitude?: number; longitude?: number }) => ({
-          id: r.id,
-          name: r.name,
-          category: r.category,
-          address: r.address,
-          avgRating: r.avgRating || 0,
-          reviewCount: r.reviewCount || 0,
-          latitude: r.latitude || 0,
-          longitude: r.longitude || 0,
-          distance: 0,
-        }));
+        .map((r: { id: number; name: string; category: string; address: string; avgRating?: number; reviewCount?: number; latitude?: number | string; longitude?: number | string }) => {
+          const lat = r.latitude ? (typeof r.latitude === 'string' ? parseFloat(r.latitude) : r.latitude) : 0;
+          const lng = r.longitude ? (typeof r.longitude === 'string' ? parseFloat(r.longitude) : r.longitude) : 0;
+          return {
+            id: r.id,
+            name: r.name,
+            category: r.category,
+            address: r.address,
+            avgRating: r.avgRating || 0,
+            reviewCount: r.reviewCount || 0,
+            latitude: lat,
+            longitude: lng,
+            distance: 0,
+          };
+        });
     }
 
     if (filteredRestaurants.length === 0) {
@@ -208,7 +240,7 @@ ${restaurantListText}
       if (current.lat && current.lng && next.lat && next.lng) {
         const dist = calculateDistance(current.lat, current.lng, next.lat, next.lng);
         const distMeters = Math.round(dist * 1000);
-        const walkingTime = Math.round((dist / 4) * 60); // 4km/h 도보 속도
+        const walkingTime = Math.round((dist / 4) * 60);
         
         spots[i].distanceToNext = distMeters;
         spots[i].walkingTimeToNext = walkingTime;
@@ -228,7 +260,7 @@ ${restaurantListText}
       spots,
     };
 
-    // 7. 응답 메시지 생성 (가게명에 링크 + 거리 표시)
+    // 7. 응답 메시지 생성
     const typeEmoji: Record<string, string> = {
       lunch: '🍽️ 점심',
       cafe: '☕ 카페', 
@@ -244,7 +276,6 @@ ${restaurantListText}
           `   📍 ${spot.restaurant.address}\n` +
           `   ⭐ ${spot.restaurant.avgRating?.toFixed(1)} (리뷰 ${spot.restaurant.reviewCount}개)`;
         
-        // 다음 장소까지 거리 표시 (마지막 제외)
         if (spot.distanceToNext && spot.walkingTimeToNext && idx < spots.length - 1) {
           text += `\n\n   ↓ 🚶 도보 약 ${spot.walkingTimeToNext}분 (${spot.distanceToNext}m)`;
         }
