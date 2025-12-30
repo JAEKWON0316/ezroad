@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { chatTools } from '@/lib/chatbot/tools';
-import { SYSTEM_PROMPT } from '@/lib/chatbot/openai';
+import { buildSystemPrompt, SYSTEM_PROMPT } from '@/lib/chatbot/openai';
 import { handleRecommendRestaurant } from '@/lib/chatbot/handlers/restaurantHandler';
 import { handleRecommendCourse } from '@/lib/chatbot/handlers/courseHandler';
 import { handleGetReservationStatus } from '@/lib/chatbot/handlers/reservationHandler';
@@ -29,9 +29,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 동적으로 시스템 프롬프트 생성 (DB에서 가게 목록 가져옴)
+    let systemPrompt: string;
+    try {
+      systemPrompt = await buildSystemPrompt();
+    } catch (error) {
+      console.error('Failed to build dynamic prompt, using fallback:', error);
+      systemPrompt = SYSTEM_PROMPT; // fallback
+    }
+
     // OpenAI 메시지 형식으로 변환
     const openaiMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: systemPrompt },
       ...messages.map((m) => ({
         role: m.role as 'user' | 'assistant',
         content: m.content,
