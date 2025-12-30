@@ -322,8 +322,8 @@ export default function RestaurantDetailPage() {
       {/* Main Content Container */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-10 -mt-6" id="content-container">
         <div className="bg-white rounded-3xl shadow-xl border border-gray-100 min-h-[500px]">
-          {/* Sticky Tabs */}
-          <div className="sticky top-[60px] md:top-[70px] bg-white/95 backdrop-blur-xl border-b border-gray-100 z-30 rounded-t-3xl">
+          {/* Tabs - Removed Sticky */}
+          <div className="bg-white border-b border-gray-100 z-30 rounded-t-3xl">
             <div className="flex">
               {(['info', 'menu', 'reviews'] as const).map((tab) => (
                 <button
@@ -513,8 +513,8 @@ export default function RestaurantDetailPage() {
         </div>
       </div>
 
-      {/* Floating Bottom Bar (Mobile/Info Tab only or always?) - Let's keep it sticky at bottom for Reservation */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/90 backdrop-blur-xl border-t border-gray-200 z-50 md:hidden">
+      {/* Bottom Bar (Mobile/Info Tab only) - Removed Sticky (Fixed) */}
+      <div className="px-4 py-6 bg-white border-t border-gray-200 md:hidden max-w-5xl mx-auto">
         {/* 🔴 모바일 대기 인원 표시 */}
         {waitingCount > 0 && (
           <div className="flex items-center justify-center gap-2 mb-3 py-2 bg-purple-50 border border-purple-200 rounded-xl">

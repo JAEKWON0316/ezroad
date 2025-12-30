@@ -27,7 +27,7 @@ export default function Footer() {
   return (
     <footer className="bg-gray-950 text-gray-400 font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
           {/* Company Info */}
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4">
@@ -57,24 +57,26 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Links */}
-          {Object.entries(footerLinks).map(([title, links]) => (
-            <div key={title}>
-              <h3 className="text-white font-semibold mb-4">{title}</h3>
-              <ul className="space-y-2">
-                {links.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="text-sm hover:text-orange-400 transition-colors"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {/* Links Grid - 3 Columns on Mobile */}
+          <div className="lg:col-span-3 grid grid-cols-3 md:grid-cols-3 gap-8">
+            {Object.entries(footerLinks).map(([title, links]) => (
+              <div key={title}>
+                <h3 className="text-white font-semibold mb-4 text-sm sm:text-base">{title}</h3>
+                <ul className="space-y-2">
+                  {links.map((link) => (
+                    <li key={link.href}>
+                      <Link
+                        href={link.href}
+                        className="text-xs sm:text-sm hover:text-orange-400 transition-colors"
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Bottom */}

@@ -96,7 +96,9 @@ export default function ChatModal({ onClose }: ChatModalProps) {
         {user && messages.length <= 1 && (
           <div className="text-center py-4 bg-white/50 rounded-2xl border border-dashed border-gray-200 mb-4 mx-2">
             <p className="text-sm text-gray-500 font-medium whitespace-pre-wrap">
-              &quot;{user.nickname || user.name}&quot;님, 안녕하세요! 👋\n오늘 어떤 맛집을 찾으시나요?
+              &quot;{user.nickname || user.name}&quot;님, 안녕하세요! 👋{"\n"}
+              오늘 어떤 맛집을{"\n"}
+              찾으시나요?
             </p>
           </div>
         )}
