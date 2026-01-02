@@ -23,7 +23,7 @@ import {
 import { useAuth } from '@/context/AuthContext';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { useNotifications } from '@/context/NotificationContext';
-import { restaurantApi, reservationApi, waitingApi, partnerApi, PartnerStats } from '@/lib/api';
+import { restaurantApi, reservationApi, waitingApi, partnerApi, PartnerStats, RestaurantStats } from '@/lib/api';
 import { Restaurant, Reservation, Waiting } from '@/types';
 import Loading from '@/components/common/Loading';
 import DashboardSkeleton from '@/components/layout/DashboardSkeleton';
@@ -43,6 +43,7 @@ export default function PartnerPage() {
   const [pendingReservations, setPendingReservations] = useState<Reservation[]>([]);
   const [activeWaitings, setActiveWaitings] = useState<Waiting[]>([]);
   const [partnerStats, setPartnerStats] = useState<PartnerStats | null>(null);
+  const [restaurantStats, setRestaurantStats] = useState<RestaurantStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // 🔴 실시간 대기 인원 (WebSocket)
@@ -58,14 +59,17 @@ export default function PartnerPage() {
       setPartnerStats(statsData);
 
       if (restaurantsData.length > 0) {
-        setSelectedRestaurant(restaurantsData[0]);
+        const firstRestaurant = restaurantsData[0];
+        setSelectedRestaurant(firstRestaurant);
 
-        // Fetch reservations and waitings for first restaurant
-        const [reservationsData, waitingsData] = await Promise.all([
-          reservationApi.getByRestaurant(restaurantsData[0].id, 0, 5),
-          waitingApi.getByRestaurant(restaurantsData[0].id, 0, 100),
+        // Fetch restaurant-specific stats, reservations and waitings
+        const [restaurantStatsData, reservationsData, waitingsData] = await Promise.all([
+          partnerApi.getRestaurantStats(firstRestaurant.id),
+          reservationApi.getByRestaurant(firstRestaurant.id, 0, 5),
+          waitingApi.getByRestaurant(firstRestaurant.id, 0, 100),
         ]);
 
+        setRestaurantStats(restaurantStatsData);
         setPendingReservations(
           reservationsData.content.filter(r => r.status === 'PENDING')
         );
@@ -153,10 +157,13 @@ export default function PartnerPage() {
     setSelectedRestaurant(restaurant);
     setIsLoading(true);
     try {
-      const [reservationsData, waitingsData] = await Promise.all([
+      const [restaurantStatsData, reservationsData, waitingsData] = await Promise.all([
+        partnerApi.getRestaurantStats(restaurant.id),
         reservationApi.getByRestaurant(restaurant.id, 0, 5),
         waitingApi.getByRestaurant(restaurant.id, 0, 100),
       ]);
+      
+      setRestaurantStats(restaurantStatsData);
       setPendingReservations(
         reservationsData.content.filter(r => r.status === 'PENDING')
       );
@@ -334,81 +341,90 @@ export default function PartnerPage() {
             {/* Main Content Area */}
             {selectedRestaurant && (
               <main className="flex-1 space-y-8">
-                {/* Stats Grid */}
-                {partnerStats && (
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    {/* Total Reviews */}
-                    <div className="glass-card rounded-2xl p-5 relative overflow-hidden group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <MessageSquare className="w-20 h-20" />
-                      </div>
-                      <div className="relative z-10">
-                        <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-                          <MessageSquare className="h-4 w-4 text-blue-500" />
-                          <span>총 리뷰</span>
-                        </div>
-                        <div className="text-2xl font-bold text-gray-900">{partnerStats.totalReviews.toLocaleString()}</div>
-                        <div className="mt-2 text-xs text-blue-600 bg-blue-50 inline-flex px-2 py-0.5 rounded-full font-medium">
-                          +{partnerStats.weekReviews} this week
-                        </div>
-                      </div>
+                {/* Stats Grid - 선택된 가게별 통계 */}
+                {restaurantStats && (
+                  <div>
+                    {/* 가게별 통계 표시 안내 */}
+                    <div className="flex items-center gap-2 mb-4">
+                      <Store className="h-5 w-5 text-orange-500" />
+                      <h2 className="text-lg font-bold text-gray-900">{selectedRestaurant.name}</h2>
+                      <span className="text-sm text-gray-500">통계</span>
                     </div>
+                    
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                      {/* Reviews - 가게별 */}
+                      <div className="glass-card rounded-2xl p-5 relative overflow-hidden group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                          <MessageSquare className="w-20 h-20" />
+                        </div>
+                        <div className="relative z-10">
+                          <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
+                            <MessageSquare className="h-4 w-4 text-blue-500" />
+                            <span>리뷰</span>
+                          </div>
+                          <div className="text-2xl font-bold text-gray-900">{restaurantStats.reviewCount.toLocaleString()}</div>
+                          <div className="mt-2 text-xs text-blue-600 bg-blue-50 inline-flex px-2 py-0.5 rounded-full font-medium">
+                            이 가게
+                          </div>
+                        </div>
+                      </div>
 
-                    {/* Total Reservations */}
-                    <div className="glass-card rounded-2xl p-5 relative overflow-hidden group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <Calendar className="w-20 h-20" />
-                      </div>
-                      <div className="relative z-10">
-                        <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-                          <Calendar className="h-4 w-4 text-purple-500" />
-                          <span>총 예약</span>
+                      {/* Reservations - 가게별 */}
+                      <div className="glass-card rounded-2xl p-5 relative overflow-hidden group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                          <Calendar className="w-20 h-20" />
                         </div>
-                        <div className="text-2xl font-bold text-gray-900">{partnerStats.totalReservations.toLocaleString()}</div>
-                        <div className="mt-2 text-xs text-purple-600 bg-purple-50 inline-flex px-2 py-0.5 rounded-full font-medium">
-                          +{partnerStats.weekReservations} this week
+                        <div className="relative z-10">
+                          <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
+                            <Calendar className="h-4 w-4 text-purple-500" />
+                            <span>예약</span>
+                          </div>
+                          <div className="text-2xl font-bold text-gray-900">{restaurantStats.reservationCount.toLocaleString()}</div>
+                          <div className="mt-2 text-xs text-purple-600 bg-purple-50 inline-flex px-2 py-0.5 rounded-full font-medium">
+                            이 가게
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Followers */}
-                    <div className="glass-card rounded-2xl p-5 relative overflow-hidden group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <Heart className="w-20 h-20" />
-                      </div>
-                      <div className="relative z-10">
-                        <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-                          <Heart className="h-4 w-4 text-red-500" />
-                          <span>단골 손님</span>
+                      {/* Followers - 가게별 */}
+                      <div className="glass-card rounded-2xl p-5 relative overflow-hidden group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                          <Heart className="w-20 h-20" />
                         </div>
-                        <div className="text-2xl font-bold text-gray-900">{partnerStats.totalFollowers.toLocaleString()}</div>
-                        <div className="mt-2 text-xs text-gray-500 font-medium">
-                          팔로워 수
+                        <div className="relative z-10">
+                          <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
+                            <Heart className="h-4 w-4 text-red-500" />
+                            <span>단골 손님</span>
+                          </div>
+                          <div className="text-2xl font-bold text-gray-900">{restaurantStats.followerCount.toLocaleString()}</div>
+                          <div className="mt-2 text-xs text-red-600 bg-red-50 inline-flex px-2 py-0.5 rounded-full font-medium">
+                            찜한 고객
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Avg Rating */}
-                    <div className="glass-card rounded-2xl p-5 relative overflow-hidden group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <Star className="w-20 h-20" />
-                      </div>
-                      <div className="relative z-10">
-                        <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
-                          <Star className="h-4 w-4 text-yellow-500" />
-                          <span>평균 별점</span>
+                      {/* Avg Rating - 가게별 */}
+                      <div className="glass-card rounded-2xl p-5 relative overflow-hidden group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                          <Star className="w-20 h-20" />
                         </div>
-                        <div className="text-2xl font-bold text-gray-900">{partnerStats.avgRating.toFixed(1)}</div>
-                        <div className="mt-2 flex">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star
-                              key={star}
-                              className={`h-3 w-3 ${star <= Math.round(partnerStats.avgRating)
-                                ? 'text-yellow-400 fill-current'
-                                : 'text-gray-200'
-                                }`}
-                            />
-                          ))}
+                        <div className="relative z-10">
+                          <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
+                            <Star className="h-4 w-4 text-yellow-500" />
+                            <span>평균 별점</span>
+                          </div>
+                          <div className="text-2xl font-bold text-gray-900">{restaurantStats.avgRating.toFixed(1)}</div>
+                          <div className="mt-2 flex">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                className={`h-3 w-3 ${star <= Math.round(restaurantStats.avgRating)
+                                  ? 'text-yellow-400 fill-current'
+                                  : 'text-gray-200'
+                                  }`}
+                              />
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </div>
