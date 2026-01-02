@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 
 const publicDir = path.join(__dirname, '../public');
-const sourceImage = path.join(publicDir, 'logo.png');
+const sourceImage = path.join(publicDir, 'favicon.png'); // 투명배경 파비콘 사용
 
 // 생성할 파비콘 크기들
 const sizes = [
@@ -23,44 +23,34 @@ const sizes = [
 
 async function generateFavicons() {
   console.log('파비콘 생성 시작...\n');
+  console.log('소스 이미지: ' + sourceImage);
 
-  // 원본 이미지에서 아이콘 부분만 추출 (왼쪽 부분)
   const metadata = await sharp(sourceImage).metadata();
-  console.log('원본 이미지: ' + metadata.width + 'x' + metadata.height);
-
-  // 로고에서 아이콘 부분만 crop (대략 왼쪽 28%)
-  const iconWidth = Math.floor(metadata.width * 0.28);
-  const iconBuffer = await sharp(sourceImage)
-    .extract({ 
-      left: 50, 
-      top: Math.floor(metadata.height * 0.25), 
-      width: iconWidth, 
-      height: Math.floor(metadata.height * 0.5) 
-    })
-    .toBuffer();
+  console.log('원본 크기: ' + metadata.width + 'x' + metadata.height + '\n');
 
   for (const item of sizes) {
     try {
-      await sharp(iconBuffer)
+      await sharp(sourceImage)
         .resize(item.size, item.size, {
           fit: 'contain',
-          background: { r: 255, g: 255, b: 255, alpha: 0 }
+          background: { r: 0, g: 0, b: 0, alpha: 0 } // 투명 배경 유지
         })
         .png()
         .toFile(path.join(publicDir, item.name));
       
-      console.log('OK ' + item.name + ' (' + item.size + 'x' + item.size + ')');
+      const stats = fs.statSync(path.join(publicDir, item.name));
+      console.log('OK ' + item.name + ' (' + item.size + 'x' + item.size + ') - ' + stats.size + ' bytes');
     } catch (err) {
       console.error('FAIL ' + item.name + ': ' + err.message);
     }
   }
 
-  // ICO 파일은 32x32 PNG를 복사
+  // ICO 파일은 32x32 PNG를 복사 (브라우저가 PNG도 인식함)
   fs.copyFileSync(
     path.join(publicDir, 'favicon-32x32.png'),
     path.join(publicDir, 'favicon.ico')
   );
-  console.log('OK favicon.ico');
+  console.log('OK favicon.ico (copied from favicon-32x32.png)');
 
   console.log('\n파비콘 생성 완료!');
 }
