@@ -558,6 +558,8 @@ export interface RestaurantStats {
   followerCount: number;
   avgRating: number;
   reservationCount: number;
+  weekReviews: number;
+  weekReservations: number;
 }
 
 export const partnerApi = {

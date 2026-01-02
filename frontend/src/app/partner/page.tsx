@@ -352,7 +352,7 @@ export default function PartnerPage() {
                     </div>
                     
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                      {/* Reviews - 가게별 */}
+                      {/* Total Reviews */}
                       <div className="glass-card rounded-2xl p-5 relative overflow-hidden group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                           <MessageSquare className="w-20 h-20" />
@@ -360,16 +360,16 @@ export default function PartnerPage() {
                         <div className="relative z-10">
                           <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
                             <MessageSquare className="h-4 w-4 text-blue-500" />
-                            <span>리뷰</span>
+                            <span>총 리뷰</span>
                           </div>
                           <div className="text-2xl font-bold text-gray-900">{restaurantStats.reviewCount.toLocaleString()}</div>
                           <div className="mt-2 text-xs text-blue-600 bg-blue-50 inline-flex px-2 py-0.5 rounded-full font-medium">
-                            이 가게
+                            +{restaurantStats.weekReviews} this week
                           </div>
                         </div>
                       </div>
 
-                      {/* Reservations - 가게별 */}
+                      {/* Total Reservations */}
                       <div className="glass-card rounded-2xl p-5 relative overflow-hidden group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                           <Calendar className="w-20 h-20" />
@@ -377,16 +377,16 @@ export default function PartnerPage() {
                         <div className="relative z-10">
                           <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
                             <Calendar className="h-4 w-4 text-purple-500" />
-                            <span>예약</span>
+                            <span>총 예약</span>
                           </div>
                           <div className="text-2xl font-bold text-gray-900">{restaurantStats.reservationCount.toLocaleString()}</div>
                           <div className="mt-2 text-xs text-purple-600 bg-purple-50 inline-flex px-2 py-0.5 rounded-full font-medium">
-                            이 가게
+                            +{restaurantStats.weekReservations} this week
                           </div>
                         </div>
                       </div>
 
-                      {/* Followers - 가게별 */}
+                      {/* Followers */}
                       <div className="glass-card rounded-2xl p-5 relative overflow-hidden group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                           <Heart className="w-20 h-20" />
@@ -397,13 +397,13 @@ export default function PartnerPage() {
                             <span>단골 손님</span>
                           </div>
                           <div className="text-2xl font-bold text-gray-900">{restaurantStats.followerCount.toLocaleString()}</div>
-                          <div className="mt-2 text-xs text-red-600 bg-red-50 inline-flex px-2 py-0.5 rounded-full font-medium">
-                            찜한 고객
+                          <div className="mt-2 text-xs text-gray-500 font-medium">
+                            팔로워 수
                           </div>
                         </div>
                       </div>
 
-                      {/* Avg Rating - 가게별 */}
+                      {/* Avg Rating */}
                       <div className="glass-card rounded-2xl p-5 relative overflow-hidden group hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                           <Star className="w-20 h-20" />

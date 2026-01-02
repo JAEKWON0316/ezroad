@@ -129,11 +129,22 @@ public class PartnerService {
             throw new RuntimeException("권한이 없습니다");
         }
         
+        // 기본 통계
         stats.put("restaurant", RestaurantResponse.from(restaurant));
         stats.put("reviewCount", reviewRepository.countByRestaurantIdAndDeletedAtIsNull(restaurantId));
         stats.put("followerCount", followRepository.countByRestaurantId(restaurantId));
         stats.put("avgRating", reviewRepository.findAverageRatingByRestaurantId(restaurantId).orElse(0.0));
         stats.put("reservationCount", reservationRepository.findByRestaurantIdOrderByReservationDateAsc(restaurantId).size());
+        
+        // 주간 통계 추가
+        LocalDateTime todayEnd = LocalDate.now().plusDays(1).atStartOfDay();
+        LocalDateTime weekStart = LocalDate.now().minusDays(7).atStartOfDay();
+        
+        long weekReviews = reviewRepository.countByRestaurantIdAndDeletedAtIsNullAndCreatedAtBetween(restaurantId, weekStart, todayEnd);
+        long weekReservations = reservationRepository.countByRestaurantIdAndCreatedAtBetween(restaurantId, weekStart, todayEnd);
+        
+        stats.put("weekReviews", weekReviews);
+        stats.put("weekReservations", weekReservations);
         
         return stats;
     }
